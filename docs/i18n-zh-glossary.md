@@ -331,6 +331,35 @@ JSON 字段名、数据库表名/列名、TypeScript 类型名、事件名,以�
 | Scope | 适用范围 | 合同/模板/号段/政策统一用词 |
 | Outstanding / Active Bookings | 未结 / 活跃订单 | 统计卡片用词 |
 
+### 销售链路补充(quotes / relationships / bookings)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Client(关系类型标签) | 客户 | 本表仅禁止用"客户"译 Person 实体;作为对手方关系标签是自然用词 |
+| Proposal(分享给客户的展示) | 方案 | 与报价版本(Quote Version)同页并存,需区分 |
+| Open / Reopen(报价状态) | 进行中 / 重新开启 | 与结案(Close)配对;"打开"有窗口歧义 |
+| Owner | 负责人 | CRM 通行;"拥有者"生硬 |
+| Active / Inactive(记录开关) | 启用 / 停用 | "活跃"保留给活跃订单等统计语境 |
+| Relationships(人与人) | 人际关系 | 与关系类型(关系)区分 |
+| Document(护照/证件) | 证件 | "文档/文件"会误读为附件 |
+| Travel profile / Travel companion | 出行档案 / 同行人 | 与出行人体系一致 |
+| Payment Method(客户支付工具) | 支付方式 | 方向中性,避开收款(入账)语义 |
+| Communication | 沟通记录 | 与联系方式、跟进记录三分 |
+| Channel(沟通渠道字段) | 方式 | "渠道"专属分销对手方 |
+| Line item | 行项目 | 通用商务词;"订单项"专属 Booking Item |
+| Discard | 放弃更改 | 未保存变更的标准动词 |
+| Booker | 预订人 | "预订仅作动词"的派生名词,指下单角色 |
+| Party size | 出行人数 | 出行人体系 |
+| Senior(出行人类别) | 长者 | 类别体系:成人/儿童/婴儿/长者 |
+| Occupant | 入住人 | 分房语境 |
+| Card on file / Agency letter / Deposit(担保类型) | 留存卡 / 挂账函 / 押金 | 押金区别于付款计划中的定金 |
+| Reconciled / Drift / Needs review | 已对平 / 差异 / 需复核 | 财务对账口语 |
+| Unit sell / Unit cost | 售价单价 / 成本单价 | 遵守成本≠售价铁律 |
+| Payment intent | 付款意向 | 支付编排语境 |
+| Ticket on credit | 挂账出票 | 沿用 Direct Bill=挂账 |
+| Extras manifest | 附加项清单 | 运营清单 |
+| Room sharing / Shared room | 同住拼房 / 同住房间 | 扩展同住组词族 |
+
 ### 通用后台词(auth / team)
 
 | 英文 | 中文译法 | 取舍理由 |
