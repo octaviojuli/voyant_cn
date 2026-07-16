@@ -360,6 +360,59 @@ JSON 字段名、数据库表名/列名、TypeScript 类型名、事件名,以�
 | Extras manifest | 附加项清单 | 运营清单 |
 | Room sharing / Shared room | 同住拼房 / 同住房间 | 扩展同住组词族 |
 
+### 目录与库存补充(catalog / inventory)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Availability(余位列) | 余位 | "可售性"专属 Sellability 判定;剩余名额列自然读作余位 |
+| Offer(日历上的可售计数) | 可售项 | 与可售候选同族;"报价"专属 Quote |
+| from(价格前缀)/ From(列头) | 低至 / 起价 | 中文无法用"…起"后缀直译 |
+| At sea | 海上巡航 | 邮轮行业标准 |
+| Room only / B&B | 不含餐 / 含早餐 | 补全餐食标准系列 |
+| Property | 物业 | 酒店行业住宿物业 |
+| Product Category / Parent category | 产品类目 / 上级类目 | 电商后台通用;避开"类别"家族占用 |
+| What's included / not included | 费用包含 / 费用不含 | 旅游行业标准栏目 |
+| Margin | 毛利(库存)/ 利润率(财务分析) | 语境分工 |
+| Reservation Timeout | 预留超时 | 沿用 Hold=预留 |
+| Overview(区块标题) | 概况 | "概览"专属 Dashboard |
+| Version snapshot | 版本快照 | 快照体系 |
+| Free sale | 自由销售 | 容量模式 |
+| City Break / Circuit | 城市短途 / 环线游 | 产品类型行业口径 |
+| Waive / Waived | 免收 / 已免收 | 费用处理 |
+| Manual(来源) | 手动录入 | 数据来源徽标 |
+| stale | 已过时 | 数据新鲜度徽标 |
+
+### 财务补充(finance-react)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Record(动词,登记款项/账单) | 登记 | 财务录入既有事实,区别于"创建" |
+| Profitability | 盈利分析 | 页面为分析视图 |
+| Variance / Unattributed cost | 偏差 / 未归属成本 | 利润词族 |
+| Cost allocation | 成本分摊 | 避开受保护的占位/切位/资源分配 |
+| Payment(方向混合记录) | 款项 | 单方向词会误导 |
+| Payment link(客户侧) | 支付链接 | 运营侧仍用收款链接;视角分工 |
+| Travel agent(客户文案) | 旅行顾问 | 面向客户口吻 |
+| Bank reference | 汇款附言 | 银行转账通行说法 |
+| Sell/Buy side(税务) | 销项 / 进项 | 国内财税标准词对 |
+| Deposit window / Grace floor | 定金窗口 / 宽限下限 | 字段直译对仗 |
+| Charge(收款项目选择) | 收款项目 | 定金/尾款/全款选择项 |
+| Installment | 分期 | 通用 |
+| Disputed / Received / Approved | 有争议 / 已接收 / 已审批 | 供应商账单状态 |
+
+### 法务补充(legal-react)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Executed(合同状态) | 已生效 | "已履行"会误指服务履约 |
+| Retire / Retired(政策版本) | 下线 / 已下线 | 避开"停用"(记录开关) |
+| Partner(合同范围) | 合作伙伴 | 通用商务词,区别于供应商/渠道 |
+| Record Signature | 登记签署记录 | 人工录入签署事实 |
+| Manual(签署方式) | 手工 | 与电子签署对仗 |
+| Window / Date Range(规则类型) | 时间窗口 / 日期区间 | 取消规则时段类型 |
+| Refund Percent(基点) | 退款比例(基点) | 财务直译,10000=100% |
+| Checksum / Storage Reference | 校验和 / 存储引用 | 技术通行译法 |
+
 ### 通用后台词(auth / team)
 
 | 英文 | 中文译法 | 取舍理由 |
