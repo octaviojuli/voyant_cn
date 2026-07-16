@@ -55,6 +55,19 @@ describe("quotes i18n", () => {
     expect(html).toContain("Acceptata")
     expect(html).toContain("Deschisa")
   })
+
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <CrmUiMessagesProvider locale="zh-CN">
+        <CrmMessageProbe />
+      </CrmUiMessagesProvider>,
+    )
+
+    expect(html).toContain("新建报价版本")
+    expect(html).toContain("报价版本")
+    expect(html).toContain("已接受")
+    expect(html).toContain("进行中")
+  })
 })
 
 function CrmMessageProbe() {

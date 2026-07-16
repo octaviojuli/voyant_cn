@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { crmUiEn } from "./en.js"
 import type { CrmUiMessages } from "./messages.js"
 import { crmUiRo } from "./ro.js"
+import { crmUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const crmUiMessageDefinitions = {
   en: crmUiEn,
   ro: crmUiRo,
+  zh: crmUiZh,
 } satisfies LocaleMessageDefinitions<CrmUiMessages>
 
 export type CrmUiMessageOverrides = LocaleMessageOverrides<CrmUiMessages>

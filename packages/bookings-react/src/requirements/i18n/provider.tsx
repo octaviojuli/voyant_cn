@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { bookingRequirementsUiEn } from "./en.js"
 import type { BookingRequirementsUiMessages } from "./messages.js"
 import { bookingRequirementsUiRo } from "./ro.js"
+import { bookingRequirementsUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const bookingRequirementsUiMessageDefinitions = {
   en: bookingRequirementsUiEn,
   ro: bookingRequirementsUiRo,
+  zh: bookingRequirementsUiZh,
 } satisfies LocaleMessageDefinitions<BookingRequirementsUiMessages>
 
 export type BookingRequirementsUiMessageOverrides =

@@ -7,6 +7,7 @@ export {
   bookingRequirementsUiEn,
   bookingRequirementsUiMessageDefinitions,
   bookingRequirementsUiRo,
+  bookingRequirementsUiZh,
   getBookingRequirementsUiI18n,
   resolveBookingRequirementsUiMessages,
   useBookingRequirementsUiI18n,

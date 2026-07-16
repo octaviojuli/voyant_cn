@@ -12,3 +12,4 @@ export {
   useExtrasUiMessagesOrDefault,
 } from "./provider.js"
 export { extrasUiRo } from "./ro.js"
+export { extrasUiZh } from "./zh.js"

@@ -18,3 +18,4 @@ export {
   useBookingRequirementsUiMessagesOrDefault,
 } from "./provider.js"
 export { bookingRequirementsUiRo } from "./ro.js"
+export { bookingRequirementsUiZh } from "./zh.js"

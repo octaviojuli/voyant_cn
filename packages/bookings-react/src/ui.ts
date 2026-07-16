@@ -175,6 +175,7 @@ export {
   bookingsUiEn,
   bookingsUiMessageDefinitions,
   bookingsUiRo,
+  bookingsUiZh,
   formatMessage,
   getBookingsUiI18n,
   resolveBookingsUiMessages,

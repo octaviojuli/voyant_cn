@@ -231,6 +231,7 @@
       "@voyant-travel/bookings-react/i18n": ["../bookings-react/dist/i18n/index.d.ts"],
       "@voyant-travel/bookings-react/i18n/en": ["../bookings-react/dist/i18n/en.d.ts"],
       "@voyant-travel/bookings-react/i18n/ro": ["../bookings-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/bookings-react/i18n/zh": ["../bookings-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/bookings-react/journey": ["../bookings-react/dist/journey/index.d.ts"],
       "@voyant-travel/bookings-react/provider": ["../bookings-react/dist/provider.d.ts"],
       "@voyant-travel/bookings-react/query-keys": ["../bookings-react/dist/query-keys.d.ts"],
@@ -254,6 +255,9 @@
       ],
       "@voyant-travel/bookings-react/requirements/i18n/ro": [
         "../bookings-react/dist/requirements/i18n/ro.d.ts"
+      ],
+      "@voyant-travel/bookings-react/requirements/i18n/zh": [
+        "../bookings-react/dist/requirements/i18n/zh.d.ts"
       ],
       "@voyant-travel/bookings-react/requirements/provider": [
         "../bookings-react/dist/requirements/provider.d.ts"
@@ -1496,6 +1500,7 @@
       "@voyant-travel/quotes-react/i18n": ["../quotes-react/dist/i18n/index.d.ts"],
       "@voyant-travel/quotes-react/i18n/en": ["../quotes-react/dist/i18n/en.d.ts"],
       "@voyant-travel/quotes-react/i18n/ro": ["../quotes-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/quotes-react/i18n/zh": ["../quotes-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/quotes-react/provider": ["../quotes-react/dist/provider.d.ts"],
       "@voyant-travel/quotes-react/public-routes": ["../quotes-react/dist/public-routes.d.ts"],
       "@voyant-travel/quotes-react/query-keys": ["../quotes-react/dist/query-keys.d.ts"],
@@ -1559,6 +1564,7 @@
       "@voyant-travel/relationships-react/i18n": ["../relationships-react/dist/i18n/index.d.ts"],
       "@voyant-travel/relationships-react/i18n/en": ["../relationships-react/dist/i18n/en.d.ts"],
       "@voyant-travel/relationships-react/i18n/ro": ["../relationships-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/relationships-react/i18n/zh": ["../relationships-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/relationships-react/provider": ["../relationships-react/dist/provider.d.ts"],
       "@voyant-travel/relationships-react/query-keys": [
         "../relationships-react/dist/query-keys.d.ts"

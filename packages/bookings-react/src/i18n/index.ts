@@ -13,3 +13,4 @@ export {
   useBookingsUiMessagesOrDefault,
 } from "./provider.js"
 export { bookingsUiRo } from "./ro.js"
+export { bookingsUiZh } from "./zh.js"

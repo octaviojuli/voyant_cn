@@ -22,6 +22,7 @@
     "./i18n": "./src/i18n/index.ts",
     "./i18n/en": "./src/i18n/en.ts",
     "./i18n/ro": "./src/i18n/ro.ts",
+    "./i18n/zh": "./src/i18n/zh.ts",
     "./components/*": "./src/components/*.tsx",
     "./admin": "./src/admin/index.tsx"
   },
@@ -150,6 +151,11 @@
         "types": "./dist/i18n/ro.d.ts",
         "import": "./dist/i18n/ro.js",
         "default": "./dist/i18n/ro.js"
+      },
+      "./i18n/zh": {
+        "types": "./dist/i18n/zh.d.ts",
+        "import": "./dist/i18n/zh.js",
+        "default": "./dist/i18n/zh.js"
       },
       "./components/*": {
         "types": "./dist/components/*.d.ts",
