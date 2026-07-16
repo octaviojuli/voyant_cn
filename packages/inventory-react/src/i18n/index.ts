@@ -12,3 +12,4 @@ export {
   useProductsUiMessagesOrDefault,
 } from "./provider.js"
 export { productsUiRo } from "./ro.js"
+export { productsUiZh } from "./zh.js"

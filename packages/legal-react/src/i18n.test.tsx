@@ -55,6 +55,19 @@ describe("legal-ui i18n", () => {
     expect(html).toContain("Editeaza documentul")
     expect(html).toContain("Manual")
   })
+
+  it("renders Chinese package messages with the provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <LegalUiMessagesProvider locale="zh-CN">
+        <LegalMessagesProbe />
+      </LegalUiMessagesProvider>,
+    )
+
+    expect(html).toContain("合同")
+    expect(html).toContain("下载")
+    expect(html).toContain("编辑文档")
+    expect(html).toContain("手工")
+  })
 })
 
 function LegalMessagesProbe() {

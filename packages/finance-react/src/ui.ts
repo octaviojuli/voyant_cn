@@ -152,6 +152,7 @@ export {
   financeUiEn,
   financeUiMessageDefinitions,
   financeUiRo,
+  financeUiZh,
   getFinanceUiI18n,
   resolveFinanceUiMessages,
   useFinanceUiI18n,

@@ -19,3 +19,4 @@ export {
   useFinanceUiMessagesOrDefault,
 } from "./provider.js"
 export { financeUiRo } from "./ro.js"
+export { financeUiZh } from "./zh.js"

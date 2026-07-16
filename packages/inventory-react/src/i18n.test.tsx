@@ -56,4 +56,19 @@ describe("products-ui i18n", () => {
 
     expect(html).toContain("Categorie parinte")
   })
+
+  it("provides chinese messages through the provider via region fallback", () => {
+    function ReadMessage() {
+      const messages = useProductsUiMessagesOrDefault()
+      return <span>{messages.productCategoryForm.fields.parentCategory}</span>
+    }
+
+    const html = renderToStaticMarkup(
+      <ProductsUiMessagesProvider locale="zh-CN">
+        <ReadMessage />
+      </ProductsUiMessagesProvider>,
+    )
+
+    expect(html).toContain("上级类目")
+  })
 })

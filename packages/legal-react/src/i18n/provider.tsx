@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { legalUiEn } from "./en.js"
 import type { LegalUiMessages } from "./messages.js"
 import { legalUiRo } from "./ro.js"
+import { legalUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const legalUiMessageDefinitions = {
   en: legalUiEn,
   ro: legalUiRo,
+  zh: legalUiZh,
 } satisfies LocaleMessageDefinitions<LegalUiMessages>
 
 export type LegalUiMessageOverrides = LocaleMessageOverrides<LegalUiMessages>

@@ -12,3 +12,4 @@ export {
   useCatalogUiMessagesOrDefault,
 } from "./provider.js"
 export { catalogUiRo } from "./ro.js"
+export { catalogUiZh } from "./zh.js"

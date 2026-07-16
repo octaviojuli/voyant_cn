@@ -12,3 +12,4 @@ export {
   useCheckoutUiMessagesOrDefault,
 } from "./provider.js"
 export { checkoutUiRo } from "./ro.js"
+export { checkoutUiZh } from "./zh.js"

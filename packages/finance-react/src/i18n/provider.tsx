@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { financeUiEn } from "./en.js"
 import type { FinanceUiMessages } from "./messages.js"
 import { financeUiRo } from "./ro.js"
+import { financeUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const financeUiMessageDefinitions = {
   en: financeUiEn,
   ro: financeUiRo,
+  zh: financeUiZh,
 } satisfies LocaleMessageDefinitions<FinanceUiMessages>
 
 export type FinanceUiMessageOverrides = LocaleMessageOverrides<FinanceUiMessages>
