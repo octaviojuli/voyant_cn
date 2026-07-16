@@ -251,6 +251,95 @@ JSON 字段名、数据库表名/列名、TypeScript 类型名、事件名,以�
 | Notification | 通知 | 直译 |
 | Quote(动词 to quote) | 出报价 | 与名词呼应 |
 
+## 阶段 2 新增词条(翻译过程中自拟,待人工复核)
+
+以下词条为全量翻译时遇到、原表未覆盖的术语,按本表风格自拟;复核后可上移至正式分组。
+
+### 操作台账与技术词(action ledger / 平台)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Action Ledger | 操作台账 | 操作审计日志;"台账"与财务"账单"区分 |
+| Reversal / Reversed | 冲正 | 台账/财务冲销语境标准词;区别于取消(Cancel)与作废(Void) |
+| Compensated | 已补偿 | saga 补偿事务通行译法 |
+| Superseded | 已被取代 | 记录被新记录替代 |
+| Relay Outbox | 中继发件箱 | outbox 模式直译 |
+| Principal | 主体 | 鉴权语境标准译法,与操作者(Actor)区分 |
+| Agent(principal 类型) | 智能体 | AI 执行主体,区别于员工用户/系统 |
+| Payload / Redaction / Retention / Idempotency / Fingerprint | 载荷 / 脱敏 / 保留期 / 幂等性 / 指纹 | 技术通行译法 |
+
+### 销售与目录(CRM / products / trips)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Deal | 商机 | 国内 CRM 通用词;与报价(Quote)明确区分 |
+| Pipeline value | 销售管道金额 | 统计卡片语境取"金额" |
+| Order(垂直/上游交易) | 交易单 | Booking=订单 已占用;类推"旧版交易单"先例 |
+| Itinerary(产品的多方案变体) | 行程方案 | 表达可切换的多套方案;泛指仍用"行程" |
+| Compose trip | 编排行程 | 组装行程包的动作 |
+| Not committed | 未成单 | 组件尚无已承诺订单 |
+| Packages(机+酒) | 度假打包 | 与 Product=产品、Trip Envelope=行程包区分 |
+| Excursions / Tours | 一日游 / 多日游 | 行业口径 |
+| Departure(产品的固定日期班次) | 班期 | 机械对应排期规则→班期;"团期"专属自营团期 |
+| Cutoff | 截售(语境亦作"截止") | 提前 N 分钟停止售卖 |
+| Override pricing(按班期覆盖价格) | 覆盖定价 / 覆盖价 | 区别于状态机的强制变更(Override) |
+| Brochure | 宣传册 | 直译 |
+| Lead(traveler) | 主出行人 | 与出行人体系一致 |
+| Pricing Category | 计价类别 | 与计价单元(Option Unit)同族 |
+| Master / Dependent category | 主类别 / 从属类别 | 类别依赖关系 |
+| Requires / Excludes / Limits per master / Limits sum | 必须搭配 / 互斥 / 按主类别限量 / 限制总量 | 类别依赖规则 |
+| Seat occupancy | 占座 | 车位/座位占用 |
+| Listing(政策层级) | 上架条目 | 订单与类别之间的政策层级 |
+
+### 排期与运营(availability / resources)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Availability(模块名) | 排期与库存 | 页面管理规则/班期/停售/接驳容量;"可售性"专属 Sellability 判定 |
+| Start Time | 出发时间 | 产品可订出发时刻 |
+| Sharing group | 同住组 | 分房共享分组 |
+| Activity(事件流) | 动态 | "跟进记录"专属 CRM Activity;此处为审计动态流 |
+| In Progress(订单状态) | 行中 | 沿用词表 Start=开始(进入行中) |
+| Resource Closeout | 停用时段 | 资源维护/黑窗;"停售日"专属销售库存 |
+| Resource Allocation(资源池→产品配置) | 资源分配 | 保护切位/占位/预留三词;此处非订单占位 |
+| Assignment | 指派 | 与 Resource=可指派资产呼应 |
+| Transfer(服务类型) | 接送 | "接驳"专属 Pickup Point 体系 |
+| Pax | 人数 | 界面标签译出更易读 |
+| On file(证件状态) | 已存档 | 直译 |
+
+### 财务与结算(finance / settings)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Proforma | 形式账单 | 沿用 Invoice=账单 体系,避开"形式发票"的税票联想 |
+| Payments(收支混合页) | 收付款 | 页面同含收款与供应商付款 |
+| Party | 往来方 | 财务对手方,覆盖客户与供应商 |
+| Balance Due | 未结余额 | 方向中性的应收余额 |
+| Direct Bill | 挂账 | 行业标准;与担保词条的挂账函呼应 |
+| Applied(贷记单状态) | 已抵扣 | 贷记单冲抵账单 |
+| pending_external_allocation | 待分配 | 收款分配语义,刻意避开"占位" |
+| Payment link | 收款链接 | 运营侧入账方向 |
+| Number Series(泛化) | 号段 | 类推账单号段 |
+| Pad Length / Reset Strategy | 补零位数 / 重置策略 | 取号配置 |
+| Tax Regime / Tax Class | 税制 / 税类 | 标准财税词对 |
+| Tax Policy Profile | 税务政策档案 | 直译 |
+| Fact(规则条件输入) | 判断项 | 规则引擎语境 |
+| Operator(比较运算) | 运算符 | 刻意区别于运营方 |
+| Marketplace / Affiliate(渠道类型) | 平台市场 / 联盟 | 分销行业口径 |
+| Trading name / pricing posture / rate card | 经营名称 / 定价口径 / 价格卡 | 商务条款用词 |
+| Policy Assignment | 政策分配 | 政策与范围的绑定 |
+| Scope | 适用范围 | 合同/模板/号段/政策统一用词 |
+| Outstanding / Active Bookings | 未结 / 活跃订单 | 统计卡片用词 |
+
+### 通用后台词(auth / team)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Redeemed(邀请) | 已接受 | "核销"专属服务凭证语义,邀请被接受不可混用 |
+| Voyant Cloud dashboard | Voyant Cloud 控制台 | "概览"专属应用内 Dashboard;此处为外部管理台 |
+| Super-admin | 超级管理员 | 标准词 |
+| Reset token | 重置令牌 | 标准技术译法 |
+
 ## 裁决记录(备查)
 
 1. **Invoice = 账单**:定稿采用"账单";另有"收据"建议,待凯撒财务同事过目后再定,阶段 1 按"账单"推进。
