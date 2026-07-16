@@ -592,6 +592,7 @@
       "@voyant-travel/cruises-react/i18n": ["../cruises-react/dist/i18n/index.d.ts"],
       "@voyant-travel/cruises-react/i18n/en": ["../cruises-react/dist/i18n/en.d.ts"],
       "@voyant-travel/cruises-react/i18n/ro": ["../cruises-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/cruises-react/i18n/zh": ["../cruises-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/cruises-react/provider": ["../cruises-react/dist/provider.d.ts"],
       "@voyant-travel/cruises-react/query-keys": ["../cruises-react/dist/query-keys.d.ts"],
       "@voyant-travel/cruises-react/storefront": ["../cruises-react/dist/storefront/index.d.ts"],

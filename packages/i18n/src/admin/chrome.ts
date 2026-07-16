@@ -10,6 +10,7 @@ export type AdminChromeMessages = {
   language: string
   english: string
   romanian: string
+  chinese: string
 }
 
 export const adminChromeMessages = {
@@ -23,6 +24,7 @@ export const adminChromeMessages = {
     language: "Language",
     english: "English",
     romanian: "Romanian",
+    chinese: "Chinese",
   },
   ro: {
     loading: "Se incarca...",
@@ -34,5 +36,6 @@ export const adminChromeMessages = {
     language: "Limba",
     english: "Engleza",
     romanian: "Romana",
+    chinese: "Chineza",
   },
 } satisfies LocaleMessageDefinitions<AdminChromeMessages>

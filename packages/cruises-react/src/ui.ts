@@ -14,6 +14,7 @@ export {
   cruisesUiEn,
   cruisesUiMessageDefinitions,
   cruisesUiRo,
+  cruisesUiZh,
   type EnrichmentProgramKind,
   getCruisesUiI18n,
   resolveCruisesUiMessages,
