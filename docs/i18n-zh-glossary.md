@@ -512,6 +512,28 @@ JSON 字段名、数据库表名/列名、TypeScript 类型名、事件名,以�
 | Host app / Locale(字段) | 宿主应用 / 语言区域 | 技术通行译法 |
 | Complete your profile | 完善个人资料 | 国内 SaaS 惯用 |
 
+### 抽取批次补充(storefront / admin 壳 / mice)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| off(折扣徽标) | 立减 | 电商通行 |
+| Aboard | 所属邮轮 | 邮轮上下文 |
+| Travel specialist | 旅行顾问(客户侧沿用)/ 旅行专员(账户页) | 视角分工 |
+| Upcoming(账户统计) | 即将出行 | 出行词族 |
+| Favicon / Brand mark | 网站图标 / 品牌标识 | 建站通行 |
+| Toggle sidebar | 切换侧边栏 | 直译 |
+| Page not found / Go to dashboard | 页面未找到 / 前往概览 | 概览词族 |
+| Soon / Beta(导航徽标) | 即将推出 / Beta | Beta 业界不译 |
+| operating(会奖项目状态) | 执行中 | 与行中(订单)区分 |
+| Cost sheet | 成本表 | 会奖行业词 |
+| picked-up(房量) | 已提用库存 | 呼应房量预留的 pickup 语义 |
+| Track(议程) | 分会场 | 会议行业标准 |
+| Networking | 社交联谊 | 会议行业标准 |
+| RFP issued / closed / under review | 已发标 / 已截标 / 评标中 | 招投标词族 |
+| Bid accepted / rejected | 已中标 / 未中标 | 招投标词族 |
+| Rooming / Primary occupant / Bed label | 分房 / 主入住人 / 床位标签 | 分房表词族 |
+| Delegate roles(attendee/speaker/exhibitor/organizer) | 普通与会 / 演讲嘉宾 / 参展商 / 主办方 | 会议行业标准 |
+
 ### 通用后台词(auth / team)
 
 | 英文 | 中文译法 | 取舍理由 |
