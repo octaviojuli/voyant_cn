@@ -533,7 +533,8 @@ function TripComponentSummary({
 }
 
 function TripComponentName({ component }: { component: Trip["components"][number] }) {
-  return <>{componentTitleFor(component)}</>
+  const display = useAdminMessages().trips.adminComposer.panels.componentDisplay
+  return <>{componentTitleFor(component, display)}</>
 }
 
 function tripScheduleBounds(components: Trip["components"]): {

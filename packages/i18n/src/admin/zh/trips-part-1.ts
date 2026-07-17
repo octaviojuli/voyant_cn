@@ -173,6 +173,7 @@ export const adminTripsZhPart1: Pick<
       requirementAtLeastOneTraveler: "至少一位出行人",
       requirementTravelerName: "出行人 {position} 的姓名",
       requirementTravelerEmail: "出行人 {position} 的邮箱",
+      datesOverlap: "所选日期与“{title}”重叠。请先调整日程,再添加到行程。",
     },
     failureMessages: {
       priceChanged: "价格已变动。请核对更新后的总额,然后重新预留。",
@@ -250,6 +251,18 @@ export const adminTripsZhPart1: Pick<
       billingLabel: "账单信息",
       travelersWithCount: "出行人({count})",
       travelerNumberedFallback: "出行人 {number}",
+      componentDisplay: {
+        cabinTitle: "舱房 {cabin}",
+        bagSingular: "1 件行李",
+        bagPlural: "{count} 件行李",
+        assistanceSingular: "1 项协助请求",
+        assistancePlural: "{count} 项协助请求",
+        extraSingular: "1 项附加项",
+        extraPlural: "{count} 项附加项",
+        nightsShort: "{count} 晚",
+        daysShort: "{count} 天",
+        seatsRemaining: "余位 {count}",
+      },
       verticals: {
         productLabel: "产品",
         productDescription: "来自目录的游览、活动或接送产品",

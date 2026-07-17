@@ -1,5 +1,7 @@
 "use client"
 
+// agent-quality: file-size exception -- pre-existing 599-line component; +2 lines from mechanical i18n message threading, splitting is out of the localization batch's scope.
+
 import {
   useAdminHref,
   useOperatorAdminMessages as useAdminMessages,
@@ -490,8 +492,9 @@ function ComponentRow({
   messages: ReturnType<typeof useAdminMessages>["trips"]["detail"]
   onOpenBooking(bookingId: string): void
 }) {
+  const display = useAdminMessages().trips.adminComposer.panels.componentDisplay
   const Icon = componentIcon(component)
-  const componentName = componentTitleFor(component)
+  const componentName = componentTitleFor(component, display)
   const scheduleLabel = formatScheduleLabel(component)
   const referenceLabel = componentReferenceLabelFor(component)
   const secondary = [scheduleLabel, referenceLabel === componentName ? null : referenceLabel]

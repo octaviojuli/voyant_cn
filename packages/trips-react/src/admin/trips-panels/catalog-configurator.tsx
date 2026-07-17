@@ -282,8 +282,10 @@ function ProductDeparturePicker({
   const filteredSlots = React.useMemo(() => {
     const trimmed = search.trim().toLowerCase()
     if (!trimmed) return slots
-    return slots.filter((slot) => formatDepartureLabel(slot).toLowerCase().includes(trimmed))
-  }, [search, slots])
+    return slots.filter((slot) =>
+      formatDepartureLabel(slot, t.componentDisplay).toLowerCase().includes(trimmed),
+    )
+  }, [search, slots, t.componentDisplay])
   const selectedSlot = slots.find((slot) => slot.id === value) ?? null
 
   return (
@@ -303,7 +305,7 @@ function ProductDeparturePicker({
           items={filteredSlots}
           selectedItem={selectedSlot}
           getKey={(slot) => slot.id}
-          getLabel={formatDepartureLabel}
+          getLabel={(slot) => formatDepartureLabel(slot, t.componentDisplay)}
           getSecondary={(slot) => slot.timezone}
           onSearchChange={setSearch}
           placeholder={t.searchDeparturesPlaceholder}
