@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMessage } from "@voyant-travel/i18n"
 import {
   Badge,
   Button,
@@ -29,6 +30,11 @@ import { useState } from "react"
 
 import { useProgramRfps, useRfp } from "../hooks/use-mice-lists.js"
 import { useRfpMutation } from "../hooks/use-rfp-mutation.js"
+import {
+  type MiceBidStatus,
+  type MiceRfpStatus,
+  useMiceUiMessagesOrDefault,
+} from "../i18n/index.js"
 import type { BidRecord } from "../schemas.js"
 
 /** RFP + bid statuses operators can set directly (`validation-rfp`). The
@@ -89,6 +95,7 @@ export interface ProgramRfpsSectionProps {
  * surface.
  */
 export function ProgramRfpsSection({ programId }: ProgramRfpsSectionProps) {
+  const m = useMiceUiMessagesOrDefault()
   const { data, isLoading } = useProgramRfps({ programId, limit: RFPS_PAGE_LIMIT })
   const rfps = data?.data ?? []
   const capped = rfps.length === RFPS_PAGE_LIMIT
@@ -98,10 +105,10 @@ export function ProgramRfpsSection({ programId }: ProgramRfpsSectionProps) {
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-semibold text-lg tracking-tight">Sourcing (RFPs)</h2>
+        <h2 className="font-semibold text-lg tracking-tight">{m.rfpsSection.heading}</h2>
         <Button size="sm" onClick={() => setShowCreate(true)}>
           <Plus className="size-4" aria-hidden="true" />
-          New RFP
+          {m.rfpsSection.create}
         </Button>
       </div>
 
@@ -109,9 +116,9 @@ export function ProgramRfpsSection({ programId }: ProgramRfpsSectionProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Due</TableHead>
+              <TableHead>{m.rfpsSection.titleColumn}</TableHead>
+              <TableHead>{m.rfpsSection.statusColumn}</TableHead>
+              <TableHead>{m.rfpsSection.dueColumn}</TableHead>
               <TableHead> </TableHead>
             </TableRow>
           </TableHeader>
@@ -119,7 +126,7 @@ export function ProgramRfpsSection({ programId }: ProgramRfpsSectionProps) {
             {!isLoading && rfps.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No RFPs yet.
+                  {m.rfpsSection.empty}
                 </TableCell>
               </TableRow>
             ) : (
@@ -131,7 +138,8 @@ export function ProgramRfpsSection({ programId }: ProgramRfpsSectionProps) {
                       variant={RFP_STATUS_VARIANT[rfp.status] ?? "outline"}
                       className="capitalize"
                     >
-                      {statusLabel(rfp.status)}
+                      {m.rfpsSection.rfpStatusLabels[rfp.status as MiceRfpStatus] ??
+                        statusLabel(rfp.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
@@ -140,7 +148,7 @@ export function ProgramRfpsSection({ programId }: ProgramRfpsSectionProps) {
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => setManageRfpId(rfp.id)}>
                       <Settings2 className="size-4" aria-hidden="true" />
-                      Manage
+                      {m.rfpsSection.manageAction}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -151,7 +159,9 @@ export function ProgramRfpsSection({ programId }: ProgramRfpsSectionProps) {
       </div>
 
       {capped ? (
-        <p className="text-muted-foreground text-xs">Showing the first {RFPS_PAGE_LIMIT} RFPs.</p>
+        <p className="text-muted-foreground text-xs">
+          {formatMessage(m.rfpsSection.capped, { count: RFPS_PAGE_LIMIT })}
+        </p>
       ) : null}
 
       <CreateRfpDialog programId={programId} open={showCreate} onOpenChange={setShowCreate} />
@@ -172,6 +182,7 @@ interface CreateRfpDialogProps {
 }
 
 function CreateRfpDialog({ programId, open, onOpenChange }: CreateRfpDialogProps) {
+  const m = useMiceUiMessagesOrDefault()
   const { create } = useRfpMutation()
   const [title, setTitle] = useState("")
   const [status, setStatus] = useState<RfpEditableStatus>("draft")
@@ -194,20 +205,20 @@ function CreateRfpDialog({ programId, open, onOpenChange }: CreateRfpDialogProps
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New RFP</DialogTitle>
+          <DialogTitle>{m.rfpsSection.createDialog.title}</DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="rfp-title">Title</Label>
+            <Label htmlFor="rfp-title">{m.rfpsSection.createDialog.titleLabel}</Label>
             <Input
               id="rfp-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Venue & catering — Lisbon"
+              placeholder={m.rfpsSection.createDialog.titlePlaceholder}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="rfp-status">Status</Label>
+            <Label htmlFor="rfp-status">{m.rfpsSection.createDialog.statusLabel}</Label>
             <Select value={status} onValueChange={(value) => setStatus(value as RfpEditableStatus)}>
               <SelectTrigger id="rfp-status" className="w-full">
                 <SelectValue />
@@ -215,7 +226,7 @@ function CreateRfpDialog({ programId, open, onOpenChange }: CreateRfpDialogProps
               <SelectContent>
                 {RFP_EDITABLE_STATUSES.map((s) => (
                   <SelectItem key={s} value={s} className="capitalize">
-                    {s}
+                    {m.rfpsSection.rfpStatusLabels[s] ?? s}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -228,13 +239,13 @@ function CreateRfpDialog({ programId, open, onOpenChange }: CreateRfpDialogProps
             onClick={() => handleOpenChange(false)}
             disabled={create.isPending}
           >
-            Cancel
+            {m.common.cancel}
           </Button>
           <Button onClick={() => void submit()} disabled={!title.trim() || create.isPending}>
             {create.isPending ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : null}
-            Create RFP
+            {m.rfpsSection.createDialog.submit}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -248,6 +259,7 @@ interface ManageRfpDialogProps {
 }
 
 function ManageRfpDialog({ rfpId, onOpenChange }: ManageRfpDialogProps) {
+  const m = useMiceUiMessagesOrDefault()
   const open = rfpId !== null
   const { invite, createBid, award } = useRfpMutation()
   const { data, isLoading } = useRfp(rfpId ?? undefined, { enabled: open })
@@ -312,10 +324,11 @@ function ManageRfpDialog({ rfpId, onOpenChange }: ManageRfpDialogProps) {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {rfp?.title ?? "RFP"}
+            {rfp?.title ?? m.rfpsSection.manageDialog.fallbackTitle}
             {rfp ? (
               <Badge variant={RFP_STATUS_VARIANT[rfp.status] ?? "outline"} className="capitalize">
-                {statusLabel(rfp.status)}
+                {m.rfpsSection.rfpStatusLabels[rfp.status as MiceRfpStatus] ??
+                  statusLabel(rfp.status)}
               </Badge>
             ) : null}
           </DialogTitle>
@@ -323,7 +336,7 @@ function ManageRfpDialog({ rfpId, onOpenChange }: ManageRfpDialogProps) {
 
         <DialogBody>
           {isLoading && !rfp ? (
-            <div className="py-6 text-center text-muted-foreground text-sm">Loading…</div>
+            <div className="py-6 text-center text-muted-foreground text-sm">{m.common.loading}</div>
           ) : (
             <div className="space-y-6">
               <Bids
@@ -336,14 +349,16 @@ function ManageRfpDialog({ rfpId, onOpenChange }: ManageRfpDialogProps) {
               {awarded ? null : (
                 <div className="space-y-4 border-t pt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="rfp-bid-supplier">Record a bid</Label>
+                    <Label htmlFor="rfp-bid-supplier">
+                      {m.rfpsSection.manageDialog.recordBidLabel}
+                    </Label>
                     <div className="flex flex-wrap items-end gap-2">
                       <Input
                         id="rfp-bid-supplier"
                         className="min-w-40 flex-1"
                         value={bidSupplierId}
                         onChange={(e) => setBidSupplierId(e.target.value)}
-                        placeholder="Supplier ID (supl_…)"
+                        placeholder={m.rfpsSection.manageDialog.bidSupplierPlaceholder}
                       />
                       <Input
                         className="w-28"
@@ -352,7 +367,7 @@ function ManageRfpDialog({ rfpId, onOpenChange }: ManageRfpDialogProps) {
                         step="0.01"
                         value={bidTotal}
                         onChange={(e) => setBidTotal(e.target.value)}
-                        placeholder="Total"
+                        placeholder={m.rfpsSection.manageDialog.bidTotalPlaceholder}
                         aria-invalid={bidTotalInvalid || undefined}
                       />
                       <CurrencyCombobox
@@ -364,27 +379,31 @@ function ManageRfpDialog({ rfpId, onOpenChange }: ManageRfpDialogProps) {
                         {createBid.isPending ? (
                           <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                         ) : null}
-                        Add bid
+                        {m.rfpsSection.manageDialog.addBid}
                       </Button>
                     </div>
                     {bidTotalInvalid ? (
-                      <p className="text-destructive text-xs">Total must be 0 or more.</p>
+                      <p className="text-destructive text-xs">
+                        {m.rfpsSection.manageDialog.totalInvalid}
+                      </p>
                     ) : bidCurrencyMissing ? (
                       <p className="text-destructive text-xs">
-                        A priced bid needs a currency (e.g. EUR).
+                        {m.rfpsSection.manageDialog.currencyMissing}
                       </p>
                     ) : null}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="rfp-invite-supplier">Invite a supplier</Label>
+                    <Label htmlFor="rfp-invite-supplier">
+                      {m.rfpsSection.manageDialog.inviteLabel}
+                    </Label>
                     <div className="flex flex-wrap items-end gap-2">
                       <Input
                         id="rfp-invite-supplier"
                         className="min-w-40 flex-1"
                         value={supplierId}
                         onChange={(e) => setSupplierId(e.target.value)}
-                        placeholder="Supplier ID (supl_…)"
+                        placeholder={m.rfpsSection.manageDialog.invitePlaceholder}
                       />
                       <Button
                         variant="outline"
@@ -394,12 +413,14 @@ function ManageRfpDialog({ rfpId, onOpenChange }: ManageRfpDialogProps) {
                         {invite.isPending ? (
                           <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                         ) : null}
-                        Invite
+                        {m.rfpsSection.manageDialog.invite}
                       </Button>
                     </div>
                     {rfp && rfp.invitations.length > 0 ? (
                       <p className="text-muted-foreground text-xs">
-                        {rfp.invitations.length} supplier(s) invited.
+                        {formatMessage(m.rfpsSection.manageDialog.invitedCount, {
+                          count: rfp.invitations.length,
+                        })}
                       </p>
                     ) : null}
                   </div>
@@ -411,7 +432,7 @@ function ManageRfpDialog({ rfpId, onOpenChange }: ManageRfpDialogProps) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            Close
+            {m.rfpsSection.manageDialog.close}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -427,16 +448,17 @@ interface BidsProps {
 }
 
 function Bids({ bids, awarded, awardPending, onAward }: BidsProps) {
+  const m = useMiceUiMessagesOrDefault()
   return (
     <div className="space-y-2">
-      <h3 className="font-medium text-sm">Bids</h3>
+      <h3 className="font-medium text-sm">{m.rfpsSection.bids.heading}</h3>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Supplier</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{m.rfpsSection.bids.supplierColumn}</TableHead>
+              <TableHead className="text-right">{m.rfpsSection.bids.totalColumn}</TableHead>
+              <TableHead>{m.rfpsSection.bids.statusColumn}</TableHead>
               <TableHead> </TableHead>
             </TableRow>
           </TableHeader>
@@ -444,7 +466,7 @@ function Bids({ bids, awarded, awardPending, onAward }: BidsProps) {
             {bids.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No bids yet.
+                  {m.rfpsSection.bids.empty}
                 </TableCell>
               </TableRow>
             ) : (
@@ -459,7 +481,8 @@ function Bids({ bids, awarded, awardPending, onAward }: BidsProps) {
                       variant={BID_STATUS_VARIANT[bid.status] ?? "outline"}
                       className="capitalize"
                     >
-                      {statusLabel(bid.status)}
+                      {m.rfpsSection.bidStatusLabels[bid.status as MiceBidStatus] ??
+                        statusLabel(bid.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -467,7 +490,7 @@ function Bids({ bids, awarded, awardPending, onAward }: BidsProps) {
                       bid.status === "accepted" ? (
                         <span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
                           <Trophy className="size-4" aria-hidden="true" />
-                          Awarded
+                          {m.rfpsSection.bids.awardedBadge}
                         </span>
                       ) : null
                     ) : (
@@ -478,7 +501,7 @@ function Bids({ bids, awarded, awardPending, onAward }: BidsProps) {
                         disabled={awardPending}
                       >
                         <Trophy className="size-4" aria-hidden="true" />
-                        Award
+                        {m.rfpsSection.bids.award}
                       </Button>
                     )}
                   </TableCell>

@@ -1,11 +1,17 @@
 "use client"
 
+import { formatMessage } from "@voyant-travel/i18n"
 import { Badge } from "@voyant-travel/ui/components/badge"
 import { Button } from "@voyant-travel/ui/components/button"
 import { Pencil } from "lucide-react"
 import { useState } from "react"
 
 import { useProgram, useProgramCostSheet } from "../hooks/use-programs.js"
+import {
+  type MiceProgramStatus,
+  type MiceProgramType,
+  useMiceUiMessagesOrDefault,
+} from "../i18n/index.js"
 import { ProgramCostSheetPanel } from "./program-cost-sheet-panel.js"
 import { ProgramDelegatesSection } from "./program-delegates-section.js"
 import { ProgramFormDialog } from "./program-form-dialog.js"
@@ -17,30 +23,37 @@ export interface ProgramDetailPageProps {
   programId: string
 }
 
-function metaLine(start?: string | null, end?: string | null, pax?: number | null): string | null {
+function metaLine(
+  start: string | null | undefined,
+  end: string | null | undefined,
+  pax: number | null | undefined,
+  paxTemplate: string,
+): string | null {
   const parts: string[] = []
   if (start || end) parts.push(`${start ?? "?"} → ${end ?? "?"}`)
-  if (pax != null) parts.push(`${pax} pax`)
+  if (pax != null) parts.push(formatMessage(paxTemplate, { count: pax }))
   return parts.length ? parts.join(" · ") : null
 }
 
 export function ProgramDetailPage({ programId }: ProgramDetailPageProps) {
+  const m = useMiceUiMessagesOrDefault()
   const { data: programResponse, isLoading } = useProgram(programId)
   const { data: costSheetResponse } = useProgramCostSheet(programId)
   const program = programResponse?.data
   const [showEdit, setShowEdit] = useState(false)
 
   if (isLoading && !program) {
-    return <div className="p-6 text-muted-foreground text-sm">Loading…</div>
+    return <div className="p-6 text-muted-foreground text-sm">{m.common.loading}</div>
   }
   if (!program) {
-    return <div className="p-6 text-muted-foreground text-sm">Program not found.</div>
+    return <div className="p-6 text-muted-foreground text-sm">{m.programDetailPage.notFound}</div>
   }
 
   const meta = metaLine(
     program.startDate,
     program.endDate,
     program.confirmedPax ?? program.estimatedPax,
+    m.programDetailPage.paxMeta,
   )
 
   return (
@@ -50,10 +63,10 @@ export function ProgramDetailPage({ programId }: ProgramDetailPageProps) {
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-semibold text-2xl tracking-tight">{program.name}</h1>
             <Badge variant="outline" className="capitalize">
-              {program.type}
+              {m.common.programTypeLabels[program.type as MiceProgramType] ?? program.type}
             </Badge>
             <Badge variant="secondary" className="capitalize">
-              {program.status}
+              {m.common.programStatusLabels[program.status as MiceProgramStatus] ?? program.status}
             </Badge>
           </div>
           {program.destination || meta ? (
@@ -64,7 +77,7 @@ export function ProgramDetailPage({ programId }: ProgramDetailPageProps) {
         </div>
         <Button variant="outline" onClick={() => setShowEdit(true)}>
           <Pencil className="size-4" aria-hidden="true" />
-          Edit
+          {m.programDetailPage.edit}
         </Button>
       </div>
 

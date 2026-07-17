@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMessage } from "@voyant-travel/i18n"
 import { Badge } from "@voyant-travel/ui/components/badge"
 import {
   Card,
@@ -17,6 +18,7 @@ import {
   TableRow,
 } from "@voyant-travel/ui/components/table"
 
+import { useMiceUiMessagesOrDefault } from "../i18n/index.js"
 import type { CostSheetCurrencyTotals, ProgramCostSheet } from "../schemas.js"
 
 function formatMoney(cents: number, currency: string): string {
@@ -54,21 +56,21 @@ export interface ProgramCostSheetPanelProps {
  * cost/sell/margin per category and a program total + margin %.
  */
 export function ProgramCostSheetPanel({ costSheet, labels = {} }: ProgramCostSheetPanelProps) {
+  const m = useMiceUiMessagesOrDefault()
   const t = {
-    title: labels.title ?? "Cost sheet",
-    description: labels.description ?? "Realized program P&L on picked-up inventory.",
-    mixedCurrencyNote:
-      labels.mixedCurrencyNote ??
-      "This program spans multiple currencies — totals are shown per currency (no conversion).",
-    category: labels.category ?? "Category",
-    cost: labels.cost ?? "Cost",
-    sell: labels.sell ?? "Sell",
-    margin: labels.margin ?? "Margin",
-    rooms: labels.rooms ?? "Room blocks",
-    space: labels.space ?? "Space blocks",
-    sessions: labels.sessions ?? "Session inclusions",
-    total: labels.total ?? "Total",
-    empty: labels.empty ?? "No committed inventory yet.",
+    title: labels.title ?? m.costSheetPanel.title,
+    description: labels.description ?? m.costSheetPanel.description,
+    mixedCurrencyNote: labels.mixedCurrencyNote ?? m.costSheetPanel.mixedCurrencyNote,
+    category: labels.category ?? m.costSheetPanel.category,
+    cost: labels.cost ?? m.costSheetPanel.cost,
+    sell: labels.sell ?? m.costSheetPanel.sell,
+    margin: labels.margin ?? m.costSheetPanel.margin,
+    marginBadge: m.costSheetPanel.marginBadge,
+    rooms: labels.rooms ?? m.costSheetPanel.rooms,
+    space: labels.space ?? m.costSheetPanel.space,
+    sessions: labels.sessions ?? m.costSheetPanel.sessions,
+    total: labels.total ?? m.costSheetPanel.total,
+    empty: labels.empty ?? m.costSheetPanel.empty,
   }
 
   return (
@@ -76,7 +78,9 @@ export function ProgramCostSheetPanel({ costSheet, labels = {} }: ProgramCostShe
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle>{t.title}</CardTitle>
-          {costSheet.mixedCurrency ? <Badge variant="outline">Multi-currency</Badge> : null}
+          {costSheet.mixedCurrency ? (
+            <Badge variant="outline">{m.costSheetPanel.multiCurrencyBadge}</Badge>
+          ) : null}
         </div>
         <CardDescription>
           {costSheet.mixedCurrency ? t.mixedCurrencyNote : t.description}
@@ -124,7 +128,7 @@ function CurrencyBlock({
         <span className="font-medium text-sm">{c}</span>
         {bucket.marginPct !== null ? (
           <Badge variant="secondary">
-            {t.margin} {bucket.marginPct}%
+            {formatMessage(t.marginBadge ?? "", { pct: bucket.marginPct })}
           </Badge>
         ) : null}
       </div>

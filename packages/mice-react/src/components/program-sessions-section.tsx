@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMessage } from "@voyant-travel/i18n"
 import {
   Badge,
   Button,
@@ -30,6 +31,7 @@ import { useState } from "react"
 
 import { useProgramSessions } from "../hooks/use-mice-lists.js"
 import { useSessionMutation } from "../hooks/use-session-mutation.js"
+import { type MiceSessionType, useMiceUiMessagesOrDefault } from "../i18n/index.js"
 import { formatSessionTimeLabel } from "./program-session-labels.js"
 
 /** The session types the MICE backend accepts (`createSessionSchema`). */
@@ -60,6 +62,7 @@ const SESSIONS_PAGE_LIMIT = 200
  * detail page. Data flows through the shared `@voyant-travel/react` provider.
  */
 export function ProgramSessionsSection({ programId }: ProgramSessionsSectionProps) {
+  const m = useMiceUiMessagesOrDefault()
   const { data, isLoading } = useProgramSessions(programId)
   const sessions = data?.data ?? []
   const capped = sessions.length === SESSIONS_PAGE_LIMIT
@@ -68,10 +71,10 @@ export function ProgramSessionsSection({ programId }: ProgramSessionsSectionProp
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-semibold text-lg tracking-tight">Agenda</h2>
+        <h2 className="font-semibold text-lg tracking-tight">{m.sessionsSection.heading}</h2>
         <Button size="sm" onClick={() => setOpen(true)}>
           <Plus className="size-4" aria-hidden="true" />
-          New session
+          {m.sessionsSection.create}
         </Button>
       </div>
 
@@ -79,19 +82,19 @@ export function ProgramSessionsSection({ programId }: ProgramSessionsSectionProp
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Day</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead>Track</TableHead>
-              <TableHead className="text-right">Capacity</TableHead>
+              <TableHead>{m.sessionsSection.titleColumn}</TableHead>
+              <TableHead>{m.sessionsSection.typeColumn}</TableHead>
+              <TableHead>{m.sessionsSection.dayColumn}</TableHead>
+              <TableHead>{m.sessionsSection.timeColumn}</TableHead>
+              <TableHead>{m.sessionsSection.trackColumn}</TableHead>
+              <TableHead className="text-right">{m.sessionsSection.capacityColumn}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {!isLoading && sessions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No sessions yet.
+                  {m.sessionsSection.empty}
                 </TableCell>
               </TableRow>
             ) : (
@@ -100,7 +103,8 @@ export function ProgramSessionsSection({ programId }: ProgramSessionsSectionProp
                   <TableCell className="font-medium">{s.title}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {s.sessionType}
+                      {m.sessionsSection.sessionTypeLabels[s.sessionType as MiceSessionType] ??
+                        s.sessionType}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
@@ -120,7 +124,7 @@ export function ProgramSessionsSection({ programId }: ProgramSessionsSectionProp
 
       {capped ? (
         <p className="text-muted-foreground text-xs">
-          Showing the first {SESSIONS_PAGE_LIMIT} sessions.
+          {formatMessage(m.sessionsSection.capped, { count: SESSIONS_PAGE_LIMIT })}
         </p>
       ) : null}
 
@@ -136,6 +140,7 @@ interface CreateSessionDialogProps {
 }
 
 function CreateSessionDialog({ programId, open, onOpenChange }: CreateSessionDialogProps) {
+  const m = useMiceUiMessagesOrDefault()
   const { create } = useSessionMutation()
   const [title, setTitle] = useState("")
   const [sessionType, setSessionType] = useState<SessionType>("breakout")
@@ -185,21 +190,21 @@ function CreateSessionDialog({ programId, open, onOpenChange }: CreateSessionDia
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New session</DialogTitle>
+          <DialogTitle>{m.sessionsSection.dialog.title}</DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="session-title">Title</Label>
+            <Label htmlFor="session-title">{m.sessionsSection.dialog.titleLabel}</Label>
             <Input
               id="session-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Opening keynote"
+              placeholder={m.sessionsSection.dialog.titlePlaceholder}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="session-type">Type</Label>
+              <Label htmlFor="session-type">{m.sessionsSection.dialog.typeLabel}</Label>
               <Select
                 value={sessionType}
                 onValueChange={(value) => setSessionType(value as SessionType)}
@@ -210,34 +215,34 @@ function CreateSessionDialog({ programId, open, onOpenChange }: CreateSessionDia
                 <SelectContent>
                   {SESSION_TYPES.map((type) => (
                     <SelectItem key={type} value={type} className="capitalize">
-                      {type}
+                      {m.sessionsSection.sessionTypeLabels[type] ?? type}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="session-day">Day</Label>
+              <Label htmlFor="session-day">{m.sessionsSection.dialog.dayLabel}</Label>
               <DatePicker
                 value={dayDate || null}
                 onChange={(value) => setDayDate(value ?? "")}
-                placeholder="Day"
+                placeholder={m.sessionsSection.dialog.dayPlaceholder}
                 className="w-full"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="session-track">Track</Label>
+              <Label htmlFor="session-track">{m.sessionsSection.dialog.trackLabel}</Label>
               <Input
                 id="session-track"
                 value={track}
                 onChange={(e) => setTrack(e.target.value)}
-                placeholder="Plenary"
+                placeholder={m.sessionsSection.dialog.trackPlaceholder}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="session-capacity">Capacity</Label>
+              <Label htmlFor="session-capacity">{m.sessionsSection.dialog.capacityLabel}</Label>
               <Input
                 id="session-capacity"
                 type="number"
@@ -249,7 +254,7 @@ function CreateSessionDialog({ programId, open, onOpenChange }: CreateSessionDia
               />
               {capacityInvalid ? (
                 <p className="text-destructive text-xs">
-                  Capacity must be a whole number of 0 or more.
+                  {m.sessionsSection.dialog.capacityInvalid}
                 </p>
               ) : null}
             </div>
@@ -260,7 +265,9 @@ function CreateSessionDialog({ programId, open, onOpenChange }: CreateSessionDia
               checked={requiresRegistration}
               onCheckedChange={(checked) => setRequiresRegistration(checked === true)}
             />
-            <Label htmlFor="session-requires-registration">Requires registration</Label>
+            <Label htmlFor="session-requires-registration">
+              {m.sessionsSection.dialog.requiresRegistration}
+            </Label>
           </div>
         </DialogBody>
         <DialogFooter>
@@ -269,13 +276,13 @@ function CreateSessionDialog({ programId, open, onOpenChange }: CreateSessionDia
             onClick={() => handleOpenChange(false)}
             disabled={create.isPending}
           >
-            Cancel
+            {m.common.cancel}
           </Button>
           <Button onClick={() => void submit()} disabled={!canSubmit}>
             {create.isPending ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : null}
-            Create session
+            {m.sessionsSection.dialog.submit}
           </Button>
         </DialogFooter>
       </DialogContent>

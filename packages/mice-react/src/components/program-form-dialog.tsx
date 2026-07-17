@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMessage } from "@voyant-travel/i18n"
 import {
   Button,
   CurrencyCombobox,
@@ -22,6 +23,7 @@ import { Loader2 } from "lucide-react"
 import { useState } from "react"
 
 import { useProgramMutation } from "../hooks/use-program-mutation.js"
+import { useMiceUiMessagesOrDefault } from "../i18n/index.js"
 import type { ProgramRecord } from "../schemas.js"
 
 /** Program types + lifecycle statuses the MICE backend accepts (`validation.ts`). */
@@ -72,6 +74,7 @@ export function ProgramFormDialog({
   onSaved,
 }: ProgramFormDialogProps) {
   const editing = program !== undefined
+  const m = useMiceUiMessagesOrDefault()
   const { create, update } = useProgramMutation()
   const pending = create.isPending || update.isPending
 
@@ -166,21 +169,23 @@ export function ProgramFormDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit program" : "New program"}</DialogTitle>
+          <DialogTitle>
+            {editing ? m.programFormDialog.editTitle : m.programFormDialog.createTitle}
+          </DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="program-name">Name</Label>
+            <Label htmlFor="program-name">{m.programFormDialog.nameLabel}</Label>
             <Input
               id="program-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Annual sales kickoff — Lisbon"
+              placeholder={m.programFormDialog.namePlaceholder}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="program-type">Type</Label>
+              <Label htmlFor="program-type">{m.programFormDialog.typeLabel}</Label>
               <Select value={type} onValueChange={(value) => setType(value as ProgramType)}>
                 <SelectTrigger id="program-type" className="w-full">
                   <SelectValue />
@@ -188,14 +193,14 @@ export function ProgramFormDialog({
                 <SelectContent>
                   {PROGRAM_TYPES.map((t) => (
                     <SelectItem key={t} value={t} className="capitalize">
-                      {t}
+                      {m.common.programTypeLabels[t] ?? t}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="program-status">Status</Label>
+              <Label htmlFor="program-status">{m.programFormDialog.statusLabel}</Label>
               <Select value={status} onValueChange={(value) => setStatus(value as ProgramStatus)}>
                 <SelectTrigger id="program-status" className="w-full">
                   <SelectValue />
@@ -203,7 +208,7 @@ export function ProgramFormDialog({
                 <SelectContent>
                   {PROGRAM_STATUSES.map((s) => (
                     <SelectItem key={s} value={s} className="capitalize">
-                      {statusLabel(s)}
+                      {m.common.programStatusLabels[s] ?? statusLabel(s)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -211,37 +216,37 @@ export function ProgramFormDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="program-destination">Destination</Label>
+            <Label htmlFor="program-destination">{m.programFormDialog.destinationLabel}</Label>
             <Input
               id="program-destination"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              placeholder="Lisbon, Portugal"
+              placeholder={m.programFormDialog.destinationPlaceholder}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="program-start">Start date</Label>
+              <Label htmlFor="program-start">{m.programFormDialog.startDateLabel}</Label>
               <DatePicker
                 value={startDate || null}
                 onChange={(value) => setStartDate(value ?? "")}
-                placeholder="Start date"
+                placeholder={m.programFormDialog.startDateLabel}
                 className="w-full"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="program-end">End date</Label>
+              <Label htmlFor="program-end">{m.programFormDialog.endDateLabel}</Label>
               <DatePicker
                 value={endDate || null}
                 onChange={(value) => setEndDate(value ?? "")}
-                placeholder="End date"
+                placeholder={m.programFormDialog.endDateLabel}
                 className="w-full"
               />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="program-est-pax">Est. pax</Label>
+              <Label htmlFor="program-est-pax">{m.programFormDialog.estimatedPaxLabel}</Label>
               <Input
                 id="program-est-pax"
                 type="number"
@@ -253,7 +258,7 @@ export function ProgramFormDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="program-conf-pax">Conf. pax</Label>
+              <Label htmlFor="program-conf-pax">{m.programFormDialog.confirmedPaxLabel}</Label>
               <Input
                 id="program-conf-pax"
                 type="number"
@@ -265,7 +270,7 @@ export function ProgramFormDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="program-currency">Currency</Label>
+              <Label htmlFor="program-currency">{m.programFormDialog.currencyLabel}</Label>
               <CurrencyCombobox
                 value={currency || null}
                 onChange={(value) => setCurrency(value ?? "")}
@@ -274,7 +279,11 @@ export function ProgramFormDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="program-budget">Budget ({currency.trim() || "currency"})</Label>
+            <Label htmlFor="program-budget">
+              {formatMessage(m.programFormDialog.budgetLabel, {
+                currency: currency.trim() || m.programFormDialog.budgetCurrencyFallback,
+              })}
+            </Label>
             <Input
               id="program-budget"
               type="number"
@@ -283,22 +292,22 @@ export function ProgramFormDialog({
               value={budget}
               onChange={(e) => setBudget(e.target.value)}
               aria-invalid={budgetInvalid || undefined}
-              placeholder="50000"
+              placeholder={m.programFormDialog.budgetPlaceholder}
             />
           </div>
           {paxInvalid ? (
-            <p className="text-destructive text-xs">Pax must be a whole number of 0 or more.</p>
+            <p className="text-destructive text-xs">{m.programFormDialog.paxInvalid}</p>
           ) : budgetInvalid ? (
-            <p className="text-destructive text-xs">Budget must be 0 or more.</p>
+            <p className="text-destructive text-xs">{m.programFormDialog.budgetInvalid}</p>
           ) : null}
         </DialogBody>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={pending}>
-            Cancel
+            {m.common.cancel}
           </Button>
           <Button onClick={() => void submit()} disabled={!canSubmit}>
             {pending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-            {editing ? "Save changes" : "Create program"}
+            {editing ? m.programFormDialog.saveChanges : m.programFormDialog.create}
           </Button>
         </DialogFooter>
       </DialogContent>

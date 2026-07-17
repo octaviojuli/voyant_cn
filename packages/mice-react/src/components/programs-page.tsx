@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMessage } from "@voyant-travel/i18n"
 import { Badge } from "@voyant-travel/ui/components/badge"
 import { Button } from "@voyant-travel/ui/components/button"
 import {
@@ -14,6 +15,11 @@ import { Plus } from "lucide-react"
 import { useState } from "react"
 
 import { usePrograms } from "../hooks/use-programs.js"
+import {
+  type MiceProgramStatus,
+  type MiceProgramType,
+  useMiceUiMessagesOrDefault,
+} from "../i18n/index.js"
 import type { ProgramRecord } from "../schemas.js"
 import { ProgramFormDialog } from "./program-form-dialog.js"
 
@@ -57,17 +63,17 @@ function dateRange(start?: string | null, end?: string | null): string {
 const PROGRAMS_PAGE_LIMIT = 200
 
 export function ProgramsPage({ onProgramOpen, labels = {} }: ProgramsPageProps) {
+  const m = useMiceUiMessagesOrDefault()
   const t = {
-    title: labels.title ?? "Programs",
-    description:
-      labels.description ?? "Group programs (meetings, incentives, conferences, exhibitions).",
-    create: labels.create ?? "New program",
-    name: labels.name ?? "Name",
-    type: labels.type ?? "Type",
-    status: labels.status ?? "Status",
-    dates: labels.dates ?? "Dates",
-    pax: labels.pax ?? "Pax",
-    empty: labels.empty ?? "No programs yet.",
+    title: labels.title ?? m.programsPage.title,
+    description: labels.description ?? m.programsPage.description,
+    create: labels.create ?? m.programsPage.create,
+    name: labels.name ?? m.programsPage.nameColumn,
+    type: labels.type ?? m.programsPage.typeColumn,
+    status: labels.status ?? m.programsPage.statusColumn,
+    dates: labels.dates ?? m.programsPage.datesColumn,
+    pax: labels.pax ?? m.programsPage.paxColumn,
+    empty: labels.empty ?? m.programsPage.empty,
   }
   const { data, isLoading } = usePrograms({ limit: PROGRAMS_PAGE_LIMIT })
   const programs = data?.data ?? []
@@ -113,10 +119,12 @@ export function ProgramsPage({ onProgramOpen, labels = {} }: ProgramsPageProps) 
                   onClick={onProgramOpen ? () => onProgramOpen(p) : undefined}
                 >
                   <TableCell className="font-medium">{p.name}</TableCell>
-                  <TableCell className="capitalize">{p.type}</TableCell>
+                  <TableCell className="capitalize">
+                    {m.common.programTypeLabels[p.type as MiceProgramType] ?? p.type}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={STATUS_VARIANT[p.status] ?? "outline"} className="capitalize">
-                      {p.status}
+                      {m.common.programStatusLabels[p.status as MiceProgramStatus] ?? p.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
@@ -134,7 +142,7 @@ export function ProgramsPage({ onProgramOpen, labels = {} }: ProgramsPageProps) 
 
       {capped ? (
         <p className="text-muted-foreground text-xs">
-          Showing the first {PROGRAMS_PAGE_LIMIT} programs.
+          {formatMessage(m.programsPage.capped, { count: PROGRAMS_PAGE_LIMIT })}
         </p>
       ) : null}
 

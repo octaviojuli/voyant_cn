@@ -2,6 +2,7 @@
 
 import type { AdminRoutePageProps } from "@voyant-travel/admin"
 import { ProgramDetailPage } from "../../components/program-detail-page.js"
+import { useMiceUiMessagesOrDefault } from "../../i18n/index.js"
 
 /**
  * Packaged admin route module for a MICE program's detail (packaged-admin RFC
@@ -13,9 +14,10 @@ import { ProgramDetailPage } from "../../components/program-detail-page.js"
  */
 // fallow-ignore-next-line unused-export
 export default function ProgramDetailRoute({ params }: AdminRoutePageProps) {
+  const m = useMiceUiMessagesOrDefault()
   const programId = params.id ?? ""
   if (!programId) {
-    return <div className="p-6 text-muted-foreground text-sm">Program not found.</div>
+    return <div className="p-6 text-muted-foreground text-sm">{m.programDetailPage.notFound}</div>
   }
   return <ProgramDetailPage programId={programId} />
 }
