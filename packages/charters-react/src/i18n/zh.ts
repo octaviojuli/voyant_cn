@@ -37,13 +37,13 @@ export const chartersUiZh: ChartersUiMessages = {
   wholeYachtQuoteCard: {
     wholeYacht: {
       heading: "整船包船报价",
-      summary: "包船费与 APA 预先收取;APA 在包船结束后对账",
+      summary: "包船费与 APA 预先收取；APA 在包船结束后对账",
       dueBeforeEmbarkation: "须于登船前支付",
       charterFee: "包船费",
-      apaLabel: "APA(预付备航金,占包船费 {percent}%)",
+      apaLabel: "APA(预付备航金，占包船费 {percent}%)",
       totalDue: "应付总额",
       explanation:
-        "APA 用于支付包船期间的燃油、餐饮、饮品、港务费及其他运营开支。实际支出在包船结束时对账,结余部分将退还承租方。",
+        "APA 用于支付包船期间的燃油、餐饮、饮品、港务费及其他运营开支。实际支出在包船结束时对账，结余部分将退还承租方。",
     },
     perSuite: {
       summary: "按套房包船报价",
@@ -57,7 +57,7 @@ export const chartersUiZh: ChartersUiMessages = {
     empty: "该航次暂未发布套房。",
     defaultSelectLabel: "出报价",
     priceOnRequest: "价格另询",
-    perSuiteAllIn: "每套房,一价全含",
+    perSuiteAllIn: "每套房，一价全含",
     availabilityLabels: {
       available: "可预订",
       limited: "余位有限",

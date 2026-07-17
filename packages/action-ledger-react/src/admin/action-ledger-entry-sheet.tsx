@@ -80,10 +80,10 @@ export function ActionLedgerEntrySheet({
           {entry ? (
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <Badge variant={RISK_VARIANT[entry.evaluatedRisk] ?? "outline"}>
-                {page.filtersPopover.riskOptions[entry.evaluatedRisk]}
+                {page.filtersPopover.riskOptions[entry.evaluatedRisk] ?? entry.evaluatedRisk}
               </Badge>
               <Badge variant={STATUS_VARIANT[entry.status] ?? "outline"}>
-                {page.filtersPopover.statusOptions[entry.status]}
+                {page.filtersPopover.statusOptions[entry.status] ?? entry.status}
               </Badge>
               <span className="font-mono text-muted-foreground text-xs">{entry.id}</span>
             </div>
@@ -152,7 +152,7 @@ function ActionLedgerEntryDetail({
         <DetailGrid>
           <DetailField
             label={messages.actor.principalType}
-            value={typeLabels.principalTypeOptions[entry.principalType]}
+            value={typeLabels.principalTypeOptions[entry.principalType] ?? entry.principalType}
             noValue={messages.noValue}
           />
           <DetailField

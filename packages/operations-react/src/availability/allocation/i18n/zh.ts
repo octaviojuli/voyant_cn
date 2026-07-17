@@ -106,7 +106,7 @@ export const allocationUiZh = {
     heading: "座位图",
     description: "点击单元格可在座位 → 过道 → 车门 → 空位之间循环切换。容量由座位单元格计算得出。",
     cellKindHeading: "单元格类型",
-    cellKindHint: "提示:车门与空位不计入容量。",
+    cellKindHint: "提示：车门与空位不计入容量。",
     cellKinds: {
       seat: "座位",
       aisle: "过道",
@@ -126,7 +126,7 @@ export const allocationUiZh = {
     seatCountSummary: "{count} 个座位",
     capacityChip: "容量 {count}",
     presetHeading: "从预设开始",
-    presetHint: "选择一个起始布局,再逐格调整。",
+    presetHint: "选择一个起始布局，再逐格调整。",
     presets: {
       standardCoach: "标准大巴(2-2,11 排)",
       miniCoach: "中巴(2-1,7 排)",

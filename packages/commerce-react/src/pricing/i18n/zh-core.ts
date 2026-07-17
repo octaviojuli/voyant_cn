@@ -120,7 +120,7 @@ export const pricingUiZhCore = {
     default: "默认",
     edit: "编辑",
     delete: "删除",
-    deleteConfirm: "要删除该价目表吗?",
+    deleteConfirm: "要删除该价目表吗？",
     showingSummary: "显示 {count} / {total} 条",
     selectCurrencyPlaceholder: "选择货币…",
     noCurrenciesFound: "未找到货币。",
@@ -205,7 +205,7 @@ export const pricingUiZhCore = {
     empty: "未找到计价类别。",
     edit: "编辑",
     delete: "删除",
-    deleteConfirm: "要删除类别“{name}”吗?",
+    deleteConfirm: "要删除类别“{name}”吗？",
     showingSummary: "显示 {count} / {total} 条",
   },
   pricingCategoryDependencyDialog: {
@@ -213,7 +213,7 @@ export const pricingUiZhCore = {
       create: "添加类别依赖",
       edit: "编辑类别依赖",
     },
-    description: "计价类别之间的规则,例如必须搭配、互斥与数量限制。",
+    description: "计价类别之间的规则，例如必须搭配、互斥与数量限制。",
   },
   pricingCategoryDependencyForm: {
     fields: {

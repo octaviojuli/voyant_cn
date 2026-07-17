@@ -29,7 +29,7 @@ export const bookingsUiZhBase = {
   },
   bookingCreatePage: {
     title: "新建订单",
-    description: "创建订单,选择账单联系人,添加出行人并安排付款计划。",
+    description: "创建订单，选择账单联系人，添加出行人并安排付款计划。",
   },
   bookingCombobox: {
     placeholder: "搜索订单…",
@@ -111,7 +111,7 @@ export const bookingsUiZhBase = {
     changeStatusAction: "变更状态",
     cancelBookingAction: "取消订单",
     deleteAction: "删除",
-    deleteConfirm: "删除此订单?",
+    deleteConfirm: "删除此订单？",
     deleteConfirmDescription:
       "订单 {number} 将连同其订单项、出行人和财务记录一并永久删除。此操作无法撤销。",
     deleteConfirmDescriptionFallback:
@@ -262,7 +262,7 @@ export const bookingsUiZhBase = {
     },
     actions: {
       deleteConfirm: {
-        title: "删除此出行人?",
+        title: "删除此出行人？",
         description: "该出行人将从此订单中移除。此操作无法撤销。",
         cancel: "取消",
         confirm: "删除",

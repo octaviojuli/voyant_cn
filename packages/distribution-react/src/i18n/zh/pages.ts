@@ -16,13 +16,13 @@ export const distributionUiZhPagesMessages = {
           button: "归档",
           confirm: "归档渠道",
           title: "归档 {countLabel}?",
-          description: "所选渠道将保留历史记录,但退出日常商务使用。",
+          description: "所选渠道将保留历史记录，但退出日常商务使用。",
         },
         delete: {
           button: "删除所选",
           confirm: "删除渠道",
           title: "删除 {countLabel}?",
-          description: "这会永久删除所选渠道。若只需停止使用,请改用归档。",
+          description: "这会永久删除所选渠道。若只需停止使用，请改用归档。",
         },
       },
     },
@@ -41,8 +41,8 @@ export const distributionUiZhPagesMessages = {
         expire: {
           button: "设为到期",
           confirm: "合同到期",
-          title: "将 {countLabel}设为到期?",
-          description: "所选合同将被保留,但标记为不再生效。",
+          title: "将 {countLabel}设为到期？",
+          description: "所选合同将被保留，但标记为不再生效。",
         },
         delete: {
           button: "删除所选",
@@ -76,13 +76,13 @@ export const distributionUiZhPagesMessages = {
           button: "启用",
           confirm: "启用映射",
           title: "启用 {countLabel}?",
-          description: "这会重新启用所选外部产品映射,用于实时渠道。",
+          description: "这会重新启用所选外部产品映射，用于实时渠道。",
         },
         deactivate: {
           button: "停用",
           confirm: "停用映射",
           title: "停用 {countLabel}?",
-          description: "所选映射将保留备查,但退出进行中的同步/分销。",
+          description: "所选映射将保留备查，但退出进行中的同步/分销。",
         },
         delete: {
           button: "删除所选",
@@ -108,21 +108,21 @@ export const distributionUiZhPagesMessages = {
     },
     webhooks: {
       title: "Webhook 事件",
-      description: "检查已接入的合作方事件,以及重放/问题案例。",
+      description: "检查已接入的合作方事件，以及重放/问题案例。",
       actionLabel: "新建 Webhook 事件",
       empty: "没有符合当前筛选的 Webhook 事件。",
       actions: {
         markProcessed: {
           button: "标记已处理",
           confirm: "标记已处理",
-          title: "将 {countLabel}标记为已处理?",
-          description: "这会将所选事件标记为已处理,并从活动同步队列中移除。",
+          title: "将 {countLabel}标记为已处理？",
+          description: "这会将所选事件标记为已处理，并从活动同步队列中移除。",
         },
         ignore: {
           button: "忽略",
           confirm: "忽略事件",
           title: "忽略 {countLabel}?",
-          description: "所选事件将保留在历史记录中,但标记为有意忽略。",
+          description: "所选事件将保留在历史记录中，但标记为有意忽略。",
         },
         delete: {
           button: "删除所选",
@@ -136,12 +136,12 @@ export const distributionUiZhPagesMessages = {
   settings: {
     channelsPage: {
       title: "渠道",
-      description: "定义产品的销售去向:直销、OTA、转售方与平台市场渠道。",
+      description: "定义产品的销售去向：直销、OTA、转售方与平台市场渠道。",
       addChannel: "添加渠道",
-      empty: "暂无渠道。创建 Website、Mobile App 或 Viator 之类的渠道,以控制产品的销售去向。",
+      empty: "暂无渠道。创建 Website、Mobile App 或 Viator 之类的渠道，以控制产品的销售去向。",
       edit: "编辑",
       delete: "删除",
-      deleteConfirm: "删除该渠道?",
+      deleteConfirm: "删除该渠道？",
       deleteDescription: "分配到该渠道的产品将被解除关联。",
       editSheetTitle: "编辑渠道",
       newSheetTitle: "新建渠道",
@@ -152,7 +152,7 @@ export const distributionUiZhPagesMessages = {
       websiteLabel: "网站",
       websitePlaceholder: "https://partner.example.com",
       primaryContactLabel: "主要联系人",
-      primaryContactPlaceholder: "Jane Doe",
+      primaryContactPlaceholder: "王芳",
       contactEmailLabel: "联系邮箱",
       contactEmailPlaceholder: "partner@example.com",
       saveChanges: "保存更改",
@@ -160,7 +160,7 @@ export const distributionUiZhPagesMessages = {
       validationNameRequired: "名称为必填项",
       validationInvalidUrl: "必须是有效的 URL",
       validationInvalidEmail: "必须是有效的邮箱地址",
-      paginationShowing: "显示 {count} 条,共 {total} 条",
+      paginationShowing: "显示 {count} 条，共 {total} 条",
       paginationPage: "第 {page} / {pageCount} 页",
       paginationPrevious: "上一页",
       paginationNext: "下一页",
@@ -170,7 +170,7 @@ export const distributionUiZhPagesMessages = {
     channel: {
       notFound: "未找到渠道",
       title: "渠道详情",
-      deleteConfirm: "删除该渠道?",
+      deleteConfirm: "删除该渠道？",
       deleteDescription: "这会永久删除该渠道及其分销配置。",
       deleteButton: "删除",
       sections: {
@@ -207,7 +207,7 @@ export const distributionUiZhPagesMessages = {
     contract: {
       notFound: "未找到合同",
       title: "渠道合同",
-      deleteConfirm: "删除该合同?",
+      deleteConfirm: "删除该合同？",
       deleteDescription: "这会永久删除该合同及其商务分销配置。",
       deleteButton: "删除",
       openChannel: "打开渠道",
@@ -236,7 +236,7 @@ export const distributionUiZhPagesMessages = {
     commissionRule: {
       notFound: "未找到佣金规则",
       title: "佣金规则",
-      deleteConfirm: "删除该佣金规则?",
+      deleteConfirm: "删除该佣金规则？",
       deleteDescription: "这会将该佣金规则从渠道定价中永久删除。",
       deleteButton: "删除",
       openContract: "打开合同",
@@ -255,7 +255,7 @@ export const distributionUiZhPagesMessages = {
     bookingLink: {
       notFound: "未找到订单链接",
       title: "订单链接",
-      deleteConfirm: "删除该订单链接?",
+      deleteConfirm: "删除该订单链接？",
       deleteDescription: "这会永久删除该外部订单引用及同步链接。",
       deleteButton: "删除",
       openChannel: "打开渠道",
@@ -273,7 +273,7 @@ export const distributionUiZhPagesMessages = {
     webhookEvent: {
       notFound: "未找到 Webhook 事件",
       title: "Webhook 事件",
-      deleteConfirm: "删除该 Webhook 事件?",
+      deleteConfirm: "删除该 Webhook 事件？",
       deleteDescription: "这会将该 Webhook 事件从事件日志中永久删除。",
       deleteButton: "删除",
       openChannel: "打开渠道",
@@ -291,7 +291,7 @@ export const distributionUiZhPagesMessages = {
     mapping: {
       notFound: "未找到产品映射",
       title: "产品映射",
-      deleteConfirm: "删除该产品映射?",
+      deleteConfirm: "删除该产品映射？",
       deleteDescription: "这会将该外部产品映射从渠道分销中永久删除。",
       deleteButton: "删除",
       openChannel: "打开渠道",

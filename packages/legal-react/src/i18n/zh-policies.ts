@@ -22,8 +22,8 @@ export const legalUiZhPolicies = {
       created: "创建时间",
     },
     pagination: {
-      showing: "显示 {count} 条,共 {total} 项政策",
-      page: "第 {page} 页,共 {pageCount} 页",
+      showing: "显示 {count} 条，共 {total} 项政策",
+      page: "第 {page} 页，共 {pageCount} 页",
       previous: "上一页",
       next: "下一页",
     },
@@ -32,8 +32,8 @@ export const legalUiZhPolicies = {
     notFound: "未找到政策",
     backToPolicies: "返回政策列表",
     deleteConfirm: "确定删除政策“{name}”?",
-    deleteAssignmentConfirm: "确定删除该政策分配?",
-    deleteRuleConfirm: "确定删除该规则?",
+    deleteAssignmentConfirm: "确定删除该政策分配？",
+    deleteRuleConfirm: "确定删除该规则？",
     always: "始终",
     actions: {
       newVersion: "新建版本",
@@ -89,7 +89,7 @@ export const legalUiZhPolicies = {
   },
   templatesPage: {
     title: "合同模板",
-    description: "可复用的合同模板,支持 Liquid 变量与版本历史。",
+    description: "可复用的合同模板，支持 Liquid 变量与版本历史。",
     create: "新建模板",
     searchPlaceholder: "搜索模板…",
     empty: "暂无模板。创建一个以开始搭建合同模板。",
@@ -200,10 +200,10 @@ export const legalUiZhPolicies = {
       flatAmountCents: "固定金额",
     },
     placeholders: {
-      label: "如:出发前 30 天以上",
-      daysBeforeDeparture: "如:30",
-      refundPercent: "如:10000 = 100%",
-      flatAmountCents: "如:50.00",
+      label: "如：出发前 30 天以上",
+      daysBeforeDeparture: "如：30",
+      refundPercent: "如：10000 = 100%",
+      flatAmountCents: "如：50.00",
     },
     actions: {
       create: "创建规则",
@@ -239,7 +239,7 @@ export const legalUiZhPolicies = {
     placeholders: {
       signerName: "全名",
       signerEmail: "email@example.com",
-      signerRole: "如:CEO、法务代表",
+      signerRole: "如：CEO、法务代表",
       provider: "选填",
       externalReference: "选填",
     },

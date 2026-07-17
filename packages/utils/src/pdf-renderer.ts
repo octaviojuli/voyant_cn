@@ -9,33 +9,23 @@ export interface RenderPdfDocumentInput {
   metadataLines?: string[]
 }
 
-const NON_WIN_ANSI_PATTERN = /[^\u0020-\u007e\u00a0-\u00ff]/
+const CJK_PATTERN = /[\u2e80-\u9fff\u3000-\u303f\uf900-\ufaff\ufe30-\ufe4f\uff00-\uffef]/
 
 type FontkitInstance = Parameters<PDFDocument["registerFontkit"]>[0]
 
 let cjkFontBytesPromise: Promise<Uint8Array> | null = null
 
-async function resolveCjkFontPath() {
-  const { existsSync } = await import("node:fs")
-  const { dirname, join } = await import("node:path")
-  const { fileURLToPath } = await import("node:url")
-
-  let dir = dirname(fileURLToPath(import.meta.url))
-  while (!existsSync(join(dir, "package.json"))) {
-    const parent = dirname(dir)
-    if (parent === dir) {
-      throw new Error("Unable to locate the @voyant-travel/utils package root for font assets")
-    }
-    dir = parent
-  }
-  return join(dir, "assets", "noto-sans-sc-subset.otf")
-}
-
 function loadCjkFontBytes() {
-  cjkFontBytesPromise ??= (async () => {
-    const { readFile } = await import("node:fs/promises")
-    return readFile(await resolveCjkFontPath())
-  })()
+  if (!cjkFontBytesPromise) {
+    const promise = (async () => {
+      const { readFile } = await import("node:fs/promises")
+      return readFile(new URL("../assets/noto-sans-sc-subset.otf", import.meta.url))
+    })()
+    cjkFontBytesPromise = promise.catch((error) => {
+      cjkFontBytesPromise = null
+      throw error
+    })
+  }
   return cjkFontBytesPromise
 }
 
@@ -113,15 +103,27 @@ function normalizePdfText(input: string, format: PdfContentFormat) {
 
 function splitOversizedWord(word: string, width: number, measure: (value: string) => number) {
   const segments: string[] = []
-  let current = ""
+  const charWidths = new Map<string, number>()
+  const widthOf = (char: string) => {
+    let value = charWidths.get(char)
+    if (value === undefined) {
+      value = measure(char)
+      charWidths.set(char, value)
+    }
+    return value
+  }
 
+  let current = ""
+  let currentWidth = 0
   for (const char of word) {
-    const next = current + char
-    if (measure(next) <= width || !current) {
-      current = next
+    const charWidth = widthOf(char)
+    if (currentWidth + charWidth <= width || !current) {
+      current += char
+      currentWidth += charWidth
     } else {
       segments.push(current)
       current = char
+      currentWidth = charWidth
     }
   }
 
@@ -135,7 +137,7 @@ function wrapLine(text: string, width: number, measure: (value: string) => numbe
   let current = ""
 
   for (const word of words) {
-    if (measure(word) > width) {
+    if (CJK_PATTERN.test(word) && measure(word) > width) {
       if (current) {
         lines.push(current)
         current = ""
@@ -165,7 +167,7 @@ export async function renderPdfDocument(input: RenderPdfDocumentInput): Promise<
   const title = input.title?.trim()
   const normalized = normalizePdfText(input.content, input.format ?? "text")
   const needsCjk = [title ?? "", ...(input.metadataLines ?? []), normalized].some((value) =>
-    NON_WIN_ANSI_PATTERN.test(value),
+    CJK_PATTERN.test(value),
   )
 
   let font: PDFFont

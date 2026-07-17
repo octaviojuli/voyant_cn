@@ -90,7 +90,7 @@ export const profitability = {
   share: {
     button: "分享给会计",
     title: "分享给会计",
-    description: "创建某一期间财务数据的只读链接。会计无需登录即可打开;您可随时撤销。",
+    description: "创建某一期间财务数据的只读链接。会计无需登录即可打开；您可随时撤销。",
     from: "起",
     to: "止",
     baseCurrency: "基准币种",
@@ -135,7 +135,7 @@ export const profitability = {
 
 export const costCategories = {
   title: "成本类别",
-  description: "对供应商成本进行分类,用于盈利分析中的成本拆分。",
+  description: "对供应商成本进行分类，用于盈利分析中的成本拆分。",
   add: "添加类别",
   adding: "添加中…",
   namePlaceholder: "类别名称",

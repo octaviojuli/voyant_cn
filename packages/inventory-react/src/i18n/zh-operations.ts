@@ -105,11 +105,11 @@ export const productsUiOperationsZh = {
     fields: {
       name: "名称",
       defaultItinerary: "设为默认行程方案",
-      notesDefaultLocked: "当前为默认方案。如需更改,请将其他行程方案设为默认。",
+      notesDefaultLocked: "当前为默认方案。如需更改，请将其他行程方案设为默认。",
       notesFirstDefault: "第一套行程方案会自动成为默认。",
     },
     placeholders: {
-      name: "例如:主行程方案、亲子版本",
+      name: "例如：主行程方案、亲子版本",
     },
     validation: {
       nameRequired: "名称为必填项",
@@ -125,15 +125,15 @@ export const productsUiOperationsZh = {
       edit: "编辑计价单元",
     },
     descriptions: {
-      create: "添加所售卖或分配的对象,例如成人票、儿童票、双人间、大巴座位、舱房或服务。",
-      edit: "更新库存上限、年龄规则,以及该单元代表房间时的入住人数。",
+      create: "添加所售卖或分配的对象，例如成人票、儿童票、双人间、大巴座位、舱房或服务。",
+      edit: "更新库存上限、年龄规则，以及该单元代表房间时的入住人数。",
     },
   },
   optionUnitForm: {
     fields: {
       name: "名称",
       code: "代码",
-      unitType: "所分配的对象是什么?",
+      unitType: "所分配的对象是什么？",
       sortOrder: "排序",
       minQuantity: "每班期最少数量",
       maxQuantity: "每班期可售数量",
@@ -165,7 +165,7 @@ export const productsUiOperationsZh = {
       notes: "备注",
     },
     placeholders: {
-      notes: "本版本有哪些变更?",
+      notes: "本版本有哪些变更？",
     },
     validation: {
       saveFailed: "版本快照创建失败。",
@@ -194,8 +194,8 @@ export const productsUiOperationsZh = {
       edit: "编辑产品选项",
     },
     descriptions: {
-      create: "创建面向客户的选择,例如默认、成人票、双人间、单人间、标准舱房或 VIP 接送。",
-      edit: "更新可售时间、排序,以及优先向客户展示哪个选项。",
+      create: "创建面向客户的选择，例如默认、成人票、双人间、单人间、标准舱房或 VIP 接送。",
+      edit: "更新可售时间、排序，以及优先向客户展示哪个选项。",
     },
   },
   productOptionForm: {
@@ -232,7 +232,7 @@ export const productsUiOperationsZh = {
       roomUnits: "该选项的房间库存",
     },
     descriptions: {
-      default: "配置客户可选择的内容、可用的库存或出行人类型,以及每位出行人支付的售价。",
+      default: "配置客户可选择的内容、可用的库存或出行人类型，以及每位出行人支付的售价。",
       units: "定义该选项背后的实体单元、票种、房间、座位、舱房或服务。",
       personUnits: "定义客户可预订的出行人年龄段。班期容量控制可出行的总人数。",
       roomUnits: "定义该选项可用的实体房间。",
@@ -257,11 +257,11 @@ export const productsUiOperationsZh = {
     configurationWarnings: {
       roomOptionsTitle: "这些选项疑似把房型配置成了产品选项",
       roomOptionsDescription:
-        "选项 {options} 疑似房型安排。对于单人间、双人间、三人间等房型选择,请使用一个选项搭配多个房间单元;仅当客户在选择真正不同的套餐时才使用多个选项。",
+        "选项 {options} 疑似房型安排。对于单人间、双人间、三人间等房型选择，请使用一个选项搭配多个房间单元；仅当客户在选择真正不同的套餐时才使用多个选项。",
     },
     deleteConfirm: {
-      option: "确定删除选项“{name}”及其配置吗?",
-      unit: "确定删除计价单元“{name}”吗?",
+      option: "确定删除选项“{name}”及其配置吗？",
+      unit: "确定删除计价单元“{name}”吗？",
     },
     columns: {
       unitType: "类型",

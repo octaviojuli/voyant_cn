@@ -29,10 +29,11 @@ export interface AdminRootHeadOptions {
 /**
  * Inline theme + language detection, run before hydration so the first paint
  * doesn't flash the wrong theme or language. Load-bearing: keep in sync with
- * the ThemeProvider storage key (`theme`) and locale storage key
- * (`admin-locale`).
+ * the ThemeProvider storage key (`theme`), the locale storage key
+ * (`admin-locale`), and the DEFAULT_ADMIN_LOCALES allowlist in
+ * `providers/locale.tsx`.
  */
-const ADMIN_BOOTSTRAP_SCRIPT = `(function(){var t=localStorage.getItem("theme");if(t==="dark"||(!t||t==="system")&&matchMedia("(prefers-color-scheme:dark)").matches){document.documentElement.classList.add("dark")}var l=localStorage.getItem("admin-locale")||(navigator.language||"en");l=l.toLowerCase().split("-")[0];document.documentElement.lang=l==="ro"?"ro":"en"})()`
+const ADMIN_BOOTSTRAP_SCRIPT = `(function(){var t=localStorage.getItem("theme");if(t==="dark"||(!t||t==="system")&&matchMedia("(prefers-color-scheme:dark)").matches){document.documentElement.classList.add("dark")}var l=localStorage.getItem("admin-locale")||(navigator.language||"en");l=l.toLowerCase().split("-")[0];document.documentElement.lang=l==="ro"?"ro":l==="zh"?"zh":"en"})()`
 
 /**
  * The root route `head()` payload for a Voyant admin app: charset/viewport,

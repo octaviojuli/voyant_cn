@@ -32,7 +32,7 @@ export const bookingsUiZhOperations = {
       notes: "备注",
     },
     placeholders: {
-      serviceName: "Hotel Dubrovnik Palace",
+      serviceName: "上海和平饭店",
       supplierReference: "CONF-12345",
       notes: "补充备注…",
     },
@@ -74,7 +74,7 @@ export const bookingsUiZhOperations = {
     },
     actions: {
       deleteConfirm: {
-        title: "删除此订单项?",
+        title: "删除此订单项？",
         description: "将从订单中移除该订单项。此操作无法撤销。",
         cancel: "取消",
         confirm: "删除",
@@ -127,7 +127,7 @@ export const bookingsUiZhOperations = {
     },
     actions: {
       deleteConfirm: {
-        title: "删除此付款计划?",
+        title: "删除此付款计划？",
         description: "将从订单中移除该计划条目。此操作无法撤销。",
         cancel: "取消",
         confirm: "删除",
@@ -140,8 +140,9 @@ export const bookingsUiZhOperations = {
       issueDocumentSuccess: "单据已签发。",
       issueDocumentFailure: "无法签发单据",
       issueDocumentErrors: {
-        invoice_number_series_not_found: "未找到所选号段。签发此单据前,请先到“财务 > 号段”中检查。",
-        invoice_number_series_inactive: "所选号段未启用。请先在“财务 > 号段”中启用,再签发此单据。",
+        invoice_number_series_not_found:
+          "未找到所选号段。签发此单据前，请先到“财务 > 号段”中检查。",
+        invoice_number_series_inactive: "所选号段未启用。请先在“财务 > 号段”中启用，再签发此单据。",
         invoice_number_series_scope_mismatch:
           "所选号段与此单据类型不匹配。请在“财务 > 号段”中选择匹配的号段。",
         no_active_series_for_scope:
@@ -155,7 +156,7 @@ export const bookingsUiZhOperations = {
     empty: "尚未记录任何账单、收款或付款计划行。",
     reconciledDescription: "账单已付合计、已记录收款与已付计划行当前一致。",
     driftDescription:
-      "账单已付合计、已记录收款与已付计划行不一致。请先核查来源数据,再继续收款或记录款项。",
+      "账单已付合计、已记录收款与已付计划行不一致。请先核查来源数据，再继续收款或记录款项。",
     reconciledBadge: "已对平",
     driftBadge: "需复核",
     billed: "已开账单",
@@ -207,14 +208,14 @@ export const bookingsUiZhOperations = {
       rule: "规则",
       resolving: "正在匹配取消政策…",
       missing: "此订单未配置取消政策。",
-      missingHint: "继续操作将不带退款预览直接取消;已付款订单会被标记为待结算复核。",
+      missingHint: "继续操作将不带退款预览直接取消；已付款订单会被标记为待结算复核。",
       calculating: "正在计算退款…",
-      noTotalAmount: "订单没有总金额,无法计算退款。",
+      noTotalAmount: "订单没有总金额，无法计算退款。",
     },
     paidSettlement: {
       title: "已付款订单需要结算处理",
       description:
-        "取消会保留现有账单与收款,并记录一条待处理的财务备注,以便复核退款、贷记单或不退款的决定。",
+        "取消会保留现有账单与收款，并记录一条待处理的财务备注，以便复核退款、贷记单或不退款的决定。",
     },
     refundTypeLabels: {
       cash: "现金退款",
@@ -226,7 +227,7 @@ export const bookingsUiZhOperations = {
       reason: "原因",
     },
     placeholders: {
-      reason: "为什么取消此订单?",
+      reason: "为什么取消此订单？",
     },
     validation: {
       cancellationFailed: "取消失败",
@@ -334,7 +335,7 @@ export const bookingsUiZhOperations = {
     },
     actions: {
       deleteConfirm: {
-        title: "删除此担保?",
+        title: "删除此担保？",
         description: "将从订单中移除该担保记录。此操作无法撤销。",
         cancel: "取消",
         confirm: "删除",
@@ -356,7 +357,7 @@ export const bookingsUiZhOperations = {
     placeholders: {
       selectGroup: "选择分组…",
       noExistingGroups: "暂无现有分组",
-      groupLabel: "例:张 + 李、204 房",
+      groupLabel: "例：张 + 李、204 房",
     },
     hints: {
       productFiltered: "仅显示该订单产品下的分组。",
@@ -385,7 +386,7 @@ export const bookingsUiZhOperations = {
     actions: {
       removeFromGroup: "移出分组",
       linkToSharedRoom: "关联同住组",
-      removeConfirm: "将此订单移出同住组?",
+      removeConfirm: "将此订单移出同住组？",
     },
   },
 } satisfies BookingsUiOperationsMessages

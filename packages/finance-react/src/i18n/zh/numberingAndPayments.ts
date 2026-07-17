@@ -71,7 +71,7 @@ export const invoiceNumberSeriesDialog = {
   help: {
     previewLabel: "预览",
     previewSample: "下一个分配的号码将采用此格式。",
-    default: "未指定号段时,使用该范围的默认启用号段。",
+    default: "未指定号段时，使用该范围的默认启用号段。",
     external: "留空则由系统内部取号。",
   },
   actions: {
@@ -143,7 +143,7 @@ export const paymentDetailPage = {
     viewSupplier: "查看供应商",
     edit: "编辑",
     delete: "删除",
-    deleteTitle: "删除此笔款项?",
+    deleteTitle: "删除此笔款项？",
     deleteDescription: "此操作将永久删除该笔款项并重新计算相关余额。",
   },
   titles: {
@@ -181,7 +181,7 @@ export const paymentPolicy = {
   form: {
     inherit: {
       label: "继承上级",
-      help: "未设置时沿用更上层的政策;关闭后可在此设置明确的政策。",
+      help: "未设置时沿用更上层的政策；关闭后可在此设置明确的政策。",
       tooltipLabel: "说明继承规则",
     },
     depositKind: {
@@ -199,22 +199,22 @@ export const paymentPolicy = {
     depositHints: {
       none: "客户需一次性支付全款。",
       percent: "使用 0 到 100 之间的整数百分比。",
-      fixed_cents: "当订单总额低于该金额时,以订单总额为上限。",
+      fixed_cents: "当订单总额低于该金额时，以订单总额为上限。",
     },
     days: {
       minDaysLabel: "定金窗口",
-      minDaysHelp: "距出发日不足该天数时,订单需一次性支付全款。",
+      minDaysHelp: "距出发日不足该天数时，订单需一次性支付全款。",
       balanceDaysLabel: "尾款到期",
       balanceDaysHelp: "尾款须在出发前多少天付清。",
       graceDaysLabel: "宽限下限",
-      graceDaysHelp: "即使临近出发,尾款到期日距今也至少保留的天数。",
+      graceDaysHelp: "即使临近出发，尾款到期日距今也至少保留的天数。",
       tooltipLabel: "显示字段说明",
       suffix: "天",
     },
   },
   preview: {
     inheriting: "继承上级政策——本层无预览。",
-    sample: "示例:订单金额 {amount},{days} 天后出发",
+    sample: "示例：订单金额 {amount},{days} 天后出发",
     scheduleTypes: {
       deposit: "定金",
       balance: "尾款",
@@ -225,8 +225,8 @@ export const paymentPolicy = {
   supplierCard: {
     title: "客户付款政策",
     description:
-      "设置后,针对该供应商的外采订单将继承这些条款,而非运营方默认值。保持继承则回退至部署级政策。",
-    missingCurrency: "请先在上方设置供应商默认币种,再定义付款政策;金额必须以已知币种计价。",
+      "设置后，针对该供应商的外采订单将继承这些条款，而非运营方默认值。保持继承则回退至部署级政策。",
+    missingCurrency: "请先在上方设置供应商默认币种，再定义付款政策；金额必须以已知币种计价。",
     save: "保存政策",
     savedToast: "客户付款政策已保存",
     saveFailed: "保存政策失败",
@@ -235,13 +235,13 @@ export const paymentPolicy = {
 
 export const taxesPage = {
   title: "税制与税类",
-  description: "管理税类,以及各税类用于增值税计算的默认税制。",
+  description: "管理税类，以及各税类用于增值税计算的默认税制。",
   addTax: "添加税类",
   empty: "暂无税类。可初始化或创建 Normala、Redusa、Art. 311 等税类。",
   inactive: "停用",
   edit: "编辑",
   delete: "删除",
-  deleteConfirm: "删除此税类?",
+  deleteConfirm: "删除此税类？",
   editSheetTitle: "编辑税类",
   newSheetTitle: "新建税类",
   taxClassBadge: "税类",
@@ -254,7 +254,7 @@ export const taxesPage = {
   defaultRegimeSectionDescription: "通过 tax_classes.default_regime_id 关联的增值税/税额计算规则。",
   regimeOverridesSectionTitle: "税制覆盖",
   regimeOverridesSectionDescription:
-    "可选的 tax_classes.lines 条目,适用于基础、附加、住宿或全部行。",
+    "可选的 tax_classes.lines 条目，适用于基础、附加、住宿或全部行。",
   addRegimeOverride: "添加覆盖",
   removeRegimeOverride: "移除覆盖",
   noRegimeOverrides: "暂无税制覆盖。该税类回退至默认税制。",
@@ -265,7 +265,7 @@ export const taxesPage = {
   appliesToAccommodation: "住宿",
   appliesToAll: "全部",
   taxClassLabelLabel: "税类名称",
-  taxClassLabelPlaceholder: "Normala 21",
+  taxClassLabelPlaceholder: "标准税率 13",
   taxClassCodeLabel: "税类代码",
   taxClassCodePlaceholder: "normala",
   taxClassDescriptionLabel: "税类描述",
@@ -292,8 +292,8 @@ export const taxesPage = {
   addPolicyRule: "添加规则",
   policyEmpty: "暂无税务政策档案。",
   policyRulesEmpty: "暂无政策规则。请为该档案添加有序规则。",
-  deletePolicyProfileConfirm: "删除此税务政策档案及其规则?",
-  deletePolicyRuleConfirm: "删除此税务政策规则?",
+  deletePolicyProfileConfirm: "删除此税务政策档案及其规则？",
+  deletePolicyRuleConfirm: "删除此税务政策规则？",
   editPolicyProfileSheetTitle: "编辑税务政策档案",
   newPolicyProfileSheetTitle: "新建税务政策档案",
   editPolicyRuleSheetTitle: "编辑税务政策规则",
@@ -313,7 +313,7 @@ export const taxesPage = {
   policyConditionSectionDescription: "选择该规则的适用时机。规则按优先级评估。",
   policyConditionModeLabel: "匹配方式",
   policyConditionAlways: "始终",
-  policyConditionAlwaysDescription: "该规则始终匹配,通常用作最后的兜底规则。",
+  policyConditionAlwaysDescription: "该规则始终匹配，通常用作最后的兜底规则。",
   policyConditionModeAll: "满足全部条件",
   policyConditionModeAny: "满足任一条件",
   addPolicyCondition: "添加条件",
@@ -347,7 +347,7 @@ export const recordBookingPaymentDialog = {
   title: "登记收款",
   editTitle: "编辑收款",
   description:
-    "记录已经收到的款项(银行转账、现金、支票、手工刷卡等)。如需向客户发送银行卡或转账链接,请改用{generateLink}。",
+    "记录已经收到的款项(银行转账、现金、支票、手工刷卡等)。如需向客户发送银行卡或转账链接，请改用{generateLink}。",
   generateLinkLabel: "生成收款链接",
   fields: {
     invoice: "账单",
@@ -360,7 +360,7 @@ export const recordBookingPaymentDialog = {
     referenceNumber: "参考号",
     notes: "备注",
     convertProformaAfter: "将形式账单转为账单",
-    convertProformaAfterHint: "签发一张合计与行项目相同的最终账单,并回链至该形式账单。",
+    convertProformaAfterHint: "签发一张合计与行项目相同的最终账单，并回链至该形式账单。",
   },
   placeholders: {
     invoice: "选择账单",
@@ -370,7 +370,7 @@ export const recordBookingPaymentDialog = {
   },
   fx: {
     title: "跨币种结算",
-    help: "输入实际收到的金额,系统将自动换算为账单币种金额。",
+    help: "输入实际收到的金额，系统将自动换算为账单币种金额。",
     loadingRate: "正在加载汇率…",
     summary:
       "{amount} {paymentCurrency} ≈ {baseAmount} {invoiceCurrency} · 1 {invoiceCurrency} = {rate} {paymentCurrency}",

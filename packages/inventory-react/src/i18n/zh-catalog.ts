@@ -23,7 +23,7 @@ export const productsUiCatalogZh = {
     },
     descriptions: {
       customerPaymentPolicy:
-        "设置后,该类目下的产品将继承这些条款,除非上架条目或订单另行设置覆盖。优先于供应商级政策。",
+        "设置后，该类目下的产品将继承这些条款，除非上架条目或订单另行设置覆盖。优先于供应商级政策。",
     },
     placeholders: {
       name: "探险",
@@ -54,7 +54,7 @@ export const productsUiCatalogZh = {
     empty: "未找到产品类目。",
     edit: "编辑",
     delete: "删除",
-    deleteConfirm: "确定删除该产品类目吗?",
+    deleteConfirm: "确定删除该产品类目吗？",
     showingSummary: "显示 {count} / {total} 条",
   },
   productTagDialog: {
@@ -63,7 +63,7 @@ export const productsUiCatalogZh = {
       edit: "编辑产品标签",
     },
     descriptions: {
-      create: "创建可复用的标签,用于筛选与分类。",
+      create: "创建可复用的标签，用于筛选与分类。",
       edit: "更新用于标记与筛选产品的标签。",
     },
   },
@@ -93,7 +93,7 @@ export const productsUiCatalogZh = {
     empty: "未找到产品标签。",
     edit: "编辑",
     delete: "删除",
-    deleteConfirm: "确定删除该产品标签吗?",
+    deleteConfirm: "确定删除该产品标签吗？",
     showingSummary: "显示 {count} / {total} 条",
   },
   productTagsPage: {
@@ -102,12 +102,12 @@ export const productsUiCatalogZh = {
   },
   productTypesPage: {
     title: "产品类型",
-    description: "产品的分类类型:城市短途、环线游、邮轮等。",
+    description: "产品的分类类型：城市短途、环线游、邮轮等。",
     addType: "添加类型",
     empty: "暂无产品类型。可创建城市短途、环线游或邮轮等类型。",
     edit: "编辑",
     delete: "删除",
-    deleteConfirm: "确定删除该产品类型吗?",
+    deleteConfirm: "确定删除该产品类型吗？",
     showingSummary: "显示 {count} / {total} 条",
     editSheetTitle: "编辑产品类型",
     newSheetTitle: "新建产品类型",
@@ -193,9 +193,9 @@ export const productsUiCatalogZh = {
     },
     loadingError: "素材加载失败。",
     empty: "尚未配置素材。",
-    itemCount: "素材数量:{count}",
+    itemCount: "素材数量：{count}",
     uploadFailed: "素材上传失败。",
-    deleteConfirm: "确定删除该素材吗?",
+    deleteConfirm: "确定删除该素材吗？",
     viewerTitle: "素材预览",
     coverBadge: "封面",
   },

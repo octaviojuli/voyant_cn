@@ -419,7 +419,9 @@ function LedgerRow({
         </div>
       </TableCell>
       <TableCell>
-        <div className="font-medium">{labels.principalTypeOptions[entry.principalType]}</div>
+        <div className="font-medium">
+          {labels.principalTypeOptions[entry.principalType] ?? entry.principalType}
+        </div>
         <div className="mt-0.5 max-w-[13rem] truncate font-mono text-muted-foreground text-xs">
           {entry.principalId}
         </div>
@@ -454,12 +456,12 @@ function LedgerRow({
       </TableCell>
       <TableCell>
         <Badge variant={RISK_VARIANT[entry.evaluatedRisk] ?? "outline"}>
-          {labels.riskOptions[entry.evaluatedRisk]}
+          {labels.riskOptions[entry.evaluatedRisk] ?? entry.evaluatedRisk}
         </Badge>
       </TableCell>
       <TableCell>
         <Badge variant={STATUS_VARIANT[entry.status] ?? "outline"}>
-          {labels.statusOptions[entry.status]}
+          {labels.statusOptions[entry.status] ?? entry.status}
         </Badge>
       </TableCell>
       <TableCell className="text-right">

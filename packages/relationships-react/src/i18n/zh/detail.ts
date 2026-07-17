@@ -8,8 +8,8 @@ export const crmUiZhDetailMessages = {
       organizations: "组织",
       merge: "合并",
       delete: "删除",
-      deleteTitle: "删除该组织?",
-      deleteDescription: "此操作将永久删除该组织,与其关联的联系人将保留。",
+      deleteTitle: "删除该组织？",
+      deleteDescription: "此操作将永久删除该组织，与其关联的联系人将保留。",
     },
     mergeDialog: {
       title: "合并组织",
@@ -72,7 +72,7 @@ export const crmUiZhDetailMessages = {
       addPerson: "添加联系人",
       addActivity: "添加跟进记录",
     },
-    hint: "字段在左侧面板更新;悬停可显示编辑图标。",
+    hint: "字段在左侧面板更新；悬停可显示编辑图标。",
   },
   personDetailPage: {
     notFound: "未找到该联系人",
@@ -84,7 +84,7 @@ export const crmUiZhDetailMessages = {
       edit: "编辑",
       merge: "合并",
       delete: "删除",
-      deleteTitle: "删除该联系人?",
+      deleteTitle: "删除该联系人？",
       deleteDescription: "此操作将从当前工作台永久删除该联系人及其 CRM 关联。",
     },
     mergeDialog: {
@@ -154,7 +154,7 @@ export const crmUiZhDetailMessages = {
       title: "支付方式",
       add: "添加支付方式",
       delete: "删除",
-      deleteTitle: "删除该支付方式?",
+      deleteTitle: "删除该支付方式？",
       deleteDescription: "此操作将永久删除该支付方式。",
       makeDefault: "设为默认",
       ending: "尾号",
@@ -228,7 +228,7 @@ export const crmUiZhDetailMessages = {
       noCommunications: "暂无沟通记录。",
       noTravelProfile: "暂无出行档案数据。",
     },
-    hint: "字段在左侧面板更新;悬停可显示编辑图标。",
+    hint: "字段在左侧面板更新；悬停可显示编辑图标。",
   },
   personDocument: {
     row: {
@@ -248,8 +248,8 @@ export const crmUiZhDetailMessages = {
     dialog: {
       title: "编辑证件",
       addTitle: "添加证件",
-      description: "更新证件详情。号码将加密存储,每次显示均会记录审计日志。",
-      addDescription: "添加证件详情。号码将加密存储,每次显示均会记录审计日志。",
+      description: "更新证件详情。号码将加密存储，每次显示均会记录审计日志。",
+      addDescription: "添加证件详情。号码将加密存储，每次显示均会记录审计日志。",
       revealFailed: "证件号码显示失败。",
       fields: {
         type: "类型",

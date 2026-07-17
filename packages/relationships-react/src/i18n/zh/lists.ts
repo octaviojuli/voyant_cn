@@ -3,7 +3,7 @@ export const crmUiZhListsMessages = {
     unnamed: "未命名",
   },
   personCardConnected: {
-    loadFailed: "联系人加载失败:",
+    loadFailed: "联系人加载失败：",
   },
   personList: {
     searchPlaceholder: "搜索联系人…",

@@ -28,7 +28,7 @@ export const externalRefsUiZh: ExternalRefsUiMessages = {
       booking: "订单",
       product: "产品",
     },
-    emptyScope: "在上方选择一个实体,以浏览其外部映射。",
+    emptyScope: "在上方选择一个实体，以浏览其外部映射。",
   },
   externalRefsTab: {
     description: "该实体与外部系统 ID 之间的关联。",
@@ -48,7 +48,7 @@ export const externalRefsUiZh: ExternalRefsUiMessages = {
     actions: {
       edit: "编辑外部映射",
       delete: "删除外部映射",
-      deleteConfirm: "删除该外部映射?",
+      deleteConfirm: "删除该外部映射？",
     },
     pagination: {
       previous: "上一页",

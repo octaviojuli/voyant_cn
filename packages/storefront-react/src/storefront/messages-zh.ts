@@ -2,8 +2,8 @@ import type { StorefrontMessages } from "./messages-en.js"
 
 /**
  * Simplified Chinese (zh) storefront messages. Terminology follows
- * `docs/i18n-zh-glossary.md` (Storefront=在线商城, Booking=订单, Traveler=出行人,
- * customer-side payment=支付, Proposal=方案, Departure(班次)=班期).
+ * `docs/i18n-zh-glossary.md` (Storefront=在线商城， Booking=订单， Traveler=出行人，
+ * customer-side payment=支付， Proposal=方案， Departure(班次)=班期).
  */
 export const storefrontMessagesZh: StorefrontMessages = {
   layout: {
@@ -54,7 +54,7 @@ export const storefrontMessagesZh: StorefrontMessages = {
     requestEditsMessageLabel: "修改请求留言",
     requestEditsPlaceholder: "告诉我们您希望修改的内容。",
     requestEditsSent: "您的修改请求已发送。",
-    declineConfirm: "拒绝该方案?",
+    declineConfirm: "拒绝该方案？",
     notSet: "未设置",
     statuses: {
       draft: "草稿",
@@ -67,7 +67,7 @@ export const storefrontMessagesZh: StorefrontMessages = {
   shop: {
     heading: "浏览与预订",
     intro:
-      "面向客户的预订流程。与运营方使用同一引擎,通过 /v1/public/catalog/* 以未认证的 customer 操作者提供服务。",
+      "面向客户的预订流程。与运营方使用同一引擎，通过 /v1/public/catalog/* 以未认证的 customer 操作者提供服务。",
     buildTrip: "编排行程",
     searchPlaceholder: "搜索产品、行程、住宿…",
     verticalProducts: "旅游产品",
@@ -76,7 +76,7 @@ export const storefrontMessagesZh: StorefrontMessages = {
     verticalCharters: "包船",
     unavailableTitle: "目录搜索尚未配置",
     unavailableBody:
-      "目录搜索服务不可用。您仍可直接打开预订流程——从运营方概览中选取一个产品 id 并访问:",
+      "目录搜索服务不可用。您仍可直接打开预订流程——从运营方概览中选取一个产品 id 并访问：",
     viewAndBook: "查看并预订",
     nonBookableTitle: "暂不支持在线预订",
     nonBookableBody: "{vertical}暂不支持在线预订。请联系运营方安排此需求。",
@@ -130,12 +130,12 @@ export const storefrontMessagesZh: StorefrontMessages = {
     chooseRoom: "选择房型",
     sleepsUpTo: "最多入住 {count} 人",
     ratePlan: "价格计划",
-    cancellation: "取消政策:{policy}",
-    includes: "包含:{inclusions}",
+    cancellation: "取消政策：{policy}",
+    includes: "包含：{inclusions}",
     unavailableTitle: "住宿不可用",
-    unavailableNoRooms: "该住宿目前无法在线预订,因为暂无可用房型。",
-    unavailableNoRatePlan: "该房型目前无法在线预订,因为没有兼容的价格计划。",
-    unavailableQuoteFailed: "该住宿目前无法在线预订,因为价格未能确认。",
+    unavailableNoRooms: "该住宿目前无法在线预订，因为暂无可用房型。",
+    unavailableNoRatePlan: "该房型目前无法在线预订，因为没有兼容的价格计划。",
+    unavailableQuoteFailed: "该住宿目前无法在线预订，因为价格未能确认。",
   },
   shopDetailCruises: {
     occupancy: "入住人数",
@@ -151,13 +151,13 @@ export const storefrontMessagesZh: StorefrontMessages = {
     soldOut: "售罄",
     available: "可预订",
     chooseCabin: "选择舱房",
-    pricingPerGuest: "价格为 {occupancy} 人入住时的每人价格;侧边栏总计为整间舱房费用。",
+    pricingPerGuest: "价格为 {occupancy} 人入住时的每人价格；侧边栏总计为整间舱房费用。",
     guestsCount: "{count} 位出行人",
     decksCount: "{count} 层甲板",
     builtYear: "{year} 年建造",
     deckPlan: "甲板平面图",
     openDeckPlan: "打开甲板平面图",
-    deckLabel: "第 {level} 层甲板:{name}",
+    deckLabel: "第 {level} 层甲板：{name}",
     wheelchairAccessible: "无障碍(轮椅可达)",
     sleeps: "可住 {count} 人",
     grades: "舱房等级 {codes}",
@@ -173,7 +173,7 @@ export const storefrontMessagesZh: StorefrontMessages = {
   confirmation: {
     bankTransferTitle: "订单等待银行转账",
     bankTransferIntro:
-      "在等待您的付款到账期间,我们会为您保留此订单。发起银行转账时请使用以下信息——请务必准确填写附言,以便我们将款项与您的订单匹配。",
+      "在等待您的付款到账期间，我们会为您保留此订单。发起银行转账时请使用以下信息——请务必准确填写附言，以便我们将款项与您的订单匹配。",
     bookingReference: "订单编号",
     proformaNumber: "形式账单编号",
     beneficiary: "收款人",
@@ -182,36 +182,36 @@ export const storefrontMessagesZh: StorefrontMessages = {
     reference: "汇款附言",
     amount: "金额",
     dueBy: "付款截止",
-    bankTransferEmailed: "银行转账说明也已通过邮件发送给您,请查收收件箱。",
-    bankTransferFollowUp: "收到款项后,我们会自动生成最终账单与合同,并通过邮件发送给您。",
+    bankTransferEmailed: "银行转账说明也已通过邮件发送给您，请查收收件箱。",
+    bankTransferFollowUp: "收到款项后，我们会自动生成最终账单与合同，并通过邮件发送给您。",
     paymentNotCompletedTitle: "支付未完成",
     paymentNotCompletedBody:
-      "银行卡处理方未确认此笔支付。如果您的账户已被扣款,请携订单编号联系我们以便核对。",
+      "银行卡处理方未确认此笔支付。如果您的账户已被扣款，请携订单编号联系我们以便核对。",
     processingTitle: "正在处理您的支付",
     processingBody:
-      "我们正在等待银行卡处理方确认您的支付。收到结果后本页面会自动更新——通常在一分钟内。您也可以关闭此标签页;订单确认后我们会通过邮件发送合同与账单。",
+      "我们正在等待银行卡处理方确认您的支付。收到结果后本页面会自动更新——通常在一分钟内。您也可以关闭此标签页；订单确认后我们会通过邮件发送合同与账单。",
     confirmedTitle: "谢谢——您的订单已确认",
-    paymentReceived: "已收到支付:",
+    paymentReceived: "已收到支付：",
     confirmedFollowUp: "我们稍后会通过邮件发送您的合同与账单。您可以放心关闭此标签页。",
     inquiryTitle: "已收到咨询",
-    inquiryBody: "谢谢——我们已收到您的信息,稍后会与您联系,提供可售情况与报价。",
-    referenceLabel: "参考编号:",
+    inquiryBody: "谢谢——我们已收到您的信息，稍后会与您联系，提供可售情况与报价。",
+    referenceLabel: "参考编号：",
     holdTitle: "订单已预留",
     holdBody: "我们已为您预留此订单。我们的团队会与您联系确认后续步骤。",
     defaultTitle: "订单已确认",
-    defaultBody: "我们已为您预留此订单。您稍后会收到确认邮件,内含后续步骤。",
+    defaultBody: "我们已为您预留此订单。您稍后会收到确认邮件，内含后续步骤。",
     backToStorefront: "返回在线商城",
   },
   bookingJourney: {
     marketingLabel: "偶尔向我发送新产品与促销的邮件。",
-    checkoutFailed: "无法完成您的预订。请检查所选内容,或稍后重试。",
-    requestReference: "参考编号:{requestId}",
+    checkoutFailed: "无法完成您的预订。请检查所选内容，或稍后重试。",
+    requestReference: "参考编号：{requestId}",
     reserveFailed: "当前无法预订所选内容。请调整日期或房型后重试。",
   },
   composer: {
     gateTitle: "登录后编排行程",
     gateBody:
-      "行程编排器会将工作草稿保存到您的账户,因此开始前需要先登录。浏览和预订单个项目对所有人开放。",
+      "行程编排器会将工作草稿保存到您的账户，因此开始前需要先登录。浏览和预订单个项目对所有人开放。",
     gateSignIn: "登录以继续",
     gateBrowse: "返回浏览",
   },
@@ -225,7 +225,7 @@ export const storefrontMessagesZh: StorefrontMessages = {
     },
     signUp: {
       title: "创建您的旅行账户",
-      description: "保存出行人信息并管理订单,无需使用运营方工作台。",
+      description: "保存出行人信息并管理订单，无需使用运营方工作台。",
       nameLabel: "姓名",
       emailPlaceholder: "you@example.com",
       submit: "创建账户",
@@ -233,7 +233,7 @@ export const storefrontMessagesZh: StorefrontMessages = {
     },
     verifyEmail: {
       title: "验证您的邮箱",
-      description: "请先输入我们发送的验证码,然后再登录。",
+      description: "请先输入我们发送的验证码，然后再登录。",
       successTitle: "邮箱已验证",
       successDescription: "您的旅行账户已就绪。",
     },

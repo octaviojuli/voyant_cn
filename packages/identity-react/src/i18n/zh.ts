@@ -58,7 +58,7 @@ export const identityUiZh = {
       booking: "订单",
       product: "产品",
     },
-    emptyScope: "在上方选择实体后,即可浏览其身份信息记录。",
+    emptyScope: "在上方选择实体后，即可浏览其身份信息记录。",
     tabs: {
       contactPoints: "联系方式",
       addresses: "地址",
@@ -79,7 +79,7 @@ export const identityUiZh = {
       primary: "主要",
     },
     actions: {
-      deleteConfirm: "删除该联系方式?",
+      deleteConfirm: "删除该联系方式？",
     },
   },
   addressesTab: {
@@ -97,7 +97,7 @@ export const identityUiZh = {
       primary: "主要",
     },
     actions: {
-      deleteConfirm: "删除该地址?",
+      deleteConfirm: "删除该地址？",
     },
   },
   namedContactsTab: {
@@ -116,7 +116,7 @@ export const identityUiZh = {
       primary: "主要",
     },
     actions: {
-      deleteConfirm: "删除该指定联系人?",
+      deleteConfirm: "删除该指定联系人？",
     },
   },
   addressDialog: {
@@ -180,7 +180,7 @@ export const identityUiZh = {
       notes: "备注",
     },
     placeholders: {
-      name: "Jane Doe",
+      name: "王芳",
       title: "销售总监",
       email: "jane@example.com",
     },

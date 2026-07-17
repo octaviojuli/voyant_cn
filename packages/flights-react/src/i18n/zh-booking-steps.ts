@@ -9,7 +9,7 @@ export const flightsUiZhBookingSteps = {
   flightBaggageStep: {
     unavailable: "无法加载该方案的行李选项。",
     title: "添加托运行李",
-    description: "座位下方的随身行李已包含。可为每位乘客选择托运行李档位,或跳过此步骤。",
+    description: "座位下方的随身行李已包含。可为每位乘客选择托运行李档位，或跳过此步骤。",
     sameForBothDirections: "去返程相同",
     bags: "{leg}行李",
     noCheckedBag: "不带托运行李",
@@ -36,7 +36,7 @@ export const flightsUiZhBookingSteps = {
       country: "国家",
     },
     placeholders: {
-      vatNumber: "例:RO43917962",
+      vatNumber: "例：RO43917962",
       streetAddress: "街道 + 门牌号",
       addressLine2: "公寓、单元等",
       searchPassengers: "搜索乘客…",
@@ -77,7 +77,7 @@ export const flightsUiZhBookingSteps = {
       offerExpires: "方案有效期至",
     },
     confirmDescription:
-      "提交后将通过连接器预留座位,并依据所选付款意向立即出票或开启出票窗口。确认后,订单将显示在下方交易单号下。",
+      "提交后将通过连接器预留座位，并依据所选付款意向立即出票或开启出票窗口。确认后，订单将显示在下方交易单号下。",
   },
   flightBookingLedger: {
     flight: "航班",
@@ -120,7 +120,7 @@ export const flightsUiZhBookingSteps = {
     documentsSomeAdded: "已添加 {count}/{total} 份",
     documentsAddAtCheckIn: "值机时补充",
     confirmDescription:
-      "提交后将通过连接器预留座位,并依据所选付款意向立即出票或开启出票窗口。确认后,订单将显示在交易单号下。",
+      "提交后将通过连接器预留座位，并依据所选付款意向立即出票或开启出票窗口。确认后，订单将显示在交易单号下。",
     lineItems: {
       fare: "{label}票价{suffix}",
       seatsPicked: "已选 {count} 个座位",
@@ -143,7 +143,7 @@ export const flightsUiZhBookingSteps = {
   flightFareUpsellStep: {
     unavailable: "该方案未提供票价升级档位。",
     title: "升级票价",
-    description: "可按航段加购行李、选座与变更灵活性,也可保留基础票价。",
+    description: "可按航段加购行李、选座与变更灵活性，也可保留基础票价。",
     sameForAllPassengers: "所有乘客使用相同票价",
     resetToBasic: "重置为基础票价",
     appliesToAllPassengers: "适用于全部 {count} 名乘客",
@@ -163,7 +163,7 @@ export const flightsUiZhBookingSteps = {
   },
   flightPassengerForm: {
     documentsRequiredNotice:
-      "该航线为国际航线——现在填写旅行证件可加快在线值机,并避免机场柜台费用;也可先跳过,稍后补充。",
+      "该航线为国际航线——现在填写旅行证件可加快在线值机，并避免机场柜台费用；也可先跳过，稍后补充。",
     fields: {
       firstName: "名",
       middleName: "中间名",
@@ -185,7 +185,7 @@ export const flightsUiZhBookingSteps = {
       asPrintedOnDocument: "与证件上印刷一致",
     },
     addNow: "现在填写",
-    skipDocuments: "跳过,值机时再补充。多数国际行程需提前提供。",
+    skipDocuments: "跳过，值机时再补充。多数国际行程需提前提供。",
     validation: {
       firstNameRequired: "请填写名",
       lastNameRequired: "请填写姓",
@@ -197,11 +197,11 @@ export const flightsUiZhBookingSteps = {
   },
   flightPaymentSelector: {
     title: "付款意向",
-    description: "选择订单的支付方式。预留可先确认座位、稍后出票;银行卡 / 挂账则立即出票。",
+    description: "选择订单的支付方式。预留可先确认座位、稍后出票；银行卡 / 挂账则立即出票。",
     intents: {
       hold: {
         title: "预留座位——稍后支付",
-        description: "立即确认订单,并在连接器的预留时限内锁定售价。款项到账后出票。",
+        description: "立即确认订单，并在连接器的预留时限内锁定售价。款项到账后出票。",
       },
       card: {
         title: "银行卡支付",
@@ -209,11 +209,11 @@ export const flightsUiZhBookingSteps = {
       },
       bank_transfer: {
         title: "银行转账",
-        description: "创建支付会话,在交易单上提供银行转账指引与参考信息。",
+        description: "创建支付会话，在交易单上提供银行转账指引与参考信息。",
       },
       ticket_on_credit: {
         title: "代理挂账出票",
-        description: "以运营方的 IATA 办公室挂账额度出票,于下一报告周期通过 BSP 结算。",
+        description: "以运营方的 IATA 办公室挂账额度出票，于下一报告周期通过 BSP 结算。",
       },
     },
   },
@@ -250,15 +250,15 @@ export const flightsUiZhBookingSteps = {
   },
   flightSeatsStep: {
     title: "选择座位",
-    description: "自选心仪座位,或由航空公司在值机时分配。",
+    description: "自选心仪座位，或由航空公司在值机时分配。",
     modes: {
       skip: {
         title: "稍后选座",
-        body: "值机时自动分配座位,可能无法相邻。",
+        body: "值机时自动分配座位，可能无法相邻。",
       },
       auto: {
         title: "自动相邻分配",
-        body: "航空公司将尽量安排同行乘客相邻就座,免费。",
+        body: "航空公司将尽量安排同行乘客相邻就座，免费。",
       },
       now: {
         title: "立即选座",

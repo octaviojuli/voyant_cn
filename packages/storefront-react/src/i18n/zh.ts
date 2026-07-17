@@ -2,8 +2,8 @@ import type { StorefrontSettingsUiMessages } from "./messages.js"
 
 /**
  * Simplified Chinese (zh) settings messages. Terminology follows
- * `docs/i18n-zh-glossary.md` (Storefront=在线商城, Payment=收款(入账方向),
- * 支付方式=客户支付工具, Travel Credit=旅行储值金, Invoice=账单, 定金/尾款).
+ * `docs/i18n-zh-glossary.md` (Storefront=在线商城， Payment=收款(入账方向),
+ * 支付方式=客户支付工具， Travel Credit=旅行储值金， Invoice=账单，定金/尾款).
  */
 export const storefrontSettingsUiZh: StorefrontSettingsUiMessages = {
   page: {

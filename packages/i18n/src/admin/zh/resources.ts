@@ -196,7 +196,7 @@ export const adminResourcesZh: AdminResourcesMessages = {
       noStartTime: "无开始时间",
       resource: {
         notFound: "未找到资源",
-        deleteConfirm: "删除此资源?",
+        deleteConfirm: "删除此资源？",
         detailsTitle: "资源详情",
         poolMembershipsTitle: "资源池归属",
         poolMembershipsEmpty: "该资源不属于任何资源池。",
@@ -211,7 +211,7 @@ export const adminResourcesZh: AdminResourcesMessages = {
       },
       pool: {
         notFound: "未找到资源池",
-        deleteConfirm: "删除此资源池?",
+        deleteConfirm: "删除此资源池？",
         detailsTitle: "资源池详情",
         membersTitle: "成员",
         membersEmpty: "尚无资源加入该资源池。",
@@ -225,7 +225,7 @@ export const adminResourcesZh: AdminResourcesMessages = {
       allocation: {
         notFound: "未找到资源分配",
         pageTitle: "资源分配",
-        deleteConfirm: "删除此资源分配?",
+        deleteConfirm: "删除此资源分配？",
         detailsTitle: "资源分配详情",
         ruleLabel: "规则",
         startTimeLabel: "开始时间",
@@ -234,7 +234,7 @@ export const adminResourcesZh: AdminResourcesMessages = {
       assignment: {
         notFound: "未找到指派",
         pageTitle: "班期指派",
-        deleteConfirm: "删除此指派?",
+        deleteConfirm: "删除此指派？",
         detailsTitle: "指派详情",
         assignedByLabel: "指派人",
         releasedLabel: "已释放",

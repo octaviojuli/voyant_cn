@@ -144,13 +144,13 @@ export const crmUiZhCommerceMessages = {
     },
     emptyNoStages: {
       title: "暂无阶段",
-      description: "请先为该销售管道添加阶段,再创建报价。",
+      description: "请先为该销售管道添加阶段，再创建报价。",
     },
   },
   createPipelineDialog: {
     title: "创建销售管道",
     nameLabel: "名称",
-    namePlaceholder: "例如:销售管道",
+    namePlaceholder: "例如：销售管道",
     setDefault: "设为默认销售管道",
     validation: {
       nameRequired: "请填写销售管道名称。",
@@ -159,7 +159,7 @@ export const crmUiZhCommerceMessages = {
   },
   manageStagesDialog: {
     title: "管理阶段",
-    empty: "暂无阶段,请在下方添加。",
+    empty: "暂无阶段，请在下方添加。",
     addStageTitle: "添加阶段",
     stageNamePlaceholder: "阶段名称",
     probabilityPlaceholder: "%",
@@ -182,8 +182,8 @@ export const crmUiZhCommerceMessages = {
     reopen: "重新开启",
     delete: "删除",
     deleteConfirm: {
-      title: "删除该报价?",
-      description: "该报价将被永久删除,此操作无法撤销。",
+      title: "删除该报价？",
+      description: "该报价将被永久删除，此操作无法撤销。",
       confirm: "删除",
     },
     lostDialog: {
@@ -196,7 +196,7 @@ export const crmUiZhCommerceMessages = {
     descriptionTitle: "描述",
     descriptionPlaceholder: "为客户描述该方案(将显示在共享的方案页面上)…",
     versionsTitle: "报价版本",
-    versionsEmpty: "暂无版本,请创建第一个版本。",
+    versionsEmpty: "暂无版本，请创建第一个版本。",
     versionsLoadFailed: "报价版本加载失败。",
     versionActive: "生效中",
     versionLabel: "v{number}",
@@ -204,7 +204,7 @@ export const crmUiZhCommerceMessages = {
     sendForReview: "发送审阅",
     copyReviewLink: "复制审阅链接",
     copyReviewOnlyLink: "复制仅审阅链接",
-    reviewOnlyNotice: "仅审阅:客户可请求修改或拒绝,但在行程快照冻结前无法接受。",
+    reviewOnlyNotice: "仅审阅：客户可请求修改或拒绝，但在行程快照冻结前无法接受。",
     proposalLinkCopied: "审阅链接已复制到剪贴板",
     proposalSendFailed: "方案分享失败",
     detailsTitle: "商机详情",
@@ -231,7 +231,7 @@ export const crmUiZhCommerceMessages = {
   quoteLineItemsCard: {
     title: "行项目",
     description: "该报价包含的内容——机票、住宿、体验。",
-    empty: "暂无条目,请添加该报价包含的内容。",
+    empty: "暂无条目，请添加该报价包含的内容。",
     columns: {
       item: "条目",
       qty: "数量",
@@ -240,7 +240,7 @@ export const crmUiZhCommerceMessages = {
     },
     addItem: "添加条目",
     editItem: "编辑条目",
-    namePlaceholder: "条目名称(如:往返机票、5 晚住宿)",
+    namePlaceholder: "条目名称(如：往返机票、5 晚住宿)",
     qtyPlaceholder: "数量",
     pricePlaceholder: "单价",
     addFailed: "条目添加失败。",
