@@ -5,6 +5,7 @@
   "scripts": {
     "seed": "tsx scripts/seed.ts",
     "seed:generated": "tsx scripts/seed-generated.ts",
+    "seed:zh-cn": "tsx scripts/seed-zh-cn.ts",
     "test": "vitest run scripts/seed-catalog-verticals.test.ts"
   },
   "dependencies": {
