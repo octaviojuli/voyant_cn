@@ -413,6 +413,58 @@ JSON 字段名、数据库表名/列名、TypeScript 类型名、事件名,以�
 | Refund Percent(基点) | 退款比例(基点) | 财务直译,10000=100% |
 | Checksum / Storage Reference | 校验和 / 存储引用 | 技术通行译法 |
 
+### 分销与运营补充(distribution / operations)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Booking Link | 订单链接 | 与外部渠道订单的同步关联;"映射"留给产品映射/外部映射词系 |
+| Product Mapping | 产品映射 | 与外部映射同族 |
+| Delivery(渠道推送) | 投递 | "送达"专属凭证生命周期动词;Push=推送 |
+| Connector | 连接器 | 技术通行译法 |
+| Throttled / Rate-limited | 已限流 / 被限流 | 技术通行译法 |
+| Payment Owner / Cancellation Owner | 收款方 / 取消责任方 | 合同条款归属;Split=分账 |
+| Expire(批量动作) | 设为到期 | 与状态"已到期"呼应 |
+| Availability(供应商日历/同步流) | 可用情况 / 可售数据 | "可售性"专属 Sellability |
+| Contract active / pending | 生效中 / 待生效 | 与 Executed=已生效 词族一致 |
+| Flat / Per person/group/night/vehicle | 固定价 / 按人/按团/按晚/按车 | 价率单位 |
+| Assignment Gaps / Ownership Gaps | 指派缺口 / 归属缺口 | 概览指标卡 |
+| Released / Release | 释放时间 / 释放 | 占用释放 |
+| Provisioned | 已配置 | 资源容量芯片 |
+| Unallocated(travelers) | 未占位 | 占位词族的否定态 |
+
+### 机票与包船补充(flights / charters)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Offer(航班搜索结果) | 航班方案 | "报价"专属 Quote;方案词族(候选方案/方案) |
+| Passenger | 乘客 | 本表将"乘客"划归交通场景,机票正是该场景;出行人保留给 Traveler |
+| Validating carrier | 出票航司 | 航空分销标准词 |
+| Billing / Billed to | 账单信息 / 账单抬头 | 账单词族;"抬头"为国内标准 |
+| Codeshare / Interline | 代码共享 / 联运 | 民航标准 |
+| Layover / Nonstop | 中转(停留)/ 直飞 | 民航标准 |
+| Exit row / Bulkhead / Extra legroom | 安全出口排 / 隔板座 / 加宽腿部空间 | 客舱标准 |
+| Special assistance / Priority boarding / Lounge access | 特殊协助 / 优先登机 / 贵宾休息室 | 航空服务标准 |
+| Charterer | 承租方 | MYBA 包船合同标准;避开"客户" |
+| Charter fee | 包船费 | 由包船直推 |
+| Whole-yacht | 整船 | 游艇行业标准 |
+| Suite(游艇) | 套房 | 舱房留给邮轮 cabins |
+| Owners / Penthouse / Signature(套房级) | 船东套房 / 顶层套房 / 尊享 | 行业/品牌层级惯例 |
+| All-in | 一价全含 | 旅游零售标准 |
+| Price on request | 价格另询 | 与需询位同族 |
+| Top-up required | 需补款 | APA 追缴 |
+| Embarkation | 登船 | 直译 |
+
+### 身份补充(identity)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Identity(页面题) | 身份信息 | 沿用 settings zh 先例 |
+| Entity | 实体 | 选择器跨联系人/组织/供应商,无领域词可覆盖 |
+| Value(联系方式内容) | 内容 | "值"过于程序员化 |
+| Emergency / General(指定联系人角色) | 紧急联络 / 常规 | 名录角色标准说法 |
+| Social(联系方式类型) | 社交账号 | 存储的是账号句柄 |
+| legal 分工 | 法定(地址标签)/ 法务(部门角色) | 语境分工 |
+
 ### 通用后台词(auth / team)
 
 | 英文 | 中文译法 | 取舍理由 |
