@@ -920,6 +920,17 @@ const paymentMethodLabelsByLanguage: Record<string, Record<string, string>> = {
     voucher: "Voucher",
     other: "Alta",
   },
+  zh: {
+    bank_transfer: "银行转账",
+    credit_card: "信用卡",
+    debit_card: "借记卡",
+    cash: "现金",
+    cheque: "支票",
+    wallet: "钱包",
+    direct_bill: "挂账",
+    voucher: "凭证",
+    other: "其他",
+  },
 }
 
 function formatPaymentMethodLabel(method: string, language: string): string {

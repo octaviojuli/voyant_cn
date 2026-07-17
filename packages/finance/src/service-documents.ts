@@ -95,6 +95,35 @@ export interface InvoiceDocumentGeneratedEvent {
   regenerated: boolean
 }
 
+function normalizeTemplateLanguage(value: string | null | undefined): string | null {
+  const normalized = value?.trim().toLowerCase()
+  return normalized || null
+}
+
+/**
+ * Pick the default invoice template for a preferred language. Rows are
+ * expected to be active defaults already ordered by recency (updatedAt desc).
+ * Matching is case-insensitive: first the full tag (`zh-CN`), then the
+ * primary subtag (`zh`), falling back to the most recent default when no
+ * language-matched default exists — the pre-language behavior.
+ */
+export function pickDefaultInvoiceTemplate<T extends { language: string }>(
+  rows: T[],
+  language: string | null | undefined,
+): T | null {
+  const preferred = normalizeTemplateLanguage(language)
+  if (!preferred) return rows[0] ?? null
+
+  const exact = rows.find((row) => normalizeTemplateLanguage(row.language) === preferred)
+  if (exact) return exact
+
+  const preferredPrimary = preferred.split(/[-_]/)[0]
+  const primaryMatch = rows.find(
+    (row) => normalizeTemplateLanguage(row.language)?.split(/[-_]/)[0] === preferredPrimary,
+  )
+  return primaryMatch ?? rows[0] ?? null
+}
+
 type PreparedInvoiceDocument =
   | { status: "not_found" }
   | {
@@ -258,13 +287,16 @@ async function prepareInvoiceDocument(
 
   let templateId = input.templateId ?? invoice.templateId ?? null
   if (!templateId) {
-    const [defaultTemplate] = await db
+    const defaultTemplates = await db
       .select()
       .from(invoiceTemplates)
       .where(and(eq(invoiceTemplates.isDefault, true), eq(invoiceTemplates.active, true)))
       .orderBy(desc(invoiceTemplates.updatedAt))
-      .limit(1)
 
+    const defaultTemplate = pickDefaultInvoiceTemplate(
+      defaultTemplates,
+      input.language ?? invoice.language,
+    )
     templateId = defaultTemplate?.id ?? null
   }
 

@@ -19,6 +19,7 @@
     "@voyant-travel/identity": "workspace:^",
     "@voyant-travel/inventory": "workspace:^",
     "@voyant-travel/legal": "workspace:^",
+    "@voyant-travel/notifications": "workspace:^",
     "@voyant-travel/operations": "workspace:^",
     "@voyant-travel/quotes": "workspace:^",
     "@voyant-travel/relationships": "workspace:^",
