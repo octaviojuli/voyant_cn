@@ -12,3 +12,4 @@ export {
   usePromotionsUiMessagesOrDefault,
 } from "./provider.js"
 export { promotionsUiRo } from "./ro.js"
+export { promotionsUiZh } from "./zh.js"

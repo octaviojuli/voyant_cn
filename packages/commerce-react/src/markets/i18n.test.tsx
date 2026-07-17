@@ -141,6 +141,34 @@ describe("markets-ui i18n", () => {
     expect(html).toContain("Editeaza Limba")
     expect(html).toContain("Arhivat")
   })
+
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <MarketsUiMessagesProvider locale="zh-CN">
+        <div>
+          <MarketDialog open onOpenChange={() => {}} market={market} />
+          <MarketCurrencyDialog
+            open
+            onOpenChange={() => {}}
+            marketId={market.id}
+            currency={marketCurrency}
+          />
+          <MarketLocaleDialog
+            open
+            onOpenChange={() => {}}
+            marketId={market.id}
+            locale={marketLocale}
+          />
+          <MarketsMessageProbe />
+        </div>
+      </MarketsUiMessagesProvider>,
+    )
+
+    expect(html).toContain("编辑市场")
+    expect(html).toContain("编辑货币")
+    expect(html).toContain("编辑语言")
+    expect(html).toContain("已归档")
+  })
 })
 
 function MarketsMessageProbe() {

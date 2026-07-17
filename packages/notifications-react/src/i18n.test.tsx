@@ -49,6 +49,16 @@ describe("notifications-ui i18n", () => {
 
     expect(html).toContain("Caută șabloane…")
   })
+
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <NotificationsUiMessagesProvider locale="zh-CN">
+        <PickerProbe />
+      </NotificationsUiMessagesProvider>,
+    )
+
+    expect(html).toContain("搜索模板…")
+  })
 })
 
 function PickerProbe() {

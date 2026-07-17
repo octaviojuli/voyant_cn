@@ -27,6 +27,7 @@
     "./markets/i18n": "./src/markets/i18n/index.ts",
     "./markets/i18n/en": "./src/markets/i18n/en.ts",
     "./markets/i18n/ro": "./src/markets/i18n/ro.ts",
+    "./markets/i18n/zh": "./src/markets/i18n/zh.ts",
     "./markets/components/*": "./src/markets/components/*.tsx",
     "./pricing": "./src/pricing.ts",
     "./pricing/provider": "./src/pricing/provider.tsx",
@@ -38,12 +39,14 @@
     "./pricing/i18n": "./src/pricing/i18n/index.ts",
     "./pricing/i18n/en": "./src/pricing/i18n/en.ts",
     "./pricing/i18n/ro": "./src/pricing/i18n/ro.ts",
+    "./pricing/i18n/zh": "./src/pricing/i18n/zh.ts",
     "./pricing/components/*": "./src/pricing/components/*.tsx",
     "./promotions": "./src/promotions.ts",
     "./promotions/ui": "./src/promotions/ui.ts",
     "./promotions/i18n": "./src/promotions/i18n/index.ts",
     "./promotions/i18n/en": "./src/promotions/i18n/en.ts",
     "./promotions/i18n/ro": "./src/promotions/i18n/ro.ts",
+    "./promotions/i18n/zh": "./src/promotions/i18n/zh.ts",
     "./promotions/components/*": "./src/promotions/*.tsx",
     "./promotions/admin": "./src/promotions-admin.ts",
     "./sellability": "./src/sellability.ts",
@@ -56,6 +59,7 @@
     "./sellability/i18n": "./src/sellability/i18n/index.ts",
     "./sellability/i18n/en": "./src/sellability/i18n/en.ts",
     "./sellability/i18n/ro": "./src/sellability/i18n/ro.ts",
+    "./sellability/i18n/zh": "./src/sellability/i18n/zh.ts",
     "./sellability/components/*": "./src/sellability/components/*.tsx",
     "./i18n": "./src/i18n.tsx",
     "./styles.css": "./src/styles.css"
@@ -193,6 +197,11 @@
         "import": "./dist/markets/i18n/ro.js",
         "default": "./dist/markets/i18n/ro.js"
       },
+      "./markets/i18n/zh": {
+        "types": "./dist/markets/i18n/zh.d.ts",
+        "import": "./dist/markets/i18n/zh.js",
+        "default": "./dist/markets/i18n/zh.js"
+      },
       "./markets/components/*": {
         "types": "./dist/markets/components/*.d.ts",
         "import": "./dist/markets/components/*.js",
@@ -246,6 +255,11 @@
         "import": "./dist/pricing/i18n/ro.js",
         "default": "./dist/pricing/i18n/ro.js"
       },
+      "./pricing/i18n/zh": {
+        "types": "./dist/pricing/i18n/zh.d.ts",
+        "import": "./dist/pricing/i18n/zh.js",
+        "default": "./dist/pricing/i18n/zh.js"
+      },
       "./pricing/components/*": {
         "types": "./dist/pricing/components/*.d.ts",
         "import": "./dist/pricing/components/*.js",
@@ -275,6 +289,11 @@
         "types": "./dist/promotions/i18n/ro.d.ts",
         "import": "./dist/promotions/i18n/ro.js",
         "default": "./dist/promotions/i18n/ro.js"
+      },
+      "./promotions/i18n/zh": {
+        "types": "./dist/promotions/i18n/zh.d.ts",
+        "import": "./dist/promotions/i18n/zh.js",
+        "default": "./dist/promotions/i18n/zh.js"
       },
       "./promotions/components/*": {
         "types": "./dist/promotions/*.d.ts",
@@ -333,6 +352,11 @@
         "types": "./dist/sellability/i18n/ro.d.ts",
         "import": "./dist/sellability/i18n/ro.js",
         "default": "./dist/sellability/i18n/ro.js"
+      },
+      "./sellability/i18n/zh": {
+        "types": "./dist/sellability/i18n/zh.d.ts",
+        "import": "./dist/sellability/i18n/zh.js",
+        "default": "./dist/sellability/i18n/zh.js"
       },
       "./sellability/components/*": {
         "types": "./dist/sellability/components/*.d.ts",

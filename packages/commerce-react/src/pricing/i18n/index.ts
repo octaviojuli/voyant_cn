@@ -22,3 +22,4 @@ export {
   usePricingUiMessagesOrDefault,
 } from "./provider.js"
 export { pricingUiRo } from "./ro.js"
+export { pricingUiZh } from "./zh.js"

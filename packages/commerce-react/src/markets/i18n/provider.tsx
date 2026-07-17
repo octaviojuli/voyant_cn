@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { marketsUiEn } from "./en.js"
 import type { MarketsUiMessages } from "./messages.js"
 import { marketsUiRo } from "./ro.js"
+import { marketsUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const marketsUiMessageDefinitions = {
   en: marketsUiEn,
   ro: marketsUiRo,
+  zh: marketsUiZh,
 } satisfies LocaleMessageDefinitions<MarketsUiMessages>
 
 export type MarketsUiMessageOverrides = LocaleMessageOverrides<MarketsUiMessages>

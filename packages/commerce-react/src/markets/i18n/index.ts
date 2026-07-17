@@ -12,3 +12,4 @@ export {
   useMarketsUiMessagesOrDefault,
 } from "./provider.js"
 export { marketsUiRo } from "./ro.js"
+export { marketsUiZh } from "./zh.js"

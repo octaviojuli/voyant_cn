@@ -7,3 +7,4 @@ export {
   useNavigationPreferencesMessages,
 } from "./provider.js"
 export { navigationPreferencesRo } from "./ro.js"
+export { navigationPreferencesZh } from "./zh.js"

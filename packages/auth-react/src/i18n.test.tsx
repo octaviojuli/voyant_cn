@@ -57,6 +57,16 @@ describe("auth-ui i18n", () => {
     expect(html).toContain("Tokenuri API")
   })
 
+  it("provides chinese messages through the provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <AuthUiMessagesProvider locale="zh-CN">
+        <MessageProbe />
+      </AuthUiMessagesProvider>,
+    )
+
+    expect(html).toContain("API 令牌")
+  })
+
   it("provides locale-aware date formatters through the provider", () => {
     const value = "2026-05-12T13:45:00.000Z"
     const expected = new Intl.DateTimeFormat("ro-RO", {

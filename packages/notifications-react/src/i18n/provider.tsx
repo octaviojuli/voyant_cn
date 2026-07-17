@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { notificationsUiEn } from "./en.js"
 import type { NotificationsUiMessages } from "./messages.js"
 import { notificationsUiRo } from "./ro.js"
+import { notificationsUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const notificationsUiMessageDefinitions = {
   en: notificationsUiEn,
   ro: notificationsUiRo,
+  zh: notificationsUiZh,
 } satisfies LocaleMessageDefinitions<NotificationsUiMessages>
 
 export type NotificationsUiMessageOverrides = LocaleMessageOverrides<NotificationsUiMessages>

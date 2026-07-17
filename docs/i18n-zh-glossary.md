@@ -465,6 +465,53 @@ JSON 字段名、数据库表名/列名、TypeScript 类型名、事件名,以�
 | Social(联系方式类型) | 社交账号 | 存储的是账号句柄 |
 | legal 分工 | 法定(地址标签)/ 法务(部门角色) | 语境分工 |
 
+### 通知与工作流补充(notifications / workflows)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Channel(通知的邮件/短信) | 发送方式 | "渠道"专属分销;沿用"沟通渠道=方式"先例并消歧 |
+| Provider(发送服务商) | 服务商 | "上游"专属订单来源 |
+| Quiet hours | 免打扰时段 | 移动端通行 |
+| Blackout dates | 停发日期 | "停售日"专属销售库存 |
+| Escalation bucket / Cadence | 递进档位 / 频次 | 提醒节奏语义 |
+| Suppression window / Rate limit | 抑制窗口 / 频率限制 | 技术通行译法 |
+| primary/cc/bcc | 主送 / 抄送 / 密送 | 邮件标准 |
+| Rerun / Resume | 重新运行 / 恢复运行 | "重试"专属步骤级 Retry |
+| Workflow schedule | 计划任务 | "排期"专属库存域;cron 任务标准词 |
+| Correlation ID | 关联标识 | 技术通行译法 |
+
+### 商务定价补充(commerce)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Net / Gross(目录类型) | 净价 / 含佣价 | 旅游同业标准词对 |
+| Reporting currency | 报表货币 | 与结算货币对仗 |
+| Tax context | 税务上下文 | 技术字段直译 |
+| Unit tier | 单元阶梯 | 阶梯价行业标准 |
+| Dropoff | 下车点 | 与"上车点"(接驳点显示形)配对 |
+| Pricing mode | 计价方式 | 计价词族 |
+| Auto-applied / Code-redeemed | 自动生效 / 凭码激活 | 优惠码为"激活促销",避开核销(凭证专属) |
+| Activate(促销) | 激活 | 区别于启用/停用记录开关 |
+| Scheduled(促销状态) | 待生效 | 沿用生效中/待生效词族 |
+| Audience | 受众 | 营销标准 |
+| Fare code / Cabin grade | 票价代码 / 舱房等级 | 机票/邮轮词族 |
+| Availability window(政策类型) | 可售窗口 | 可售词族+窗口先例 |
+| Capability(OCTO) | 能力 | 直译 |
+
+### 初始化与令牌补充(setup / auth)
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Setup(首跑流程) | 初始设置 | 区别于 Settings=设置 |
+| Navigation preferences | 导航偏好 | 偏好词族 |
+| Invitation/Verification token | 邀请令牌 / 验证令牌 | 类推重置令牌 |
+| Token secret / Rotate | 令牌密钥 / 轮换 | 技术通行译法 |
+| Roster | 成员名单 | 团队名录语境 |
+| Last activity | 最近动态 | 沿用 Activity(事件流)=动态 |
+| Enabled/Disabled(令牌) | 已启用 / 已禁用 | 与成员启用/停用刻意分开 |
+| Host app / Locale(字段) | 宿主应用 / 语言区域 | 技术通行译法 |
+| Complete your profile | 完善个人资料 | 国内 SaaS 惯用 |
+
 ### 通用后台词(auth / team)
 
 | 英文 | 中文译法 | 取舍理由 |
