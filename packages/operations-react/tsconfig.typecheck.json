@@ -1640,6 +1640,10 @@
         "../storefront-react/dist/customer-portal/query-keys.d.ts"
       ],
       "@voyant-travel/storefront-react/hooks": ["../storefront-react/dist/hooks/index.d.ts"],
+      "@voyant-travel/storefront-react/i18n": ["../storefront-react/dist/i18n/index.d.ts"],
+      "@voyant-travel/storefront-react/i18n/en": ["../storefront-react/dist/i18n/en.d.ts"],
+      "@voyant-travel/storefront-react/i18n/ro": ["../storefront-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/storefront-react/i18n/zh": ["../storefront-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/storefront-react/provider": ["../storefront-react/dist/provider.d.ts"],
       "@voyant-travel/storefront-react/query-keys": ["../storefront-react/dist/query-keys.d.ts"],
       "@voyant-travel/storefront-react/storefront": [

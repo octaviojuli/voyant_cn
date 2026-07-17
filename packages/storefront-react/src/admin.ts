@@ -27,6 +27,10 @@ export function createSelectedStorefrontAdminExtension(): AdminExtension {
           import("./components/storefront-settings-page.js").then((module) =>
             adminRoutePageModule(module.StorefrontSettingsPage),
           ),
+        routeMessagesProvider: () =>
+          import("./i18n/provider.js").then((module) => ({
+            default: module.StorefrontSettingsUiMessagesProvider,
+          })),
       },
     ],
     setupSteps: [
@@ -45,6 +49,11 @@ export function createSelectedStorefrontAdminExtension(): AdminExtension {
             title: "Identitatea magazinului",
             description: "Adauga sigla si identitatea vizuala afisata clientilor in magazin.",
             action: "Deschide setarile magazinului",
+          },
+          zh: {
+            title: "在线商城品牌",
+            description: "添加客户在您的在线商城中看到的标志与视觉识别。",
+            action: "打开在线商城设置",
           },
         },
         prefill: parseStorefrontSetupPrefill,

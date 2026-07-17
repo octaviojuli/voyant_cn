@@ -19,6 +19,10 @@
     "./ui": "./src/ui.ts",
     "./styles.css": "./src/styles.css",
     "./storefront": "./src/storefront/index.ts",
+    "./i18n": "./src/i18n/index.ts",
+    "./i18n/en": "./src/i18n/en.ts",
+    "./i18n/ro": "./src/i18n/ro.ts",
+    "./i18n/zh": "./src/i18n/zh.ts",
     "./customer-portal": "./src/customer-portal/index.ts",
     "./customer-portal/client": "./src/customer-portal/client.ts",
     "./customer-portal/hooks": "./src/customer-portal/hooks/index.ts",
@@ -147,6 +151,26 @@
         "types": "./dist/storefront/index.d.ts",
         "import": "./dist/storefront/index.js",
         "default": "./dist/storefront/index.js"
+      },
+      "./i18n": {
+        "types": "./dist/i18n/index.d.ts",
+        "import": "./dist/i18n/index.js",
+        "default": "./dist/i18n/index.js"
+      },
+      "./i18n/en": {
+        "types": "./dist/i18n/en.d.ts",
+        "import": "./dist/i18n/en.js",
+        "default": "./dist/i18n/en.js"
+      },
+      "./i18n/ro": {
+        "types": "./dist/i18n/ro.d.ts",
+        "import": "./dist/i18n/ro.js",
+        "default": "./dist/i18n/ro.js"
+      },
+      "./i18n/zh": {
+        "types": "./dist/i18n/zh.d.ts",
+        "import": "./dist/i18n/zh.js",
+        "default": "./dist/i18n/zh.js"
       },
       "./customer-portal": {
         "types": "./dist/customer-portal/index.d.ts",

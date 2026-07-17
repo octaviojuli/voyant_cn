@@ -20,6 +20,7 @@ import { PhoneInput } from "@voyant-travel/ui/components/phone-input"
 import { Skeleton } from "@voyant-travel/ui/components/skeleton"
 import { AlertCircle, Plus, Trash2 } from "lucide-react"
 
+import { useStorefrontSettingsUiMessagesOrDefault } from "../i18n/provider.js"
 import {
   type FormState,
   loadingSectionKeys,
@@ -65,20 +66,19 @@ export function StorefrontSettingsErrorState({
   error: unknown
   refetch: () => void
 }) {
+  const t = useStorefrontSettingsUiMessagesOrDefault().loadError
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AlertCircle className="size-5 text-destructive" />
-          Could not load settings
+          {t.title}
         </CardTitle>
-        <CardDescription>
-          {error instanceof Error ? error.message : "The storefront settings request failed."}
-        </CardDescription>
+        <CardDescription>{error instanceof Error ? error.message : t.fallbackBody}</CardDescription>
       </CardHeader>
       <CardFooter>
         <Button type="button" variant="outline" onClick={refetch}>
-          Try again
+          {t.retry}
         </Button>
       </CardFooter>
     </Card>
@@ -86,26 +86,27 @@ export function StorefrontSettingsErrorState({
 }
 
 export function BrandingSection({ form, setField }: SettingsSectionProps) {
+  const t = useStorefrontSettingsUiMessagesOrDefault().branding
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Branding</CardTitle>
-        <CardDescription>Customer-facing assets and brand color tokens.</CardDescription>
+        <CardTitle>{t.title}</CardTitle>
+        <CardDescription>{t.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="storefront-logo-url">Logo URL</FieldLabel>
+            <FieldLabel htmlFor="storefront-logo-url">{t.logoUrl}</FieldLabel>
             <Input
               id="storefront-logo-url"
               value={form.logoUrl}
               onChange={(event) => setField("logoUrl", event.target.value)}
-              placeholder="https://cdn.example.com/logo.svg"
+              placeholder={t.logoUrlPlaceholder}
             />
           </Field>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="storefront-favicon-url">Favicon URL</FieldLabel>
+              <FieldLabel htmlFor="storefront-favicon-url">{t.faviconUrl}</FieldLabel>
               <Input
                 id="storefront-favicon-url"
                 value={form.faviconUrl}
@@ -113,7 +114,7 @@ export function BrandingSection({ form, setField }: SettingsSectionProps) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="storefront-brand-mark-url">Brand mark URL</FieldLabel>
+              <FieldLabel htmlFor="storefront-brand-mark-url">{t.brandMarkUrl}</FieldLabel>
               <Input
                 id="storefront-brand-mark-url"
                 value={form.brandMarkUrl}
@@ -121,33 +122,33 @@ export function BrandingSection({ form, setField }: SettingsSectionProps) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="storefront-primary-color">Primary color</FieldLabel>
+              <FieldLabel htmlFor="storefront-primary-color">{t.primaryColor}</FieldLabel>
               <Input
                 id="storefront-primary-color"
                 value={form.primaryColor}
                 onChange={(event) => setField("primaryColor", event.target.value)}
-                placeholder="#0f766e"
+                placeholder={t.primaryColorPlaceholder}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="storefront-accent-color">Accent color</FieldLabel>
+              <FieldLabel htmlFor="storefront-accent-color">{t.accentColor}</FieldLabel>
               <Input
                 id="storefront-accent-color"
                 value={form.accentColor}
                 onChange={(event) => setField("accentColor", event.target.value)}
-                placeholder="#f59e0b"
+                placeholder={t.accentColorPlaceholder}
               />
             </Field>
           </div>
           <Field>
-            <FieldLabel htmlFor="storefront-supported-languages">Supported languages</FieldLabel>
+            <FieldLabel htmlFor="storefront-supported-languages">{t.supportedLanguages}</FieldLabel>
             <Input
               id="storefront-supported-languages"
               value={form.supportedLanguages}
               onChange={(event) => setField("supportedLanguages", event.target.value)}
-              placeholder="en, ro, fr-FR"
+              placeholder={t.supportedLanguagesPlaceholder}
             />
-            <FieldDescription>Use comma-separated BCP 47 language tags.</FieldDescription>
+            <FieldDescription>{t.supportedLanguagesHint}</FieldDescription>
           </Field>
         </FieldGroup>
       </CardContent>
@@ -156,17 +157,18 @@ export function BrandingSection({ form, setField }: SettingsSectionProps) {
 }
 
 export function SupportSection({ form, setField, updateSupportLink }: SupportSectionProps) {
+  const t = useStorefrontSettingsUiMessagesOrDefault().support
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Support</CardTitle>
-        <CardDescription>Contact channels shown to storefront customers.</CardDescription>
+        <CardTitle>{t.title}</CardTitle>
+        <CardDescription>{t.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <FieldGroup>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="storefront-support-email">Email</FieldLabel>
+              <FieldLabel htmlFor="storefront-support-email">{t.email}</FieldLabel>
               <Input
                 id="storefront-support-email"
                 type="email"
@@ -175,7 +177,7 @@ export function SupportSection({ form, setField, updateSupportLink }: SupportSec
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="storefront-support-phone">Phone</FieldLabel>
+              <FieldLabel htmlFor="storefront-support-phone">{t.phone}</FieldLabel>
               <PhoneInput
                 id="storefront-support-phone"
                 value={form.supportPhone ?? ""}
@@ -184,7 +186,7 @@ export function SupportSection({ form, setField, updateSupportLink }: SupportSec
             </Field>
           </div>
           <FieldSet>
-            <FieldLegend>Contact links</FieldLegend>
+            <FieldLegend>{t.contactLinks}</FieldLegend>
             <div className="space-y-2">
               {form.supportLinks.map((link) => (
                 <div
@@ -196,16 +198,16 @@ export function SupportSection({ form, setField, updateSupportLink }: SupportSec
                     onChange={(event) =>
                       updateSupportLink(link.rowKey, { label: event.target.value })
                     }
-                    placeholder="WhatsApp"
-                    aria-label="Contact link label"
+                    placeholder={t.linkLabelPlaceholder}
+                    aria-label={t.linkLabelAria}
                   />
                   <Input
                     value={link.url}
                     onChange={(event) =>
                       updateSupportLink(link.rowKey, { url: event.target.value })
                     }
-                    placeholder="https://example.com/contact"
-                    aria-label="Contact link URL"
+                    placeholder={t.linkUrlPlaceholder}
+                    aria-label={t.linkUrlAria}
                   />
                   <Button
                     type="button"
@@ -217,7 +219,7 @@ export function SupportSection({ form, setField, updateSupportLink }: SupportSec
                         form.supportLinks.filter((row) => row.rowKey !== link.rowKey),
                       )
                     }
-                    aria-label="Remove contact link"
+                    aria-label={t.removeLinkAria}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -235,7 +237,7 @@ export function SupportSection({ form, setField, updateSupportLink }: SupportSec
                 }
               >
                 <Plus className="size-4" />
-                Add link
+                {t.addLink}
               </Button>
             </div>
           </FieldSet>
@@ -246,17 +248,18 @@ export function SupportSection({ form, setField, updateSupportLink }: SupportSec
 }
 
 export function LegalLocalizationSection({ form, setField }: SettingsSectionProps) {
+  const t = useStorefrontSettingsUiMessagesOrDefault().legalLocalization
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Legal and localization</CardTitle>
-        <CardDescription>Policy links and default display preferences.</CardDescription>
+        <CardTitle>{t.title}</CardTitle>
+        <CardDescription>{t.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <FieldGroup>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="storefront-terms-url">Terms URL</FieldLabel>
+              <FieldLabel htmlFor="storefront-terms-url">{t.termsUrl}</FieldLabel>
               <Input
                 id="storefront-terms-url"
                 value={form.termsUrl}
@@ -264,7 +267,7 @@ export function LegalLocalizationSection({ form, setField }: SettingsSectionProp
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="storefront-privacy-url">Privacy URL</FieldLabel>
+              <FieldLabel htmlFor="storefront-privacy-url">{t.privacyUrl}</FieldLabel>
               <Input
                 id="storefront-privacy-url"
                 value={form.privacyUrl}
@@ -272,7 +275,7 @@ export function LegalLocalizationSection({ form, setField }: SettingsSectionProp
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="storefront-cancellation-url">Cancellation URL</FieldLabel>
+              <FieldLabel htmlFor="storefront-cancellation-url">{t.cancellationUrl}</FieldLabel>
               <Input
                 id="storefront-cancellation-url"
                 value={form.cancellationUrl}
@@ -280,7 +283,7 @@ export function LegalLocalizationSection({ form, setField }: SettingsSectionProp
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="storefront-contract-template">Contract template ID</FieldLabel>
+              <FieldLabel htmlFor="storefront-contract-template">{t.contractTemplateId}</FieldLabel>
               <Input
                 id="storefront-contract-template"
                 value={form.defaultContractTemplateId}
@@ -288,16 +291,16 @@ export function LegalLocalizationSection({ form, setField }: SettingsSectionProp
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="storefront-default-locale">Default locale</FieldLabel>
+              <FieldLabel htmlFor="storefront-default-locale">{t.defaultLocale}</FieldLabel>
               <Input
                 id="storefront-default-locale"
                 value={form.defaultLocale}
                 onChange={(event) => setField("defaultLocale", event.target.value)}
-                placeholder="en-US"
+                placeholder={t.defaultLocalePlaceholder}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="storefront-currency-display">Currency display</FieldLabel>
+              <FieldLabel htmlFor="storefront-currency-display">{t.currencyDisplay}</FieldLabel>
               <select
                 id="storefront-currency-display"
                 className="h-9 rounded-md border bg-background px-3 text-sm"
@@ -306,9 +309,9 @@ export function LegalLocalizationSection({ form, setField }: SettingsSectionProp
                   setField("currencyDisplay", event.target.value as FormState["currencyDisplay"])
                 }
               >
-                <option value="code">Code</option>
-                <option value="symbol">Symbol</option>
-                <option value="name">Name</option>
+                <option value="code">{t.currencyDisplayLabels.code}</option>
+                <option value="symbol">{t.currencyDisplayLabels.symbol}</option>
+                <option value="name">{t.currencyDisplayLabels.name}</option>
               </select>
             </Field>
           </div>
@@ -325,14 +328,12 @@ export function StorefrontSettingsSaveError({
   localError: string | null
   mutationError: unknown
 }) {
+  const t = useStorefrontSettingsUiMessagesOrDefault().save
   if (!localError && !mutationError) return null
 
   return (
     <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-      {localError ??
-        (mutationError instanceof Error
-          ? mutationError.message
-          : "Failed to save storefront settings.")}
+      {localError ?? (mutationError instanceof Error ? mutationError.message : t.fallbackError)}
     </p>
   )
 }
