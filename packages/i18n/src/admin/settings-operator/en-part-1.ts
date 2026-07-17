@@ -225,6 +225,7 @@ export const operatorAdminSettingsMessagesEnPart1 = {
     descriptionSuffix: " in contract templates.",
     savedToast: "Operator profile saved",
     saveFailed: "Save failed",
+    saveFailedWithStatus: "Save failed ({status})",
     saveChanges: "Save changes",
     identity: {
       title: "Identity",

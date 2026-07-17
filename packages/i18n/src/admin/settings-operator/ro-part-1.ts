@@ -228,6 +228,7 @@ export const operatorAdminSettingsMessagesRoPart1 = {
     descriptionSuffix: " in sabloanele de contract.",
     savedToast: "Profilul operatorului a fost salvat",
     saveFailed: "Salvarea a esuat",
+    saveFailedWithStatus: "Salvarea a esuat ({status})",
     saveChanges: "Salveaza modificarile",
     identity: {
       title: "Identitate",

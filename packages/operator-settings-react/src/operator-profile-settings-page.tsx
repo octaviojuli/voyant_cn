@@ -17,6 +17,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { consumeAdminSetupPrefill } from "@voyant-travel/admin/extensions"
+import { formatMessage } from "@voyant-travel/admin/lib/i18n"
 import { useOperatorAdminMessages } from "@voyant-travel/admin/providers/operator-admin-messages"
 import {
   noDepositPolicy,
@@ -200,7 +201,9 @@ export function OperatorProfileSettingsPage() {
       const failed = responses.find((res) => !res.ok)
       if (failed) {
         const body = (await failed.json().catch(() => ({}))) as { error?: string }
-        throw new Error(body.error ?? `Save failed (${failed.status})`)
+        throw new Error(
+          body.error ?? formatMessage(t.saveFailedWithStatus, { status: failed.status }),
+        )
       }
     },
     onSuccess: () => {

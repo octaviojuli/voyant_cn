@@ -217,6 +217,7 @@ export const operatorAdminSettingsZhPart1: OperatorAdminSettingsMessages["settin
     descriptionSuffix: " 字段。",
     savedToast: "运营方资料已保存",
     saveFailed: "保存失败",
+    saveFailedWithStatus: "保存失败({status})",
     saveChanges: "保存更改",
     identity: {
       title: "身份信息",
