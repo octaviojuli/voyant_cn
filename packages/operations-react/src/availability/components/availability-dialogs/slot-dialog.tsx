@@ -78,6 +78,14 @@ function toLocalDateTimeInput(instant: string, timezone: string) {
   return `${local.date}T${local.time}`
 }
 
+function getDefaultTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" // i18n-literal-ok IANA timezone fallback
+  } catch {
+    return "UTC" // i18n-literal-ok IANA timezone fallback
+  }
+}
+
 function localDateTimeInputToInstant(value: string, timezone: string) {
   const [date, time] = value.split("T")
   if (!date || !time) {
@@ -109,7 +117,7 @@ export function AvailabilitySlotDialog(props: {
       dateLocal: "",
       startsAt: "",
       endsAt: "",
-      timezone: "Europe/Bucharest", // i18n-literal-ok IANA timezone default
+      timezone: getDefaultTimezone(),
       status: "open",
       unlimited: false,
       initialPax: "",
