@@ -11,6 +11,7 @@ import {
 import { RefreshCcw } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { useOptionalOperatorAdminMessages } from "../providers/operator-admin-messages.js"
 import { ThemeProvider } from "../providers/theme.js"
 
 export interface AdminRootHeadOptions {
@@ -94,10 +95,17 @@ export interface AdminRootErrorBoundaryProps {
 export function AdminRootErrorBoundary({
   error,
   reset,
-  fallbackMessage = "Something went wrong while loading this page.",
+  fallbackMessage,
   homeHref = "/",
 }: AdminRootErrorBoundaryProps) {
-  const message = error instanceof Error && error.message ? error.message : fallbackMessage
+  // Optional: the root error boundary replaces the root component, so the
+  // app's message provider is usually gone — fall back to English copy then.
+  const messages = useOptionalOperatorAdminMessages()
+  const resolvedFallbackMessage =
+    fallbackMessage ??
+    messages?.errorBoundaryFallbackMessage ??
+    "Something went wrong while loading this page."
+  const message = error instanceof Error && error.message ? error.message : resolvedFallbackMessage
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="theme">
@@ -107,17 +115,17 @@ export function AdminRootErrorBoundary({
             <EmptyMedia variant="icon">
               <RefreshCcw className="size-5" />
             </EmptyMedia>
-            <EmptyTitle>Something went wrong</EmptyTitle>
+            <EmptyTitle>{messages?.errorBoundaryTitle ?? "Something went wrong"}</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
             <Alert variant="destructive" className="text-left">
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{messages?.errorBoundaryRequestFailed ?? "Request failed"}</AlertTitle>
               <AlertDescription>{message}</AlertDescription>
             </Alert>
             <div className="flex items-center gap-3">
-              <Button onClick={() => reset()}>Try again</Button>
+              <Button onClick={() => reset()}>{messages?.tryAgain ?? "Try again"}</Button>
               <Button variant="outline" onClick={() => window.location.assign(homeHref)}>
-                Go to dashboard
+                {messages?.goToDashboard ?? "Go to dashboard"}
               </Button>
             </div>
           </EmptyContent>

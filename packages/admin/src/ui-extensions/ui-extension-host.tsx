@@ -27,6 +27,8 @@ import { Skeleton } from "@voyant-travel/ui/components/skeleton"
 import { cn } from "@voyant-travel/ui/lib/utils"
 import { Component, type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 
+import { formatMessage } from "../lib/i18n.js"
+import { useOptionalOperatorAdminMessages } from "../providers/operator-admin-messages.js"
 import { isUiExtensionCompatible } from "./compat.js"
 
 /** Sandbox tokens the frame is allowed — never `allow-same-origin`. */
@@ -86,8 +88,15 @@ function UiExtensionStateCard({
 }
 
 function UiExtensionLoadingCard({ displayName }: { displayName: string }) {
+  // Optional: state cards may render outside the operator admin messages
+  // provider (e.g. standalone hosts/tests) — fall back to English copy there.
+  const messages = useOptionalOperatorAdminMessages()
+
   return (
-    <UiExtensionStateCard title={displayName} description="Loading extension…">
+    <UiExtensionStateCard
+      title={displayName}
+      description={messages?.uiExtensionLoadingDescription ?? "Loading extension…"}
+    >
       <div className="space-y-2">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
@@ -97,20 +106,34 @@ function UiExtensionLoadingCard({ displayName }: { displayName: string }) {
 }
 
 function UiExtensionErrorCard({ displayName }: { displayName: string }) {
+  const messages = useOptionalOperatorAdminMessages()
+
   return (
     <UiExtensionStateCard
       title={displayName}
-      description="This extension could not be loaded and was skipped."
+      description={
+        messages?.uiExtensionLoadFailedDescription ??
+        "This extension could not be loaded and was skipped."
+      }
       className="border-destructive/40"
     />
   )
 }
 
 function UiExtensionIncompatibleCard({ descriptor }: { descriptor: UiExtensionDescriptor }) {
+  const messages = useOptionalOperatorAdminMessages()
+
   return (
     <UiExtensionStateCard
       title={descriptor.displayName}
-      description={`This extension is incompatible with this admin version (requires ${descriptor.extensionApi}, admin provides ${ADMIN_UI_EXTENSION_API_VERSION}).`}
+      description={formatMessage(
+        messages?.uiExtensionIncompatibleDescription ??
+          "This extension is incompatible with this admin version (requires {requiredVersion}, admin provides {providedVersion}).",
+        {
+          requiredVersion: descriptor.extensionApi,
+          providedVersion: ADMIN_UI_EXTENSION_API_VERSION,
+        },
+      )}
     />
   )
 }

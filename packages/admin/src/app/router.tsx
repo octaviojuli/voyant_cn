@@ -12,6 +12,8 @@ import {
 import { Loader2, SearchX } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { useOptionalOperatorAdminMessages } from "../providers/operator-admin-messages.js"
+
 export interface AdminRouterContext {
   queryClient: QueryClient
 }
@@ -74,22 +76,30 @@ export function createAdminRouter<TRouteTree extends AnyRoute>({
 }
 
 export function AdminPendingFallback() {
+  // Optional: router-level fallbacks can render before the workspace mounts
+  // the operator admin messages provider — fall back to English copy there.
+  const messages = useOptionalOperatorAdminMessages()
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
       <div
         className="flex flex-col items-center gap-4 text-muted-foreground"
         role="status"
         aria-live="polite"
-        aria-label="Loading admin workspace"
+        aria-label={messages?.loadingWorkspaceAriaLabel ?? "Loading admin workspace"}
       >
         <Loader2 className="size-8 animate-spin" aria-hidden="true" />
-        <span className="text-sm">Loading workspace</span>
+        <span className="text-sm">{messages?.loadingWorkspace ?? "Loading workspace"}</span>
       </div>
     </div>
   )
 }
 
 export function AdminNotFound() {
+  // Optional: router-level fallbacks can render before the workspace mounts
+  // the operator admin messages provider — fall back to English copy there.
+  const messages = useOptionalOperatorAdminMessages()
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
       <Empty className="max-w-xl border border-border bg-card">
@@ -97,14 +107,15 @@ export function AdminNotFound() {
           <EmptyMedia variant="icon">
             <SearchX />
           </EmptyMedia>
-          <EmptyTitle>Page not found</EmptyTitle>
+          <EmptyTitle>{messages?.notFoundTitle ?? "Page not found"}</EmptyTitle>
           <EmptyDescription>
-            The page you requested does not exist or is no longer available.
+            {messages?.notFoundDescription ??
+              "The page you requested does not exist or is no longer available."}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Link to="/" className={buttonVariants({ variant: "default" })}>
-            Go to dashboard
+            {messages?.goToDashboard ?? "Go to dashboard"}
           </Link>
         </EmptyContent>
       </Empty>
