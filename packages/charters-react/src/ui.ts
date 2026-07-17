@@ -20,6 +20,7 @@ export {
   chartersUiEn,
   chartersUiMessageDefinitions,
   chartersUiRo,
+  chartersUiZh,
   getChartersUiI18n,
   resolveChartersUiMessages,
   useChartersUiI18n,

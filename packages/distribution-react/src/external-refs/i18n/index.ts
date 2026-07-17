@@ -12,3 +12,4 @@ export {
   useExternalRefsUiMessagesOrDefault,
 } from "./provider.js"
 export { externalRefsUiRo } from "./ro.js"
+export { externalRefsUiZh } from "./zh.js"

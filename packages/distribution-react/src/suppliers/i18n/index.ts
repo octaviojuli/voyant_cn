@@ -18,3 +18,4 @@ export {
   useSuppliersUiMessagesOrDefault,
 } from "./provider.js"
 export { suppliersUiRo } from "./ro.js"
+export { suppliersUiZh } from "./zh.js"

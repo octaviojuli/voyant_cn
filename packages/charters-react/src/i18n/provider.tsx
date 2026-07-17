@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { chartersUiEn } from "./en.js"
 import type { ChartersUiMessages } from "./messages.js"
 import { chartersUiRo } from "./ro.js"
+import { chartersUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const chartersUiMessageDefinitions = {
   en: chartersUiEn,
   ro: chartersUiRo,
+  zh: chartersUiZh,
 } satisfies LocaleMessageDefinitions<ChartersUiMessages>
 
 export type ChartersUiMessageOverrides = LocaleMessageOverrides<ChartersUiMessages>

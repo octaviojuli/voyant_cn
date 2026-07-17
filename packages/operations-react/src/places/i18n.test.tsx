@@ -64,6 +64,20 @@ describe("facilities-ui i18n", () => {
     expect(html).toContain("Selectează o facilitate")
     expect(html).toContain("Nicio facilitate găsită")
   })
+
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <FacilitiesUiMessagesProvider locale="zh-CN">
+        <div>
+          <FacilityBadge facilityId={null} />
+          <MessagesProbe />
+        </div>
+      </FacilitiesUiMessagesProvider>,
+    )
+
+    expect(html).toContain("选择地点")
+    expect(html).toContain("未找到地点")
+  })
 })
 
 function MessagesProbe() {

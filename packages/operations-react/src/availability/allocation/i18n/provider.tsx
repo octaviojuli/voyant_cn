@@ -10,6 +10,8 @@ import {
 } from "@voyant-travel/i18n"
 import type { ReactNode } from "react"
 
+import { allocationUiZh } from "./zh.js"
+
 export type AllocationUiMessages = Record<string, unknown> & {
   pageTitle: string
   loading: string
@@ -413,6 +415,7 @@ const fallbackLocale = "en"
 export const allocationUiMessageDefinitions = {
   en: allocationUiEn,
   ro: allocationUiRo,
+  zh: allocationUiZh,
 } satisfies LocaleMessageDefinitions<AllocationUiMessages>
 
 export type AllocationUiMessageOverrides = LocaleMessageOverrides<AllocationUiMessages>

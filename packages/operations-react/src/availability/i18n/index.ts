@@ -5,6 +5,7 @@ export {
   availabilityUiEn,
   availabilityUiMessageDefinitions,
   availabilityUiRo,
+  availabilityUiZh,
   getAvailabilityUiI18n,
   resolveAvailabilityUiMessages,
   useAvailabilityUiI18n,

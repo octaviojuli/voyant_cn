@@ -467,6 +467,7 @@
       "@voyant-travel/charters-react/i18n": ["../charters-react/dist/i18n/index.d.ts"],
       "@voyant-travel/charters-react/i18n/en": ["../charters-react/dist/i18n/en.d.ts"],
       "@voyant-travel/charters-react/i18n/ro": ["../charters-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/charters-react/i18n/zh": ["../charters-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/charters-react/provider": ["../charters-react/dist/provider.d.ts"],
       "@voyant-travel/charters-react/query-keys": ["../charters-react/dist/query-keys.d.ts"],
       "@voyant-travel/charters-react/ui": ["../charters-react/dist/ui.d.ts"],
@@ -700,6 +701,9 @@
       "@voyant-travel/distribution-react/external-refs/i18n/ro": [
         "../distribution-react/dist/external-refs/i18n/ro.d.ts"
       ],
+      "@voyant-travel/distribution-react/external-refs/i18n/zh": [
+        "../distribution-react/dist/external-refs/i18n/zh.d.ts"
+      ],
       "@voyant-travel/distribution-react/external-refs/provider": [
         "../distribution-react/dist/external-refs/provider.d.ts"
       ],
@@ -713,6 +717,7 @@
       "@voyant-travel/distribution-react/i18n": ["../distribution-react/dist/i18n/index.d.ts"],
       "@voyant-travel/distribution-react/i18n/en": ["../distribution-react/dist/i18n/en.d.ts"],
       "@voyant-travel/distribution-react/i18n/ro": ["../distribution-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/distribution-react/i18n/zh": ["../distribution-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/distribution-react/provider": ["../distribution-react/dist/provider.d.ts"],
       "@voyant-travel/distribution-react/query-keys": [
         "../distribution-react/dist/query-keys.d.ts"
@@ -740,6 +745,9 @@
       ],
       "@voyant-travel/distribution-react/suppliers/i18n/ro": [
         "../distribution-react/dist/suppliers/i18n/ro.d.ts"
+      ],
+      "@voyant-travel/distribution-react/suppliers/i18n/zh": [
+        "../distribution-react/dist/suppliers/i18n/zh.d.ts"
       ],
       "@voyant-travel/distribution-react/suppliers/provider": [
         "../distribution-react/dist/suppliers/provider.d.ts"
@@ -875,6 +883,7 @@
       "@voyant-travel/flights-react/i18n": ["../flights-react/dist/i18n/index.d.ts"],
       "@voyant-travel/flights-react/i18n/en": ["../flights-react/dist/i18n/en.d.ts"],
       "@voyant-travel/flights-react/i18n/ro": ["../flights-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/flights-react/i18n/zh": ["../flights-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/flights-react/provider": ["../flights-react/dist/provider.d.ts"],
       "@voyant-travel/flights-react/query-keys": ["../flights-react/dist/query-keys.d.ts"],
       "@voyant-travel/flights-react/ui": ["../flights-react/dist/ui.d.ts"],
@@ -979,6 +988,7 @@
       "@voyant-travel/identity-react/i18n": ["../identity-react/dist/i18n/index.d.ts"],
       "@voyant-travel/identity-react/i18n/en": ["../identity-react/dist/i18n/en.d.ts"],
       "@voyant-travel/identity-react/i18n/ro": ["../identity-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/identity-react/i18n/zh": ["../identity-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/identity-react/provider": ["../identity-react/dist/provider.d.ts"],
       "@voyant-travel/identity-react/query-keys": ["../identity-react/dist/query-keys.d.ts"],
       "@voyant-travel/identity-react/ui": ["../identity-react/dist/ui.d.ts"],
@@ -1330,6 +1340,9 @@
       "@voyant-travel/operations-react/places/i18n/ro": [
         "../operations-react/dist/places/i18n/ro.d.ts"
       ],
+      "@voyant-travel/operations-react/places/i18n/zh": [
+        "../operations-react/dist/places/i18n/zh.d.ts"
+      ],
       "@voyant-travel/operations-react/places/provider": [
         "../operations-react/dist/places/provider.d.ts"
       ],
@@ -1360,6 +1373,9 @@
       ],
       "@voyant-travel/operations-react/resources/i18n/ro": [
         "../operations-react/dist/resources/i18n/ro.d.ts"
+      ],
+      "@voyant-travel/operations-react/resources/i18n/zh": [
+        "../operations-react/dist/resources/i18n/zh.d.ts"
       ],
       "@voyant-travel/operations-react/resources/provider": [
         "../operations-react/dist/resources/provider.d.ts"

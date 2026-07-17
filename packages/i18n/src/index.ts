@@ -92,6 +92,7 @@ export {
   operatorAdminSuppliersMessages,
 } from "./admin/suppliers-operator.js"
 export { type AdminTeamMessages, adminTeamMessages } from "./admin/team.js"
+export { adminAvailabilityZh } from "./admin/zh/availability.js"
 export {
   createLocaleFormatters,
   type LocaleFormatters,

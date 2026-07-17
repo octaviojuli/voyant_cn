@@ -12,3 +12,4 @@ export {
   useFlightsUiMessagesOrDefault,
 } from "./provider.js"
 export { flightsUiRo } from "./ro.js"
+export { flightsUiZh } from "./zh.js"

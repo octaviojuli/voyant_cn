@@ -17,6 +17,7 @@ export {
   suppliersUiEn,
   suppliersUiMessageDefinitions,
   suppliersUiRo,
+  suppliersUiZh,
   useSuppliersUiI18n,
   useSuppliersUiI18nOrDefault,
   useSuppliersUiMessages,

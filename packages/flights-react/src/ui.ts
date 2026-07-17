@@ -137,6 +137,7 @@ export {
   flightsUiEn,
   flightsUiMessageDefinitions,
   flightsUiRo,
+  flightsUiZh,
   getFlightsUiI18n,
   resolveFlightsUiMessages,
   useFlightsUiI18n,

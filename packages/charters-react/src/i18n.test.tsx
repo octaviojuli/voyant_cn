@@ -101,6 +101,17 @@ describe("charters-ui i18n", () => {
     expect(html).toContain("voyant-connect")
   })
 
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <ChartersUiMessagesProvider locale="zh-CN">
+        <ExternalCharterBadge sourceProvider="voyant-connect" />
+      </ChartersUiMessagesProvider>,
+    )
+
+    expect(html).toContain("外采")
+    expect(html).toContain("voyant-connect")
+  })
+
   it("renders localized quote and suite copy with the package provider", () => {
     const html = renderToStaticMarkup(
       <ChartersUiMessagesProvider locale="ro-RO">

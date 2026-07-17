@@ -24,3 +24,4 @@ export {
   useDistributionUiMessagesOrDefault,
 } from "./provider.js"
 export { distributionUiRo } from "./ro.js"
+export { distributionUiZh } from "./zh.js"

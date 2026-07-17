@@ -12,3 +12,4 @@ export {
   useFacilitiesUiMessagesOrDefault,
 } from "./provider.js"
 export { facilitiesUiRo } from "./ro.js"
+export { facilitiesUiZh } from "./zh.js"

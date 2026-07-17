@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { distributionUiEn } from "./en.js"
 import type { DistributionUiMessages } from "./messages.js"
 import { distributionUiRo } from "./ro.js"
+import { distributionUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const distributionUiMessageDefinitions = {
   en: distributionUiEn,
   ro: distributionUiRo,
+  zh: distributionUiZh,
 } satisfies LocaleMessageDefinitions<DistributionUiMessages>
 
 export type DistributionUiMessageOverrides = LocaleMessageOverrides<DistributionUiMessages>

@@ -39,6 +39,7 @@
     "./resources/i18n": "./src/resources/i18n/index.ts",
     "./resources/i18n/en": "./src/resources/i18n/en.ts",
     "./resources/i18n/ro": "./src/resources/i18n/ro.ts",
+    "./resources/i18n/zh": "./src/resources/i18n/zh.ts",
     "./resources/components/*": "./src/resources/components/*.tsx",
     "./resources/admin": "./src/resources/admin/index.tsx",
     "./ground": "./src/ground/index.ts",
@@ -56,6 +57,7 @@
     "./places/i18n": "./src/places/i18n/index.ts",
     "./places/i18n/en": "./src/places/i18n/en.ts",
     "./places/i18n/ro": "./src/places/i18n/ro.ts",
+    "./places/i18n/zh": "./src/places/i18n/zh.ts",
     "./places/components/*": "./src/places/components/*.tsx"
   },
   "scripts": {
@@ -281,6 +283,11 @@
         "import": "./dist/resources/i18n/ro.js",
         "default": "./dist/resources/i18n/ro.js"
       },
+      "./resources/i18n/zh": {
+        "types": "./dist/resources/i18n/zh.d.ts",
+        "import": "./dist/resources/i18n/zh.js",
+        "default": "./dist/resources/i18n/zh.js"
+      },
       "./resources/components/*": {
         "types": "./dist/resources/components/*.d.ts",
         "import": "./dist/resources/components/*.js",
@@ -363,6 +370,11 @@
         "types": "./dist/places/i18n/ro.d.ts",
         "import": "./dist/places/i18n/ro.js",
         "default": "./dist/places/i18n/ro.js"
+      },
+      "./places/i18n/zh": {
+        "types": "./dist/places/i18n/zh.d.ts",
+        "import": "./dist/places/i18n/zh.js",
+        "default": "./dist/places/i18n/zh.js"
       },
       "./places/components/*": {
         "types": "./dist/places/components/*.d.ts",
