@@ -1,4 +1,10 @@
+import { formatMessage } from "@voyant-travel/i18n"
 import type { TripComponent } from "@voyant-travel/trips"
+
+/** Localized fragments needed by {@link componentTitleFor}. */
+export interface ComponentTitleMessages {
+  cabinTitle: string
+}
 
 export function readComponentSchedule(component: TripComponent): {
   start: string | null
@@ -61,6 +67,7 @@ export function sortComponentsBySchedule(components: TripComponent[]): TripCompo
 
 export function componentTitleFor(
   component: TripComponent,
+  display: ComponentTitleMessages,
   resolvedEntityName?: string | null,
 ): string {
   const metadata = component.metadata as
@@ -100,7 +107,7 @@ export function componentTitleFor(
 
   if (component.entityModule === "cruises") {
     const cabin = cleanDisplayLabel(metadata?.cruiseDraft?.cabin)
-    if (cabin) return `Cabin ${cabin}`
+    if (cabin) return formatMessage(display.cabinTitle, { cabin })
   }
 
   if (component.entityModule === "accommodations") {
@@ -113,7 +120,7 @@ export function componentTitleFor(
 
   if (metadata?.cruiseDraft) {
     const cabin = cleanDisplayLabel(metadata.cruiseDraft.cabin)
-    if (cabin) return `Cabin ${cabin}`
+    if (cabin) return formatMessage(display.cabinTitle, { cabin })
   }
 
   if (component.kind === "manual_placeholder") {

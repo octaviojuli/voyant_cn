@@ -63,6 +63,7 @@ export {
   legalUiEn,
   legalUiMessageDefinitions,
   legalUiRo,
+  legalUiZh,
   resolveLegalUiMessages,
   useLegalUiI18n,
   useLegalUiI18nOrDefault,

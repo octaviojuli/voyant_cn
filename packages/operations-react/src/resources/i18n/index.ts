@@ -17,3 +17,4 @@ export {
   useResourcesUiMessagesOrDefault,
 } from "./provider.js"
 export { resourcesUiRo } from "./ro.js"
+export { resourcesUiZh } from "./zh.js"

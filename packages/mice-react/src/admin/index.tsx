@@ -6,6 +6,7 @@ import {
   defineAdminExtension,
   type NavItem,
   type SelectedAdminExtensionFactoryContext,
+  withAdminRouteMessagesProvider,
 } from "@voyant-travel/admin"
 // Lean static only: the shared fetcher fallback. The page-data helpers resolve
 // via dynamic import inside the loaders so the REST query options stay out of
@@ -128,10 +129,16 @@ export function createMiceAdminExtension(
 export function createSelectedMiceAdminExtension(
   { navMessages }: SelectedAdminExtensionFactoryContext = { navMessages: {} },
 ): AdminExtension {
-  return createMiceAdminExtension({
-    labels: { programs: navMessages.mice ?? "Programs" },
-    icon: CalendarRange,
-  })
+  // Route-level copy provider: every MICE page renders inside the package's
+  // messages context with the workspace shell's resolved locale, so the
+  // `OrDefault` hooks pick up localized copy instead of the English fallback.
+  return withAdminRouteMessagesProvider(
+    createMiceAdminExtension({
+      labels: { programs: navMessages.mice ?? "Programs" },
+      icon: CalendarRange,
+    }),
+    () => import("../i18n/index.js").then((module) => ({ default: module.MiceUiMessagesProvider })),
+  )
 }
 
 /**

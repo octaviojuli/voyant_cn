@@ -20,6 +20,7 @@
     "./i18n": "./src/i18n/index.ts",
     "./i18n/en": "./src/i18n/en.ts",
     "./i18n/ro": "./src/i18n/ro.ts",
+    "./i18n/zh": "./src/i18n/zh.ts",
     "./admin": "./src/admin/index.tsx",
     "./components/*": "./src/components/*.tsx",
     "./suppliers": "./src/suppliers/index.ts",
@@ -32,6 +33,7 @@
     "./suppliers/i18n": "./src/suppliers/i18n/index.ts",
     "./suppliers/i18n/en": "./src/suppliers/i18n/en.ts",
     "./suppliers/i18n/ro": "./src/suppliers/i18n/ro.ts",
+    "./suppliers/i18n/zh": "./src/suppliers/i18n/zh.ts",
     "./suppliers/admin": "./src/suppliers/admin/index.tsx",
     "./suppliers/components/*": "./src/suppliers/components/*.tsx",
     "./external-refs": "./src/external-refs/index.ts",
@@ -44,6 +46,7 @@
     "./external-refs/i18n": "./src/external-refs/i18n/index.ts",
     "./external-refs/i18n/en": "./src/external-refs/i18n/en.ts",
     "./external-refs/i18n/ro": "./src/external-refs/i18n/ro.ts",
+    "./external-refs/i18n/zh": "./src/external-refs/i18n/zh.ts",
     "./external-refs/components/*": "./src/external-refs/components/*.tsx"
   },
   "scripts": {
@@ -174,6 +177,11 @@
         "import": "./dist/i18n/ro.js",
         "default": "./dist/i18n/ro.js"
       },
+      "./i18n/zh": {
+        "types": "./dist/i18n/zh.d.ts",
+        "import": "./dist/i18n/zh.js",
+        "default": "./dist/i18n/zh.js"
+      },
       "./admin": {
         "types": "./dist/admin/index.d.ts",
         "import": "./dist/admin/index.js",
@@ -232,6 +240,11 @@
         "import": "./dist/suppliers/i18n/ro.js",
         "default": "./dist/suppliers/i18n/ro.js"
       },
+      "./suppliers/i18n/zh": {
+        "types": "./dist/suppliers/i18n/zh.d.ts",
+        "import": "./dist/suppliers/i18n/zh.js",
+        "default": "./dist/suppliers/i18n/zh.js"
+      },
       "./suppliers/admin": {
         "types": "./dist/suppliers/admin/index.d.ts",
         "import": "./dist/suppliers/admin/index.js",
@@ -289,6 +302,11 @@
         "types": "./dist/external-refs/i18n/ro.d.ts",
         "import": "./dist/external-refs/i18n/ro.js",
         "default": "./dist/external-refs/i18n/ro.js"
+      },
+      "./external-refs/i18n/zh": {
+        "types": "./dist/external-refs/i18n/zh.d.ts",
+        "import": "./dist/external-refs/i18n/zh.js",
+        "default": "./dist/external-refs/i18n/zh.js"
       },
       "./external-refs/components/*": {
         "types": "./dist/external-refs/components/*.d.ts",

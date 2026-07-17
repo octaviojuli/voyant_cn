@@ -12,3 +12,4 @@ export {
   useAllocationUiMessages,
   useAllocationUiMessagesOrDefault,
 } from "./provider.js"
+export { allocationUiZh } from "./zh.js"

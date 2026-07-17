@@ -12,3 +12,4 @@ export {
   useAuthUiMessagesOrDefault,
 } from "./provider.js"
 export { authUiRo } from "./ro.js"
+export { authUiZh } from "./zh.js"

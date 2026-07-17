@@ -3,10 +3,13 @@
 import { emptyPaymentScheduleValue } from "@voyant-travel/bookings-react/components/payment-schedule-section"
 import type { PaymentScheduleValue, PersonPickerValue } from "@voyant-travel/bookings-react/ui"
 import type { AncillarySelection, FlightOffer } from "@voyant-travel/flights/contract/types"
+import { formatMessage } from "@voyant-travel/i18n"
 import type { TripComponent } from "@voyant-travel/trips"
 import { BedDouble, ExternalLink, Landmark, Plane, Route as RouteIcon } from "lucide-react"
 
 import type { AvailabilitySlot, PanelsMessages, PendingComponent } from "./shared.js"
+
+export type ComponentDisplayMessages = PanelsMessages["componentDisplay"]
 
 interface BillingDisplay {
   primary: string
@@ -197,6 +200,7 @@ export function findOverlappingComponent(
 
 export function componentTitleFor(
   component: TripComponent,
+  display: ComponentDisplayMessages,
   resolvedEntityName?: string | null,
 ): string {
   const metadata = component.metadata as
@@ -236,7 +240,7 @@ export function componentTitleFor(
 
   if (component.entityModule === "cruises") {
     const cabin = cleanDisplayLabel(metadata?.cruiseDraft?.cabin)
-    if (cabin) return `Cabin ${cabin}`
+    if (cabin) return formatMessage(display.cabinTitle, { cabin })
   }
 
   if (component.entityModule === "accommodations") {
@@ -249,7 +253,7 @@ export function componentTitleFor(
 
   if (metadata?.cruiseDraft) {
     const cabin = cleanDisplayLabel(metadata.cruiseDraft.cabin)
-    if (cabin) return `Cabin ${cabin}`
+    if (cabin) return formatMessage(display.cabinTitle, { cabin })
   }
 
   if (component.kind === "manual_placeholder") {
@@ -264,7 +268,10 @@ export function componentTitleFor(
   return componentReferenceLabelFor(component)
 }
 
-export function componentOptionSummaryFor(component: TripComponent): string | null {
+export function componentOptionSummaryFor(
+  component: TripComponent,
+  display: ComponentDisplayMessages,
+): string | null {
   const metadata = component.metadata as
     | {
         flightDraft?: {
@@ -288,6 +295,7 @@ export function componentOptionSummaryFor(component: TripComponent): string | nu
     const flightLabels = flightSelectionLabels(
       metadata.flightDraft.selectedOffer ?? null,
       metadata.flightDraft.ancillaries ?? null,
+      display,
     )
     if (flightLabels.length > 0) return flightLabels.join(", ")
   }
@@ -312,6 +320,7 @@ export function componentOptionSummaryFor(component: TripComponent): string | nu
 function flightSelectionLabels(
   offer: FlightOffer | null,
   ancillaries: AncillarySelection | null,
+  display: ComponentDisplayMessages,
 ): string[] {
   if (!offer || !ancillaries) return []
   const labels: string[] = []
@@ -323,13 +332,29 @@ function flightSelectionLabels(
   }
   const baggageCount =
     ancillaries.baggage?.reduce((sum, pick) => sum + (pick.quantity ?? 1), 0) ?? 0
-  if (baggageCount > 0) labels.push(`${baggageCount} bag${baggageCount === 1 ? "" : "s"}`)
+  if (baggageCount > 0) {
+    labels.push(
+      baggageCount === 1
+        ? display.bagSingular
+        : formatMessage(display.bagPlural, { count: baggageCount }),
+    )
+  }
   const assistanceCount = ancillaries.assistance?.length ?? 0
   if (assistanceCount > 0) {
-    labels.push(`${assistanceCount} assistance request${assistanceCount === 1 ? "" : "s"}`)
+    labels.push(
+      assistanceCount === 1
+        ? display.assistanceSingular
+        : formatMessage(display.assistancePlural, { count: assistanceCount }),
+    )
   }
   const extrasCount = ancillaries.extras?.reduce((sum, pick) => sum + (pick.quantity ?? 1), 0) ?? 0
-  if (extrasCount > 0) labels.push(`${extrasCount} extra${extrasCount === 1 ? "" : "s"}`)
+  if (extrasCount > 0) {
+    labels.push(
+      extrasCount === 1
+        ? display.extraSingular
+        : formatMessage(display.extraPlural, { count: extrasCount }),
+    )
+  }
   return labels
 }
 
@@ -425,13 +450,20 @@ function formatDateTime(iso: string): string {
   }).format(parsed)
 }
 
-export function formatDepartureLabel(slot: AvailabilitySlot): string {
+export function formatDepartureLabel(
+  slot: AvailabilitySlot,
+  display: ComponentDisplayMessages,
+): string {
   const date = formatDateTime(slot.startsAt)
-  const duration = slot.nights ? ` · ${slot.nights}n` : slot.days ? ` · ${slot.days}d` : ""
+  const duration = slot.nights
+    ? ` · ${formatMessage(display.nightsShort, { count: slot.nights })}`
+    : slot.days
+      ? ` · ${formatMessage(display.daysShort, { count: slot.days })}`
+      : ""
   const capacity = slot.unlimited
     ? ""
     : slot.remainingPax != null
-      ? ` · ${slot.remainingPax} left`
+      ? ` · ${formatMessage(display.seatsRemaining, { count: slot.remainingPax })}`
       : ""
   return `${date}${duration}${capacity}`
 }

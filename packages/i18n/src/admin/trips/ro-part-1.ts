@@ -173,6 +173,8 @@ export const adminTripsMessagesRoPart1 = {
       requirementAtLeastOneTraveler: "cel putin un calator",
       requirementTravelerName: "numele calatorului {position}",
       requirementTravelerEmail: "emailul calatorului {position}",
+      datesOverlap:
+        'Aceste date se suprapun cu "{title}". Ajusteaza programul inainte de a adauga la calatorie.',
     },
     failureMessages: {
       priceChanged: "Preturile s-au schimbat. Verifica totalurile actualizate si rezerva din nou.",
@@ -257,6 +259,18 @@ export const adminTripsMessagesRoPart1 = {
       billingLabel: "Facturare",
       travelersWithCount: "Calatori ({count})",
       travelerNumberedFallback: "Calator {number}",
+      componentDisplay: {
+        cabinTitle: "Cabina {cabin}",
+        bagSingular: "1 bagaj",
+        bagPlural: "{count} bagaje",
+        assistanceSingular: "1 cerere de asistenta",
+        assistancePlural: "{count} cereri de asistenta",
+        extraSingular: "1 extra",
+        extraPlural: "{count} extra",
+        nightsShort: "{count}n",
+        daysShort: "{count}z",
+        seatsRemaining: "{count} ramase",
+      },
       verticals: {
         productLabel: "Produs",
         productDescription: "Tur, activitate sau transfer din catalog",

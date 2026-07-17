@@ -47,8 +47,8 @@ export function CommittedComponentCard({
   const t = useAdminMessages().trips.adminComposer.panels
   const Icon = componentIcon(component)
   const coverUrl = componentThumbnailFor(component)
-  const componentName = componentTitleFor(component)
-  const optionSummary = componentOptionSummaryFor(component)
+  const componentName = componentTitleFor(component, t.componentDisplay)
+  const optionSummary = componentOptionSummaryFor(component, t.componentDisplay)
   const bookingSetup = componentBookingSetupFor(component)
   const canEditBookingSetup =
     bookingSetupEditable && component.kind === "catalog_booking" && !component.bookingId

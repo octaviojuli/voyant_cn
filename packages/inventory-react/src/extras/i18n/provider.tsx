@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { extrasUiEn } from "./en.js"
 import type { ExtrasUiMessages } from "./messages.js"
 import { extrasUiRo } from "./ro.js"
+import { extrasUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const extrasUiMessageDefinitions = {
   en: extrasUiEn,
   ro: extrasUiRo,
+  zh: extrasUiZh,
 } satisfies LocaleMessageDefinitions<ExtrasUiMessages>
 
 export type ExtrasUiMessageOverrides = LocaleMessageOverrides<ExtrasUiMessages>

@@ -101,6 +101,7 @@ export {
   crmUiEn,
   crmUiMessageDefinitions,
   crmUiRo,
+  crmUiZh,
   getCrmUiI18n,
   resolveCrmUiMessages,
   useCrmUiI18n,

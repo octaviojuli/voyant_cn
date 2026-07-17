@@ -2,6 +2,7 @@
 
 import {
   adminAvailabilityMessages,
+  adminAvailabilityZh,
   createLocaleFormatters,
   createPackageMessagesContext,
   type LocaleMessageDefinitions,
@@ -94,6 +95,33 @@ const availabilityUiExtraRo = {
   },
 } satisfies Pick<AvailabilityUiMessages, "page">
 
+const availabilityUiExtraZh = {
+  page: {
+    loading: "正在加载排期与库存…",
+    loadFailed: "无法加载排期与库存数据。",
+    calendarTab: "日历",
+    filters: {
+      statusLabel: "状态",
+      stateLabel: "启用状态",
+      dateRangeLabel: "日期范围",
+      anyDate: "任意日期",
+      allStatuses: "全部状态",
+      allStates: "全部",
+      active: "启用",
+      inactive: "停用",
+      reset: "重置",
+      productSearchEmpty: "没有匹配该搜索的产品。",
+    },
+    skeleton: {
+      date: "日期",
+      product: "产品",
+      status: "状态",
+      remaining: "余位",
+      capacity: "容量",
+    },
+  },
+} satisfies Pick<AvailabilityUiMessages, "page">
+
 export const availabilityUiEn = {
   ...adminAvailabilityMessages.en.availability,
   ...availabilityUiExtraEn,
@@ -104,11 +132,17 @@ export const availabilityUiRo = {
   ...availabilityUiExtraRo,
 } satisfies AvailabilityUiMessages
 
+export const availabilityUiZh = {
+  ...adminAvailabilityZh.availability,
+  ...availabilityUiExtraZh,
+} satisfies AvailabilityUiMessages
+
 const fallbackLocale = "en"
 
 export const availabilityUiMessageDefinitions = {
   en: availabilityUiEn,
   ro: availabilityUiRo,
+  zh: availabilityUiZh,
 } satisfies LocaleMessageDefinitions<AvailabilityUiMessages>
 
 export type AvailabilityUiMessageOverrides = LocaleMessageOverrides<AvailabilityUiMessages>

@@ -22,3 +22,4 @@ export {
   useLegalUiMessagesOrDefault,
 } from "./provider.js"
 export { legalUiRo } from "./ro.js"
+export { legalUiZh } from "./zh.js"

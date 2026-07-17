@@ -13,6 +13,7 @@ import {
   type PersonPickerValue,
   type TravelCreditPickerValue,
 } from "@voyant-travel/bookings-react/ui"
+import { formatMessage } from "@voyant-travel/i18n"
 import { usePerson } from "@voyant-travel/relationships-react"
 import type { Trip, TripComponent } from "@voyant-travel/trips"
 import { CurrencyCombobox } from "@voyant-travel/ui/components/currency-combobox"
@@ -511,7 +512,9 @@ export function AdminTripsPage({ initialTrip = null }: AdminTripsPageProps): Rea
           p.localId === component.localId
             ? {
                 ...p,
-                commitError: `These dates overlap with "${componentTitleFor(overlap)}". Adjust the schedule before adding to the trip.`,
+                commitError: formatMessage(t.errors.datesOverlap, {
+                  title: componentTitleFor(overlap, t.panels.componentDisplay),
+                }),
               }
             : p,
         ),

@@ -20,3 +20,4 @@ export {
   useSellabilityUiMessagesOrDefault,
 } from "./provider.js"
 export { sellabilityUiRo } from "./ro.js"
+export { sellabilityUiZh } from "./zh.js"

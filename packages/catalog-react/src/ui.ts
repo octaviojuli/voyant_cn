@@ -107,6 +107,7 @@ export {
   catalogUiEn,
   catalogUiMessageDefinitions,
   catalogUiRo,
+  catalogUiZh,
   getCatalogUiI18n,
   resolveCatalogUiMessages,
   useCatalogUiI18n,

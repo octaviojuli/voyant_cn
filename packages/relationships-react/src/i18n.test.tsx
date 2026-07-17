@@ -59,6 +59,21 @@ describe("crm-ui i18n", () => {
     expect(html).toContain("Urmarire")
     expect(html).toContain("Client")
   })
+
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <CrmUiMessagesProvider locale="zh-CN">
+        <CrmMessageProbe />
+      </CrmUiMessagesProvider>,
+    )
+
+    expect(html).toContain("新建组织")
+    expect(html).toContain("联系人")
+    expect(html).toContain("联系方式")
+    expect(html).toContain("添加跟进记录")
+    expect(html).toContain("跟进")
+    expect(html).toContain("客户")
+  })
 })
 
 function CrmMessageProbe() {

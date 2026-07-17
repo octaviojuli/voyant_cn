@@ -35,6 +35,7 @@ import {
 } from "./suppliers-operator.js"
 import { type AdminTeamMessages, adminTeamMessages } from "./team.js"
 import { type AdminTripsMessages, adminTripsMessages } from "./trips.js"
+import { operatorAdminZh } from "./zh/index.js"
 
 export type OperatorAdminMessages = AdminChromeMessages & {
   auth: AdminAuthMessages
@@ -76,4 +77,5 @@ export const operatorAdminMessageDefinitions =
     adminFinanceMessages,
     adminResourcesMessages,
     operatorAdminNavMessages,
+    { zh: operatorAdminZh },
   ) satisfies LocaleMessageDefinitions<OperatorAdminMessages>

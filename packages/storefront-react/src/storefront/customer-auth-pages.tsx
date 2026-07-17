@@ -8,29 +8,38 @@ import {
 } from "@voyant-travel/auth-react/ui"
 import { buttonVariants } from "@voyant-travel/ui/components/button"
 import { useCustomerPortalMutation } from "../customer-portal/hooks/index.js"
+import { type StorefrontMessages, useStorefrontMessagesOrDefault } from "./messages.js"
 
-const signInMessages: Partial<SignInPageMessages> = {
-  title: "Sign in to your travel account",
-  description: "Access your profile, saved travelers, documents, and bookings.",
-  emailPlaceholder: "you@example.com",
-  submit: "Sign in",
-  signingIn: "Signing in",
+type StorefrontAuthMessages = StorefrontMessages["auth"]
+
+function toSignInMessages(auth: StorefrontAuthMessages): Partial<SignInPageMessages> {
+  return {
+    title: auth.signIn.title,
+    description: auth.signIn.description,
+    emailPlaceholder: auth.signIn.emailPlaceholder,
+    submit: auth.signIn.submit,
+    signingIn: auth.signIn.signingIn,
+  }
 }
 
-const signUpMessages: Partial<SignUpPageMessages> = {
-  title: "Create your travel account",
-  description: "Save traveler details and manage bookings without using the operator workspace.",
-  nameLabel: "Full name",
-  emailPlaceholder: "you@example.com",
-  submit: "Create account",
-  signingUp: "Creating account",
+function toSignUpMessages(auth: StorefrontAuthMessages): Partial<SignUpPageMessages> {
+  return {
+    title: auth.signUp.title,
+    description: auth.signUp.description,
+    nameLabel: auth.signUp.nameLabel,
+    emailPlaceholder: auth.signUp.emailPlaceholder,
+    submit: auth.signUp.submit,
+    signingUp: auth.signUp.signingUp,
+  }
 }
 
-const verifyEmailMessages: Partial<VerifyEmailPageMessages> = {
-  title: "Verify your email",
-  description: "Enter the verification code we sent before signing in.",
-  successTitle: "Email verified",
-  successDescription: "Your travel account is ready.",
+function toVerifyEmailMessages(auth: StorefrontAuthMessages): Partial<VerifyEmailPageMessages> {
+  return {
+    title: auth.verifyEmail.title,
+    description: auth.verifyEmail.description,
+    successTitle: auth.verifyEmail.successTitle,
+    successDescription: auth.verifyEmail.successDescription,
+  }
 }
 
 export function CustomerSignInPage({
@@ -42,18 +51,19 @@ export function CustomerSignInPage({
   redirectTo: string
   verified?: boolean
 }): React.ReactElement {
+  const auth = useStorefrontMessagesOrDefault().auth
   const customerPortal = useCustomerPortalMutation()
   return (
     <div className="mx-auto max-w-md py-10">
       {verified ? (
         <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-green-900 text-sm">
-          Email verified. Sign in to continue.
+          {auth.verifiedNotice}
         </div>
       ) : null}
       <SignInPage
         redirectTo={redirectTo}
         signUpHref={`/shop/account/sign-up?next=${encodeURIComponent(redirectTo)}`}
-        messages={signInMessages}
+        messages={toSignInMessages(auth)}
         onSignedIn={async () => {
           await customerPortal.bootstrap.mutateAsync({ createCustomerIfMissing: true })
           onNavigate(redirectTo)
@@ -71,12 +81,13 @@ export function CustomerSignUpPage({
   onNavigateToVerify: (email: string) => void
   redirectTo: string
 }): React.ReactElement {
+  const auth = useStorefrontMessagesOrDefault().auth
   return (
     <div className="mx-auto max-w-md py-10">
       <SignUpPage
         redirectTo={redirectTo}
         signInHref={`/shop/account/sign-in?next=${encodeURIComponent(redirectTo)}`}
-        messages={signUpMessages}
+        messages={toSignUpMessages(auth)}
         onSignedUp={async ({ email }) => onNavigateToVerify(email)}
       />
       <StorefrontBackLink />
@@ -97,13 +108,14 @@ export function CustomerVerifyEmailPage({
   onResendVerification: (email: string) => Promise<void>
   redirectTo: string
 }): React.ReactElement {
+  const auth = useStorefrontMessagesOrDefault().auth
   return (
     <div className="mx-auto max-w-md py-10">
       <VerifyEmailPage
         mode="otp"
         email={email}
         signInHref={`/shop/account/sign-in?next=${encodeURIComponent(redirectTo)}&verify=1`}
-        messages={verifyEmailMessages}
+        messages={toVerifyEmailMessages(auth)}
         onCompleted={onCompleted}
         onResendVerification={onResendVerification}
         onSignInClick={onNavigateToSignIn}
@@ -113,10 +125,11 @@ export function CustomerVerifyEmailPage({
 }
 
 function StorefrontBackLink(): React.ReactElement {
+  const auth = useStorefrontMessagesOrDefault().auth
   return (
     <div className="mt-4 text-center">
       <a href="/shop" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-        Back to storefront
+        {auth.backToStorefront}
       </a>
     </div>
   )

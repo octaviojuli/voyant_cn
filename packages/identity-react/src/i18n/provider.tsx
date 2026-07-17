@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { identityUiEn } from "./en.js"
 import type { IdentityUiMessages } from "./messages.js"
 import { identityUiRo } from "./ro.js"
+import { identityUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const identityUiMessageDefinitions = {
   en: identityUiEn,
   ro: identityUiRo,
+  zh: identityUiZh,
 } satisfies LocaleMessageDefinitions<IdentityUiMessages>
 
 export type IdentityUiMessageOverrides = LocaleMessageOverrides<IdentityUiMessages>

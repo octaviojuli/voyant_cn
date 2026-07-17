@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { workflowRunsUiEn } from "./en.js"
 import type { WorkflowRunsUiMessages } from "./messages.js"
 import { workflowRunsUiRo } from "./ro.js"
+import { workflowRunsUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const workflowRunsUiMessageDefinitions = {
   en: workflowRunsUiEn,
   ro: workflowRunsUiRo,
+  zh: workflowRunsUiZh,
 } satisfies LocaleMessageDefinitions<WorkflowRunsUiMessages>
 
 export type WorkflowRunsUiMessageOverrides = LocaleMessageOverrides<WorkflowRunsUiMessages>

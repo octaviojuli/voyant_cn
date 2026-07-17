@@ -406,6 +406,7 @@ function LedgerRow({
 }) {
   const resolveHref = useAdminHref()
   const navigateTo = useAdminNavigate()
+  const labels = useAdminMessages().actionLedgerPage.filtersPopover
   return (
     <TableRow className="cursor-pointer" onClick={() => onSelect(entry.id)}>
       <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
@@ -418,13 +419,17 @@ function LedgerRow({
         </div>
       </TableCell>
       <TableCell>
-        <div className="font-medium">{entry.principalType}</div>
+        <div className="font-medium">
+          {labels.principalTypeOptions[entry.principalType] ?? entry.principalType}
+        </div>
         <div className="mt-0.5 max-w-[13rem] truncate font-mono text-muted-foreground text-xs">
           {entry.principalId}
         </div>
       </TableCell>
       <TableCell>
-        <div className="font-medium">{formatTargetType(entry.targetType)}</div>
+        <div className="font-medium">
+          {formatTargetTypeLabel(entry.targetType, labels.targetTypeOptions)}
+        </div>
         <div className="mt-0.5 max-w-[14rem] truncate font-mono text-muted-foreground text-xs">
           {entry.targetType === "booking" ? (
             <a
@@ -451,11 +456,13 @@ function LedgerRow({
       </TableCell>
       <TableCell>
         <Badge variant={RISK_VARIANT[entry.evaluatedRisk] ?? "outline"}>
-          {entry.evaluatedRisk}
+          {labels.riskOptions[entry.evaluatedRisk] ?? entry.evaluatedRisk}
         </Badge>
       </TableCell>
       <TableCell>
-        <Badge variant={STATUS_VARIANT[entry.status] ?? "outline"}>{entry.status}</Badge>
+        <Badge variant={STATUS_VARIANT[entry.status] ?? "outline"}>
+          {labels.statusOptions[entry.status] ?? entry.status}
+        </Badge>
       </TableCell>
       <TableCell className="text-right">
         <Button
@@ -522,4 +529,20 @@ function formatActionName(value: string) {
 
 function formatTargetType(value: string) {
   return value.replaceAll("_", " ")
+}
+
+type TargetTypeOptionLabels = ReturnType<
+  typeof useAdminMessages
+>["actionLedgerPage"]["filtersPopover"]["targetTypeOptions"]
+
+/**
+ * Target types are freeform strings on the wire — known types render the
+ * localized filter-option label, unknown ones fall back to the raw
+ * underscore-split value.
+ */
+function formatTargetTypeLabel(value: string, labels: TargetTypeOptionLabels) {
+  if (value !== "any" && value in labels) {
+    return labels[value as keyof TargetTypeOptionLabels]
+  }
+  return formatTargetType(value)
 }

@@ -17,3 +17,4 @@ export {
   useChartersUiMessagesOrDefault,
 } from "./provider.js"
 export { chartersUiRo } from "./ro.js"
+export { chartersUiZh } from "./zh.js"

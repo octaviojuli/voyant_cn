@@ -25,6 +25,7 @@ export {
   extrasUiEn,
   extrasUiMessageDefinitions,
   extrasUiRo,
+  extrasUiZh,
   getExtrasUiI18n,
   resolveExtrasUiMessages,
   useExtrasUiI18n,

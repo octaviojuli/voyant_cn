@@ -20,12 +20,16 @@ import {
   useCustomerPortalProfile,
   useCustomerPortalProfileDocuments,
 } from "../customer-portal/hooks/index.js"
+import { type StorefrontMessages, useStorefrontMessagesOrDefault } from "./messages.js"
+
+type StorefrontAccountMessages = StorefrontMessages["account"]
 
 export function CustomerAccountPage({
   onSignOut,
 }: {
   onSignOut: () => Promise<void>
 }): React.ReactElement {
+  const t = useStorefrontMessagesOrDefault().account
   const profile = useCustomerPortalProfile()
   const bookings = useCustomerPortalBookings()
   const companions = useCustomerPortalCompanions()
@@ -89,13 +93,11 @@ export function CustomerAccountPage({
   if (profile.isError) {
     return (
       <div className="mx-auto max-w-xl rounded-md border p-6">
-        <h1 className="font-semibold text-xl">Account unavailable</h1>
-        <p className="mt-2 text-muted-foreground text-sm">
-          We could not load your customer account. Sign out and try again.
-        </p>
+        <h1 className="font-semibold text-xl">{t.unavailableTitle}</h1>
+        <p className="mt-2 text-muted-foreground text-sm">{t.unavailableBody}</p>
         <Button type="button" className="mt-4" onClick={() => void signOut()}>
           <LogOut className="size-4" aria-hidden="true" />
-          Sign out
+          {t.signOut}
         </Button>
       </div>
     )
@@ -105,35 +107,33 @@ export function CustomerAccountPage({
     <div className="space-y-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="font-semibold text-3xl tracking-normal">Your account</h1>
-          <p className="mt-1 text-muted-foreground">
-            Manage your customer profile, saved travelers, documents, and bookings.
-          </p>
+          <h1 className="font-semibold text-3xl tracking-normal">{t.heading}</h1>
+          <p className="mt-1 text-muted-foreground">{t.intro}</p>
         </div>
         <Button type="button" variant="outline" onClick={() => void signOut()}>
           <LogOut className="size-4" aria-hidden="true" />
-          Sign out
+          {t.signOut}
         </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <AccountMetric icon={Plane} label="Bookings" value={bookingRows.length} />
-        <AccountMetric icon={CalendarDays} label="Upcoming" value={upcomingBookings} />
-        <AccountMetric icon={Users} label="Saved travelers" value={companionRows.length} />
-        <AccountMetric icon={FileText} label="Documents" value={documentRows.length} />
+        <AccountMetric icon={Plane} label={t.metricBookings} value={bookingRows.length} />
+        <AccountMetric icon={CalendarDays} label={t.metricUpcoming} value={upcomingBookings} />
+        <AccountMetric icon={Users} label={t.metricSavedTravelers} value={companionRows.length} />
+        <AccountMetric icon={FileText} label={t.metricDocuments} value={documentRows.length} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,420px)_1fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>Contact details used for future bookings.</CardDescription>
+            <CardTitle>{t.profileTitle}</CardTitle>
+            <CardDescription>{t.profileDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={onSubmit}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="customer-first-name">First name</Label>
+                  <Label htmlFor="customer-first-name">{t.firstName}</Label>
                   <Input
                     id="customer-first-name"
                     value={firstName}
@@ -142,7 +142,7 @@ export function CustomerAccountPage({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="customer-last-name">Last name</Label>
+                  <Label htmlFor="customer-last-name">{t.lastName}</Label>
                   <Input
                     id="customer-last-name"
                     value={lastName}
@@ -152,11 +152,11 @@ export function CustomerAccountPage({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="customer-email">Email</Label>
+                <Label htmlFor="customer-email">{t.email}</Label>
                 <Input id="customer-email" value={customer?.email ?? ""} disabled />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="customer-phone">Phone</Label>
+                <Label htmlFor="customer-phone">{t.phone}</Label>
                 <Input
                   id="customer-phone"
                   value={phone}
@@ -171,9 +171,9 @@ export function CustomerAccountPage({
                   ) : (
                     <Save className="size-4" aria-hidden="true" />
                   )}
-                  Save profile
+                  {t.saveProfile}
                 </Button>
-                {saved && <span className="text-green-700 text-sm">Saved</span>}
+                {saved && <span className="text-green-700 text-sm">{t.saved}</span>}
               </div>
             </form>
           </CardContent>
@@ -181,19 +181,14 @@ export function CustomerAccountPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>My bookings</CardTitle>
-            <CardDescription>
-              Confirmed, held, and in-progress bookings linked to you.
-            </CardDescription>
+            <CardTitle>{t.bookingsTitle}</CardTitle>
+            <CardDescription>{t.bookingsDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             {bookings.isPending ? (
               <LoadingRows />
             ) : bookingRows.length === 0 ? (
-              <EmptyState
-                title="No bookings yet"
-                body="Bookings made with this account will appear here."
-              />
+              <EmptyState title={t.bookingsEmptyTitle} body={t.bookingsEmptyBody} />
             ) : (
               <div className="divide-y rounded-md border">
                 {bookingRows.map((booking) => (
@@ -211,15 +206,20 @@ export function CustomerAccountPage({
                       </div>
                       <p className="mt-1 text-muted-foreground text-sm">
                         {booking.bookingNumber} ·{" "}
-                        {formatDateRange(booking.startDate, booking.endDate)}
+                        {formatDateRange(booking.startDate, booking.endDate, t.datesPending)}
                       </p>
                     </div>
                     <div className="text-left md:text-right">
                       <p className="font-medium">
-                        {formatMoney(booking.sellAmountCents, booking.sellCurrency)}
+                        {formatMoney(
+                          booking.sellAmountCents,
+                          booking.sellCurrency,
+                          t.amountPending,
+                        )}
                       </p>
                       <p className="text-muted-foreground text-sm">
-                        {booking.travelerCount} traveler{booking.travelerCount === 1 ? "" : "s"}
+                        {booking.travelerCount}{" "}
+                        {booking.travelerCount === 1 ? t.travelerSingular : t.travelerPlural}
                       </p>
                     </div>
                   </div>
@@ -233,15 +233,12 @@ export function CustomerAccountPage({
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Saved travelers</CardTitle>
-            <CardDescription>Reusable traveler records for future bookings.</CardDescription>
+            <CardTitle>{t.companionsTitle}</CardTitle>
+            <CardDescription>{t.companionsDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             {companionRows.length === 0 ? (
-              <EmptyState
-                title="No saved travelers"
-                body="Importing travelers from a booking and full traveler editing are deferred."
-              />
+              <EmptyState title={t.companionsEmptyTitle} body={t.companionsEmptyBody} />
             ) : (
               <div className="divide-y rounded-md border">
                 {companionRows.slice(0, 5).map((companion) => (
@@ -252,7 +249,7 @@ export function CustomerAccountPage({
                         {companion.email ?? companion.phone}
                       </p>
                     </div>
-                    {companion.isPrimary && <Badge>Primary</Badge>}
+                    {companion.isPrimary && <Badge>{t.primaryBadge}</Badge>}
                   </div>
                 ))}
               </div>
@@ -262,15 +259,12 @@ export function CustomerAccountPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Documents</CardTitle>
-            <CardDescription>Identity documents saved to your customer profile.</CardDescription>
+            <CardTitle>{t.documentsTitle}</CardTitle>
+            <CardDescription>{t.documentsDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             {documentRows.length === 0 ? (
-              <EmptyState
-                title="No documents saved"
-                body="Document upload and editing are intentionally left for the next slice."
-              />
+              <EmptyState title={t.documentsEmptyTitle} body={t.documentsEmptyBody} />
             ) : (
               <div className="divide-y rounded-md border">
                 {documentRows.slice(0, 5).map((document) => (
@@ -278,11 +272,11 @@ export function CustomerAccountPage({
                     <div>
                       <p className="font-medium">{document.type.replace("_", " ")}</p>
                       <p className="text-muted-foreground text-sm">
-                        {document.issuingCountry ?? "No issuing country"} · expires{" "}
-                        {document.expiryDate ?? "not set"}
+                        {document.issuingCountry ?? t.noIssuingCountry} ·{" "}
+                        {t.expiresOn.replace("{date}", document.expiryDate ?? t.expiryNotSet)}
                       </p>
                     </div>
-                    {document.isPrimary && <Badge>Primary</Badge>}
+                    {document.isPrimary && <Badge>{t.primaryBadge}</Badge>}
                   </div>
                 ))}
               </div>
@@ -293,7 +287,7 @@ export function CustomerAccountPage({
 
       <div className="flex justify-center">
         <a href="/shop" className="text-muted-foreground text-sm hover:text-foreground">
-          Back to storefront
+          {t.backToStorefront}
         </a>
       </div>
     </div>
@@ -339,8 +333,12 @@ function LoadingRows() {
   )
 }
 
-function formatDateRange(startDate: string | null, endDate: string | null) {
-  if (!startDate && !endDate) return "dates pending"
+function formatDateRange(
+  startDate: string | null,
+  endDate: string | null,
+  pendingLabel: StorefrontAccountMessages["datesPending"],
+) {
+  if (!startDate && !endDate) return pendingLabel
   const short = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" })
   const long = new Intl.DateTimeFormat(undefined, {
     month: "short",
@@ -352,8 +350,12 @@ function formatDateRange(startDate: string | null, endDate: string | null) {
   return long.format(new Date(startDate ?? endDate ?? ""))
 }
 
-function formatMoney(amountCents: number | null, currency: string) {
-  if (amountCents === null) return "Amount pending"
+function formatMoney(
+  amountCents: number | null,
+  currency: string,
+  pendingLabel: StorefrontAccountMessages["amountPending"],
+) {
+  if (amountCents === null) return pendingLabel
   return new Intl.NumberFormat(undefined, {
     style: "currency",
     currency,

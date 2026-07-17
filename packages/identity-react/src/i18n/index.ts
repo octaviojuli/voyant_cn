@@ -17,3 +17,4 @@ export {
   useIdentityUiMessagesOrDefault,
 } from "./provider.js"
 export { identityUiRo } from "./ro.js"
+export { identityUiZh } from "./zh.js"

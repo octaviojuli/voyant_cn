@@ -124,10 +124,11 @@ export function TripPreviewRail({
 }
 
 function PreviewComponentRow({ component }: { component: TripComponent }) {
+  const display = useAdminMessages().trips.adminComposer.panels.componentDisplay
   const Icon = componentIcon(component)
   const coverUrl = componentThumbnailFor(component)
-  const name = componentTitleFor(component)
-  const optionSummary = componentOptionSummaryFor(component)
+  const name = componentTitleFor(component, display)
+  const optionSummary = componentOptionSummaryFor(component, display)
 
   return (
     <div className="flex items-start gap-3">

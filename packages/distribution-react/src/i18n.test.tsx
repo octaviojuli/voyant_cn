@@ -98,6 +98,36 @@ describe("distribution-ui i18n", () => {
     expect(html).toContain("Cauta distributie")
     expect(html).toContain("Sterge Filtrele")
   })
+
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <DistributionUiMessagesProvider locale="zh-CN">
+        <DistributionOverview
+          channels={channels}
+          suppliers={suppliers}
+          filteredChannels={channels}
+          filteredContracts={contracts}
+          filteredMappings={mappings}
+          syncQueue={webhookEvents}
+          contractsNeedingReview={contracts}
+          search=""
+          setSearch={() => {}}
+          channelFilter="all"
+          setChannelFilter={() => {}}
+          hasFilters
+          onClearFilters={() => {}}
+          onOpenWebhookEvent={() => {}}
+          onOpenContract={() => {}}
+        />
+      </DistributionUiMessagesProvider>,
+    )
+
+    expect(html).toContain("活跃渠道")
+    expect(html).toContain("Webhook 队列")
+    expect(html).toContain("已接收")
+    expect(html).toContain("搜索分销")
+    expect(html).toContain("清除筛选")
+  })
 })
 
 const channels: ChannelRow[] = [

@@ -1,0 +1,31 @@
+import type { AdminChromeMessages } from "../chrome.js"
+
+export const adminChromeZh: AdminChromeMessages = {
+  loading: "加载中…",
+  account: "账户",
+  notifications: "通知",
+  logOut: "退出登录",
+  light: "浅色",
+  dark: "深色",
+  language: "语言",
+  english: "英语",
+  romanian: "罗马尼亚语",
+  chinese: "中文",
+  toggleSidebar: "切换侧边栏",
+  toggleSidebarShortcutTitle: "切换侧边栏（Cmd/Ctrl+B）",
+  loadingWorkspace: "工作台加载中…",
+  loadingWorkspaceAriaLabel: "管理后台加载中…",
+  notFoundTitle: "页面未找到",
+  notFoundDescription: "请求的页面不存在或已不可用。",
+  goToDashboard: "前往概览",
+  tryAgain: "重试",
+  errorBoundaryTitle: "出了点问题",
+  errorBoundaryRequestFailed: "请求失败",
+  errorBoundaryFallbackMessage: "加载此页面时出了点问题。",
+  navBadgeSoon: "即将推出",
+  navBadgeBeta: "Beta",
+  uiExtensionLoadingDescription: "扩展加载中…",
+  uiExtensionLoadFailedDescription: "该扩展加载失败，已跳过。",
+  uiExtensionIncompatibleDescription:
+    "该扩展与当前管理后台版本不兼容（需要 {requiredVersion}，当前提供 {providedVersion}）。",
+}

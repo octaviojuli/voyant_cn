@@ -3,6 +3,8 @@
 import { cn, Separator, SidebarTrigger } from "@voyant-travel/ui/components"
 import type * as React from "react"
 
+import { useOptionalOperatorAdminMessages } from "../providers/operator-admin-messages.js"
+
 export interface OperatorAdminPageShellProps {
   actions?: React.ReactNode
   breadcrumbs?: React.ReactNode
@@ -24,6 +26,10 @@ export function OperatorAdminPageShell({
   padded = true,
   showSidebarTrigger = true,
 }: OperatorAdminPageShellProps) {
+  // Optional: the page shell is exported standalone and may render outside
+  // the operator admin messages provider — fall back to English copy there.
+  const messages = useOptionalOperatorAdminMessages()
+
   return (
     <div
       data-slot="operator-admin-page-shell"
@@ -40,8 +46,8 @@ export function OperatorAdminPageShell({
           {showSidebarTrigger ? (
             <SidebarTrigger
               className="-ml-1"
-              title="Toggle sidebar (Cmd/Ctrl+B)"
-              aria-label="Toggle sidebar"
+              title={messages?.toggleSidebarShortcutTitle ?? "Toggle sidebar (Cmd/Ctrl+B)"}
+              aria-label={messages?.toggleSidebar ?? "Toggle sidebar"}
             />
           ) : null}
           {breadcrumbs ? (

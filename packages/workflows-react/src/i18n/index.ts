@@ -24,3 +24,4 @@ export {
   workflowRunsUiMessageDefinitions as workflowsUiMessageDefinitions,
 } from "./provider.js"
 export { workflowRunsUiRo, workflowRunsUiRo as workflowsUiRo } from "./ro.js"
+export { workflowRunsUiZh, workflowRunsUiZh as workflowsUiZh } from "./zh.js"

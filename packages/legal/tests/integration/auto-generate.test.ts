@@ -536,6 +536,72 @@ describe.skipIf(!DB_AVAILABLE)("autoGenerateContractForBooking", () => {
     expect(bodies[0]).toContain("Metoda Alta | Ultima Alta")
   })
 
+  it("localizes latest payment method labels for zh-CN contracts", async () => {
+    const { template, version } = await seedTemplate("cust-settlement-zh-1", { language: "zh-CN" })
+    await db
+      .update(contractTemplateVersions)
+      .set({
+        body: [
+          "收款方式 {{ payment.method }}",
+          "最近收款 {{ payment.latestCompleted.methodLabel }}",
+        ].join(" | "),
+      })
+      .where(eq(contractTemplateVersions.id, version.id))
+
+    const booking = await seedBooking({
+      sellCurrency: "CNY",
+      sellAmountCents: 32000,
+    })
+    const [invoice] = await db
+      .insert(invoices)
+      .values({
+        invoiceNumber: `INV-${booking.bookingNumber}`,
+        bookingId: booking.id,
+        status: "paid",
+        currency: "CNY",
+        subtotalCents: 32000,
+        taxCents: 0,
+        totalCents: 32000,
+        paidCents: 32000,
+        balanceDueCents: 0,
+        issueDate: "2026-05-01",
+        dueDate: "2026-05-10",
+      })
+      .returning()
+    await db.insert(payments).values({
+      invoiceId: invoice!.id,
+      amountCents: 32000,
+      currency: "CNY",
+      paymentMethod: "bank_transfer",
+      status: "completed",
+      paymentDate: "2026-05-04",
+    })
+
+    const bodies: string[] = []
+    const outcome = await autoGenerateContractForBooking(
+      db,
+      { bookingId: booking.id, bookingNumber: booking.bookingNumber, actorId: null },
+      { enabled: true, templateSlug: template.slug },
+      { generator: makeGenerator(bodies) },
+    )
+    expect(outcome.status).toBe("ok")
+    if (outcome.status !== "ok") return
+
+    const contract = await contractRecordsService.getContractById(db, outcome.contractId)
+    const variables = contract?.variables as Record<string, unknown>
+    const paymentVariables = variables.payment as Record<string, unknown>
+    const latestCompleted = paymentVariables.latestCompleted as Record<string, unknown>
+
+    expect(contract?.language).toBe("zh-CN")
+    expect(latestCompleted).toMatchObject({
+      method: "bank_transfer",
+      methodLabel: "银行转账",
+      date: "2026-05-04",
+    })
+    expect(paymentVariables.method).toBe("银行转账")
+    expect(bodies[0]).toContain("收款方式 银行转账 | 最近收款 银行转账")
+  })
+
   it("separates scheduled balance from current amount due for paid-in-full bookings", async () => {
     const { template, version } = await seedTemplate("cust-paid-full-balance-1")
     await db

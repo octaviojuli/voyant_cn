@@ -12,3 +12,4 @@ export {
   useNotificationsUiMessagesOrDefault,
 } from "./provider.js"
 export { notificationsUiRo } from "./ro.js"
+export { notificationsUiZh } from "./zh.js"

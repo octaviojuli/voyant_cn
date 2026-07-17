@@ -180,6 +180,7 @@
       "@voyant-travel/auth-react/i18n": ["../auth-react/dist/i18n/index.d.ts"],
       "@voyant-travel/auth-react/i18n/en": ["../auth-react/dist/i18n/en.d.ts"],
       "@voyant-travel/auth-react/i18n/ro": ["../auth-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/auth-react/i18n/zh": ["../auth-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/auth-react/local-auth-routes": ["../auth-react/dist/local-auth-routes.d.ts"],
       "@voyant-travel/auth-react/organization-members": [
         "../auth-react/dist/components/organization-members-page.d.ts"
@@ -231,6 +232,7 @@
       "@voyant-travel/bookings-react/i18n": ["../bookings-react/dist/i18n/index.d.ts"],
       "@voyant-travel/bookings-react/i18n/en": ["../bookings-react/dist/i18n/en.d.ts"],
       "@voyant-travel/bookings-react/i18n/ro": ["../bookings-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/bookings-react/i18n/zh": ["../bookings-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/bookings-react/journey": ["../bookings-react/dist/journey/index.d.ts"],
       "@voyant-travel/bookings-react/provider": ["../bookings-react/dist/provider.d.ts"],
       "@voyant-travel/bookings-react/query-keys": ["../bookings-react/dist/query-keys.d.ts"],
@@ -254,6 +256,9 @@
       ],
       "@voyant-travel/bookings-react/requirements/i18n/ro": [
         "../bookings-react/dist/requirements/i18n/ro.d.ts"
+      ],
+      "@voyant-travel/bookings-react/requirements/i18n/zh": [
+        "../bookings-react/dist/requirements/i18n/zh.d.ts"
       ],
       "@voyant-travel/bookings-react/requirements/provider": [
         "../bookings-react/dist/requirements/provider.d.ts"
@@ -360,6 +365,7 @@
       "@voyant-travel/catalog-react/i18n": ["../catalog-react/dist/i18n/index.d.ts"],
       "@voyant-travel/catalog-react/i18n/en": ["../catalog-react/dist/i18n/en.d.ts"],
       "@voyant-travel/catalog-react/i18n/ro": ["../catalog-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/catalog-react/i18n/zh": ["../catalog-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/catalog-react/provider": ["../catalog-react/dist/provider.d.ts"],
       "@voyant-travel/catalog-react/storefront": ["../catalog-react/dist/storefront/index.d.ts"],
       "@voyant-travel/catalog-react/ui": ["../catalog-react/dist/ui.d.ts"],
@@ -375,6 +381,7 @@
       "@voyant-travel/charters-react/i18n": ["../charters-react/dist/i18n/index.d.ts"],
       "@voyant-travel/charters-react/i18n/en": ["../charters-react/dist/i18n/en.d.ts"],
       "@voyant-travel/charters-react/i18n/ro": ["../charters-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/charters-react/i18n/zh": ["../charters-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/charters-react/provider": ["../charters-react/dist/provider.d.ts"],
       "@voyant-travel/charters-react/query-keys": ["../charters-react/dist/query-keys.d.ts"],
       "@voyant-travel/charters-react/ui": ["../charters-react/dist/ui.d.ts"],
@@ -423,6 +430,9 @@
       "@voyant-travel/commerce-react/markets/i18n/ro": [
         "../commerce-react/dist/markets/i18n/ro.d.ts"
       ],
+      "@voyant-travel/commerce-react/markets/i18n/zh": [
+        "../commerce-react/dist/markets/i18n/zh.d.ts"
+      ],
       "@voyant-travel/commerce-react/markets/provider": [
         "../commerce-react/dist/markets/provider.d.ts"
       ],
@@ -449,6 +459,9 @@
       "@voyant-travel/commerce-react/pricing/i18n/ro": [
         "../commerce-react/dist/pricing/i18n/ro.d.ts"
       ],
+      "@voyant-travel/commerce-react/pricing/i18n/zh": [
+        "../commerce-react/dist/pricing/i18n/zh.d.ts"
+      ],
       "@voyant-travel/commerce-react/pricing/provider": [
         "../commerce-react/dist/pricing/provider.d.ts"
       ],
@@ -472,6 +485,9 @@
       "@voyant-travel/commerce-react/promotions/i18n/ro": [
         "../commerce-react/dist/promotions/i18n/ro.d.ts"
       ],
+      "@voyant-travel/commerce-react/promotions/i18n/zh": [
+        "../commerce-react/dist/promotions/i18n/zh.d.ts"
+      ],
       "@voyant-travel/commerce-react/promotions/ui": ["../commerce-react/dist/promotions/ui.d.ts"],
       "@voyant-travel/commerce-react/sellability": ["../commerce-react/dist/sellability.d.ts"],
       "@voyant-travel/commerce-react/sellability/client": [
@@ -491,6 +507,9 @@
       ],
       "@voyant-travel/commerce-react/sellability/i18n/ro": [
         "../commerce-react/dist/sellability/i18n/ro.d.ts"
+      ],
+      "@voyant-travel/commerce-react/sellability/i18n/zh": [
+        "../commerce-react/dist/sellability/i18n/zh.d.ts"
       ],
       "@voyant-travel/commerce-react/sellability/provider": [
         "../commerce-react/dist/sellability/provider.d.ts"
@@ -559,6 +578,7 @@
       "@voyant-travel/cruises-react/i18n": ["../cruises-react/dist/i18n/index.d.ts"],
       "@voyant-travel/cruises-react/i18n/en": ["../cruises-react/dist/i18n/en.d.ts"],
       "@voyant-travel/cruises-react/i18n/ro": ["../cruises-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/cruises-react/i18n/zh": ["../cruises-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/cruises-react/provider": ["../cruises-react/dist/provider.d.ts"],
       "@voyant-travel/cruises-react/query-keys": ["../cruises-react/dist/query-keys.d.ts"],
       "@voyant-travel/cruises-react/storefront": ["../cruises-react/dist/storefront/index.d.ts"],
@@ -707,6 +727,9 @@
       "@voyant-travel/distribution-react/external-refs/i18n/ro": [
         "../distribution-react/dist/external-refs/i18n/ro.d.ts"
       ],
+      "@voyant-travel/distribution-react/external-refs/i18n/zh": [
+        "../distribution-react/dist/external-refs/i18n/zh.d.ts"
+      ],
       "@voyant-travel/distribution-react/external-refs/provider": [
         "../distribution-react/dist/external-refs/provider.d.ts"
       ],
@@ -720,6 +743,7 @@
       "@voyant-travel/distribution-react/i18n": ["../distribution-react/dist/i18n/index.d.ts"],
       "@voyant-travel/distribution-react/i18n/en": ["../distribution-react/dist/i18n/en.d.ts"],
       "@voyant-travel/distribution-react/i18n/ro": ["../distribution-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/distribution-react/i18n/zh": ["../distribution-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/distribution-react/provider": ["../distribution-react/dist/provider.d.ts"],
       "@voyant-travel/distribution-react/query-keys": [
         "../distribution-react/dist/query-keys.d.ts"
@@ -747,6 +771,9 @@
       ],
       "@voyant-travel/distribution-react/suppliers/i18n/ro": [
         "../distribution-react/dist/suppliers/i18n/ro.d.ts"
+      ],
+      "@voyant-travel/distribution-react/suppliers/i18n/zh": [
+        "../distribution-react/dist/suppliers/i18n/zh.d.ts"
       ],
       "@voyant-travel/distribution-react/suppliers/provider": [
         "../distribution-react/dist/suppliers/provider.d.ts"
@@ -812,6 +839,7 @@
       "@voyant-travel/finance-react/i18n": ["../finance-react/dist/i18n/index.d.ts"],
       "@voyant-travel/finance-react/i18n/en": ["../finance-react/dist/i18n/en.d.ts"],
       "@voyant-travel/finance-react/i18n/ro": ["../finance-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/finance-react/i18n/zh": ["../finance-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/finance-react/provider": ["../finance-react/dist/provider.d.ts"],
       "@voyant-travel/finance-react/public-routes": ["../finance-react/dist/public-routes.d.ts"],
       "@voyant-travel/finance-react/query-keys": ["../finance-react/dist/query-keys.d.ts"],
@@ -881,6 +909,7 @@
       "@voyant-travel/flights-react/i18n": ["../flights-react/dist/i18n/index.d.ts"],
       "@voyant-travel/flights-react/i18n/en": ["../flights-react/dist/i18n/en.d.ts"],
       "@voyant-travel/flights-react/i18n/ro": ["../flights-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/flights-react/i18n/zh": ["../flights-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/flights-react/provider": ["../flights-react/dist/provider.d.ts"],
       "@voyant-travel/flights-react/query-keys": ["../flights-react/dist/query-keys.d.ts"],
       "@voyant-travel/flights-react/ui": ["../flights-react/dist/ui.d.ts"],
@@ -985,6 +1014,7 @@
       "@voyant-travel/identity-react/i18n": ["../identity-react/dist/i18n/index.d.ts"],
       "@voyant-travel/identity-react/i18n/en": ["../identity-react/dist/i18n/en.d.ts"],
       "@voyant-travel/identity-react/i18n/ro": ["../identity-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/identity-react/i18n/zh": ["../identity-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/identity-react/provider": ["../identity-react/dist/provider.d.ts"],
       "@voyant-travel/identity-react/query-keys": ["../identity-react/dist/query-keys.d.ts"],
       "@voyant-travel/identity-react/ui": ["../identity-react/dist/ui.d.ts"],
@@ -1007,6 +1037,7 @@
       "@voyant-travel/inventory-react/i18n": ["../inventory-react/dist/i18n.d.ts"],
       "@voyant-travel/inventory-react/i18n/en": ["../inventory-react/dist/i18n-en.d.ts"],
       "@voyant-travel/inventory-react/i18n/ro": ["../inventory-react/dist/i18n-ro.d.ts"],
+      "@voyant-travel/inventory-react/i18n/zh": ["../inventory-react/dist/i18n-zh.d.ts"],
       "@voyant-travel/inventory-react/provider": ["../inventory-react/dist/provider.d.ts"],
       "@voyant-travel/inventory-react/query-keys": ["../inventory-react/dist/query-keys.d.ts"],
       "@voyant-travel/inventory-react/storefront": [
@@ -1107,6 +1138,7 @@
       "@voyant-travel/legal-react/i18n": ["../legal-react/dist/i18n/index.d.ts"],
       "@voyant-travel/legal-react/i18n/en": ["../legal-react/dist/i18n/en.d.ts"],
       "@voyant-travel/legal-react/i18n/ro": ["../legal-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/legal-react/i18n/zh": ["../legal-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/legal-react/provider": ["../legal-react/dist/provider.d.ts"],
       "@voyant-travel/legal-react/query-keys": ["../legal-react/dist/query-keys.d.ts"],
       "@voyant-travel/legal-react/ui": ["../legal-react/dist/ui.d.ts"],
@@ -1160,6 +1192,10 @@
       "@voyant-travel/mice-react/client": ["../mice-react/dist/client.d.ts"],
       "@voyant-travel/mice-react/components/*": ["../mice-react/dist/components/*.d.ts"],
       "@voyant-travel/mice-react/hooks": ["../mice-react/dist/hooks/index.d.ts"],
+      "@voyant-travel/mice-react/i18n": ["../mice-react/dist/i18n/index.d.ts"],
+      "@voyant-travel/mice-react/i18n/en": ["../mice-react/dist/i18n/en.d.ts"],
+      "@voyant-travel/mice-react/i18n/ro": ["../mice-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/mice-react/i18n/zh": ["../mice-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/mice-react/provider": ["../mice-react/dist/provider.d.ts"],
       "@voyant-travel/mice-react/query-keys": ["../mice-react/dist/query-keys.d.ts"],
       "@voyant-travel/mice-react/query-options": ["../mice-react/dist/query-options.d.ts"],
@@ -1217,6 +1253,7 @@
       "@voyant-travel/notifications-react/i18n": ["../notifications-react/dist/i18n/index.d.ts"],
       "@voyant-travel/notifications-react/i18n/en": ["../notifications-react/dist/i18n/en.d.ts"],
       "@voyant-travel/notifications-react/i18n/ro": ["../notifications-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/notifications-react/i18n/zh": ["../notifications-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/notifications-react/provider": ["../notifications-react/dist/provider.d.ts"],
       "@voyant-travel/notifications-react/query-keys": [
         "../notifications-react/dist/query-keys.d.ts"
@@ -1334,6 +1371,9 @@
       "@voyant-travel/operations-react/places/i18n/ro": [
         "../operations-react/dist/places/i18n/ro.d.ts"
       ],
+      "@voyant-travel/operations-react/places/i18n/zh": [
+        "../operations-react/dist/places/i18n/zh.d.ts"
+      ],
       "@voyant-travel/operations-react/places/provider": [
         "../operations-react/dist/places/provider.d.ts"
       ],
@@ -1364,6 +1404,9 @@
       ],
       "@voyant-travel/operations-react/resources/i18n/ro": [
         "../operations-react/dist/resources/i18n/ro.d.ts"
+      ],
+      "@voyant-travel/operations-react/resources/i18n/zh": [
+        "../operations-react/dist/resources/i18n/zh.d.ts"
       ],
       "@voyant-travel/operations-react/resources/provider": [
         "../operations-react/dist/resources/provider.d.ts"
@@ -1488,6 +1531,7 @@
       "@voyant-travel/quotes-react/i18n": ["../quotes-react/dist/i18n/index.d.ts"],
       "@voyant-travel/quotes-react/i18n/en": ["../quotes-react/dist/i18n/en.d.ts"],
       "@voyant-travel/quotes-react/i18n/ro": ["../quotes-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/quotes-react/i18n/zh": ["../quotes-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/quotes-react/provider": ["../quotes-react/dist/provider.d.ts"],
       "@voyant-travel/quotes-react/public-routes": ["../quotes-react/dist/public-routes.d.ts"],
       "@voyant-travel/quotes-react/query-keys": ["../quotes-react/dist/query-keys.d.ts"],
@@ -1551,6 +1595,7 @@
       "@voyant-travel/relationships-react/i18n": ["../relationships-react/dist/i18n/index.d.ts"],
       "@voyant-travel/relationships-react/i18n/en": ["../relationships-react/dist/i18n/en.d.ts"],
       "@voyant-travel/relationships-react/i18n/ro": ["../relationships-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/relationships-react/i18n/zh": ["../relationships-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/relationships-react/provider": ["../relationships-react/dist/provider.d.ts"],
       "@voyant-travel/relationships-react/query-keys": [
         "../relationships-react/dist/query-keys.d.ts"
@@ -1643,6 +1688,10 @@
         "../storefront-react/dist/customer-portal/query-keys.d.ts"
       ],
       "@voyant-travel/storefront-react/hooks": ["../storefront-react/dist/hooks/index.d.ts"],
+      "@voyant-travel/storefront-react/i18n": ["../storefront-react/dist/i18n/index.d.ts"],
+      "@voyant-travel/storefront-react/i18n/en": ["../storefront-react/dist/i18n/en.d.ts"],
+      "@voyant-travel/storefront-react/i18n/ro": ["../storefront-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/storefront-react/i18n/zh": ["../storefront-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/storefront-react/provider": ["../storefront-react/dist/provider.d.ts"],
       "@voyant-travel/storefront-react/query-keys": ["../storefront-react/dist/query-keys.d.ts"],
       "@voyant-travel/storefront-react/storefront": [
@@ -1802,6 +1851,7 @@
       "@voyant-travel/workflows-react/i18n": ["../workflows-react/dist/i18n/index.d.ts"],
       "@voyant-travel/workflows-react/i18n/en": ["../workflows-react/dist/i18n/en.d.ts"],
       "@voyant-travel/workflows-react/i18n/ro": ["../workflows-react/dist/i18n/ro.d.ts"],
+      "@voyant-travel/workflows-react/i18n/zh": ["../workflows-react/dist/i18n/zh.d.ts"],
       "@voyant-travel/workflows-react/ui": ["../workflows-react/dist/ui.d.ts"],
       "@voyant-travel/workflows-react/workflow-runs": [
         "../workflows-react/dist/workflow-runs.d.ts"

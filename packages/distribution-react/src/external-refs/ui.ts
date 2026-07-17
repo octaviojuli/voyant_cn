@@ -14,6 +14,7 @@ export {
   externalRefsUiEn,
   externalRefsUiMessageDefinitions,
   externalRefsUiRo,
+  externalRefsUiZh,
   getExternalRefsUiI18n,
   resolveExternalRefsUiMessages,
   useExternalRefsUiI18n,

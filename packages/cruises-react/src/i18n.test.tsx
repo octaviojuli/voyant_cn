@@ -76,6 +76,17 @@ describe("cruises-ui i18n", () => {
     expect(html).toContain("voyant-connect")
   })
 
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <CruisesUiMessagesProvider locale="zh-CN">
+        <ExternalCruiseBadge sourceProvider="voyant-connect" />
+      </CruisesUiMessagesProvider>,
+    )
+
+    expect(html).toContain("外采")
+    expect(html).toContain("voyant-connect")
+  })
+
   it("renders localized quote copy with the package provider", () => {
     const html = renderToStaticMarkup(
       <CruisesUiMessagesProvider locale="ro-RO">

@@ -17,3 +17,4 @@ export {
   useCruisesUiMessagesOrDefault,
 } from "./provider.js"
 export { cruisesUiRo } from "./ro.js"
+export { cruisesUiZh } from "./zh.js"

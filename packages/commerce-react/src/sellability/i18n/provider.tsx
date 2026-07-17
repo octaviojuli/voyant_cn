@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { sellabilityUiEn } from "./en.js"
 import type { SellabilityUiMessages } from "./messages.js"
 import { sellabilityUiRo } from "./ro.js"
+import { sellabilityUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const sellabilityUiMessageDefinitions = {
   en: sellabilityUiEn,
   ro: sellabilityUiRo,
+  zh: sellabilityUiZh,
 } satisfies LocaleMessageDefinitions<SellabilityUiMessages>
 
 export type SellabilityUiMessageOverrides = LocaleMessageOverrides<SellabilityUiMessages>

@@ -42,6 +42,7 @@ export {
   StorefrontMessagesProvider,
   storefrontMessagesEn,
   storefrontMessagesRo,
+  storefrontMessagesZh,
   useStorefrontMessages,
   useStorefrontMessagesOrDefault,
 } from "./messages.js"

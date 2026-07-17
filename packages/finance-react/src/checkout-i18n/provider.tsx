@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { checkoutUiEn } from "./en.js"
 import type { CheckoutUiMessages } from "./messages.js"
 import { checkoutUiRo } from "./ro.js"
+import { checkoutUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const checkoutUiMessageDefinitions = {
   en: checkoutUiEn,
   ro: checkoutUiRo,
+  zh: checkoutUiZh,
 } satisfies LocaleMessageDefinitions<CheckoutUiMessages>
 
 export type CheckoutUiMessageOverrides = LocaleMessageOverrides<CheckoutUiMessages>

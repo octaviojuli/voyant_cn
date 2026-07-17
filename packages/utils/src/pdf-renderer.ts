@@ -1,4 +1,4 @@
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib"
+import { PDFDocument, type PDFFont, rgb, StandardFonts } from "pdf-lib"
 
 export type PdfContentFormat = "text" | "html" | "markdown" | "lexical_json"
 
@@ -7,6 +7,31 @@ export interface RenderPdfDocumentInput {
   content: string
   format?: PdfContentFormat
   metadataLines?: string[]
+}
+
+const CJK_PATTERN = /[\u2e80-\u9fff\u3000-\u303f\uf900-\ufaff\ufe30-\ufe4f\uff00-\uffef]/
+
+type FontkitInstance = Parameters<PDFDocument["registerFontkit"]>[0]
+
+let cjkFontBytesPromise: Promise<Uint8Array> | null = null
+
+function loadCjkFontBytes() {
+  if (!cjkFontBytesPromise) {
+    const promise = (async () => {
+      const { readFile } = await import("node:fs/promises")
+      return readFile(new URL("../assets/noto-sans-sc-subset.otf", import.meta.url))
+    })()
+    cjkFontBytesPromise = promise.catch((error) => {
+      cjkFontBytesPromise = null
+      throw error
+    })
+  }
+  return cjkFontBytesPromise
+}
+
+async function loadFontkit(): Promise<FontkitInstance> {
+  const mod: { default: FontkitInstance } = await import("@pdf-lib/fontkit")
+  return mod.default
 }
 
 function decodeEntities(input: string) {
@@ -76,12 +101,53 @@ function normalizePdfText(input: string, format: PdfContentFormat) {
     .trim()
 }
 
+function splitOversizedWord(word: string, width: number, measure: (value: string) => number) {
+  const segments: string[] = []
+  const charWidths = new Map<string, number>()
+  const widthOf = (char: string) => {
+    let value = charWidths.get(char)
+    if (value === undefined) {
+      value = measure(char)
+      charWidths.set(char, value)
+    }
+    return value
+  }
+
+  let current = ""
+  let currentWidth = 0
+  for (const char of word) {
+    const charWidth = widthOf(char)
+    if (currentWidth + charWidth <= width || !current) {
+      current += char
+      currentWidth += charWidth
+    } else {
+      segments.push(current)
+      current = char
+      currentWidth = charWidth
+    }
+  }
+
+  if (current) segments.push(current)
+  return segments
+}
+
 function wrapLine(text: string, width: number, measure: (value: string) => number) {
   const words = text.split(/\s+/).filter(Boolean)
   const lines: string[] = []
   let current = ""
 
   for (const word of words) {
+    if (CJK_PATTERN.test(word) && measure(word) > width) {
+      if (current) {
+        lines.push(current)
+        current = ""
+      }
+      const segments = splitOversizedWord(word, width, measure)
+      lines.push(...segments.slice(0, -1))
+      current = segments.at(-1) ?? ""
+      continue
+    }
+
     const next = current ? `${current} ${word}` : word
     if (measure(next) <= width || !current) {
       current = next
@@ -97,8 +163,23 @@ function wrapLine(text: string, width: number, measure: (value: string) => numbe
 
 export async function renderPdfDocument(input: RenderPdfDocumentInput): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create()
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+
+  const title = input.title?.trim()
+  const normalized = normalizePdfText(input.content, input.format ?? "text")
+  const needsCjk = [title ?? "", ...(input.metadataLines ?? []), normalized].some((value) =>
+    CJK_PATTERN.test(value),
+  )
+
+  let font: PDFFont
+  let bold: PDFFont
+  if (needsCjk) {
+    pdfDoc.registerFontkit(await loadFontkit())
+    font = await pdfDoc.embedFont(await loadCjkFontBytes(), { subset: true })
+    bold = font
+  } else {
+    font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+    bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  }
 
   const PAGE_WIDTH = 595.28
   const PAGE_HEIGHT = 841.89
@@ -132,7 +213,6 @@ export async function renderPdfDocument(input: RenderPdfDocumentInput): Promise<
     y -= LINE_HEIGHT
   }
 
-  const title = input.title?.trim()
   if (title) {
     drawLine(title, { bold: true, size: TITLE_SIZE })
     y -= 6
@@ -150,7 +230,6 @@ export async function renderPdfDocument(input: RenderPdfDocumentInput): Promise<
     y -= 6
   }
 
-  const normalized = normalizePdfText(input.content, input.format ?? "text")
   for (const paragraph of normalized.split(/\n{2,}/)) {
     const lines = paragraph.split("\n").flatMap((line) => wrapLine(line, bodyWidth, measure))
     for (const line of lines) {

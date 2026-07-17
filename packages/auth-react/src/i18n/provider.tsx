@@ -13,12 +13,14 @@ import type { ReactNode } from "react"
 import { authUiEn } from "./en.js"
 import type { AuthUiMessages } from "./messages.js"
 import { authUiRo } from "./ro.js"
+import { authUiZh } from "./zh.js"
 
 const fallbackLocale = "en"
 
 export const authUiMessageDefinitions = {
   en: authUiEn,
   ro: authUiRo,
+  zh: authUiZh,
 } satisfies LocaleMessageDefinitions<AuthUiMessages>
 
 export type AuthUiMessageOverrides = LocaleMessageOverrides<AuthUiMessages>

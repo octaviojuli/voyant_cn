@@ -27,10 +27,12 @@
     "./requirements/i18n": "./src/requirements/i18n/index.ts",
     "./requirements/i18n/en": "./src/requirements/i18n/en.ts",
     "./requirements/i18n/ro": "./src/requirements/i18n/ro.ts",
+    "./requirements/i18n/zh": "./src/requirements/i18n/zh.ts",
     "./requirements/components/*": "./src/requirements/components/*.tsx",
     "./i18n": "./src/i18n/index.ts",
     "./i18n/en": "./src/i18n/en.ts",
     "./i18n/ro": "./src/i18n/ro.ts",
+    "./i18n/zh": "./src/i18n/zh.ts",
     "./journey": "./src/journey/index.ts",
     "./storefront": "./src/storefront/index.ts",
     "./extras": "./src/extras.ts",
@@ -265,6 +267,11 @@
         "import": "./dist/requirements/i18n/ro.js",
         "default": "./dist/requirements/i18n/ro.js"
       },
+      "./requirements/i18n/zh": {
+        "types": "./dist/requirements/i18n/zh.d.ts",
+        "import": "./dist/requirements/i18n/zh.js",
+        "default": "./dist/requirements/i18n/zh.js"
+      },
       "./requirements/components/*": {
         "types": "./dist/requirements/components/*.d.ts",
         "import": "./dist/requirements/components/*.js",
@@ -284,6 +291,11 @@
         "types": "./dist/i18n/ro.d.ts",
         "import": "./dist/i18n/ro.js",
         "default": "./dist/i18n/ro.js"
+      },
+      "./i18n/zh": {
+        "types": "./dist/i18n/zh.d.ts",
+        "import": "./dist/i18n/zh.js",
+        "default": "./dist/i18n/zh.js"
       },
       "./journey": {
         "types": "./dist/journey/index.d.ts",

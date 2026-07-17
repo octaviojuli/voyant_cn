@@ -3,6 +3,7 @@
 import { consumeAdminSetupPrefill } from "@voyant-travel/admin"
 import { cn } from "@voyant-travel/ui/lib/utils"
 import { useEffect, useMemo, useState } from "react"
+import { useStorefrontSettingsUiMessagesOrDefault } from "../i18n/provider.js"
 import { useAdminStorefrontSettings, useAdminStorefrontSettingsMutation } from "../index.js"
 
 import {
@@ -36,6 +37,7 @@ export interface StorefrontSettingsPageProps {
 }
 
 export function StorefrontSettingsPage({ className }: StorefrontSettingsPageProps) {
+  const messages = useStorefrontSettingsUiMessagesOrDefault()
   const settingsQuery = useAdminStorefrontSettings()
   const mutation = useAdminStorefrontSettingsMutation()
   const [form, setForm] = useState<FormState>(emptyForm)
@@ -66,7 +68,7 @@ export function StorefrontSettingsPage({ className }: StorefrontSettingsPageProp
   }
 
   const save = async () => {
-    const validationError = validateForm(form)
+    const validationError = validateForm(form, messages.validation)
     setLocalError(validationError)
     if (validationError) return
 
@@ -76,10 +78,8 @@ export function StorefrontSettingsPage({ className }: StorefrontSettingsPageProp
   return (
     <div data-slot="storefront-settings-page" className={cn("flex flex-col gap-6 p-6", className)}>
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Storefront settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage customer-facing branding, support, legal, localization, and payment defaults.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{messages.page.title}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{messages.page.intro}</p>
       </div>
 
       {settingsQuery.isLoading ? (
@@ -93,7 +93,7 @@ export function StorefrontSettingsPage({ className }: StorefrontSettingsPageProp
         <>
           {isEmpty ? (
             <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-              No storefront settings have been saved yet.
+              {messages.page.emptyNotice}
             </p>
           ) : null}
 

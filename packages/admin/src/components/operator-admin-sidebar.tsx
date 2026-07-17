@@ -308,8 +308,8 @@ export function OperatorAdminWorkspaceLayout({
             {showSidebarTrigger && (
               <SidebarTrigger
                 className="-ml-1"
-                title="Toggle sidebar (Cmd/Ctrl+B)"
-                aria-label="Toggle sidebar"
+                title={messages.toggleSidebarShortcutTitle}
+                aria-label={messages.toggleSidebar}
               />
             )}
             {headerSlot !== undefined ? (

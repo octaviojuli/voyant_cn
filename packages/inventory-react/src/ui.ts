@@ -128,6 +128,7 @@ export {
   productsUiEn,
   productsUiMessageDefinitions,
   productsUiRo,
+  productsUiZh,
   resolveProductsUiMessages,
   useProductsUiI18n,
   useProductsUiI18nOrDefault,

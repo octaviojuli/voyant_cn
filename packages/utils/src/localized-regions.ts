@@ -59,4 +59,14 @@ export const localizedRegions = {
     { name: "America del Sud", code: "sa", slug: "america-del-sud" },
     { name: "Medio Oriente", code: "me", slug: "medio-oriente" },
   ],
+  zh: [
+    { name: "非洲", code: "af", slug: "africa" },
+    { name: "南极洲", code: "an", slug: "antarctica" },
+    { name: "亚洲", code: "as", slug: "asia" },
+    { name: "欧洲", code: "eu", slug: "europe" },
+    { name: "北美洲", code: "na", slug: "north-america" },
+    { name: "大洋洲", code: "oc", slug: "oceania" },
+    { name: "南美洲", code: "sa", slug: "south-america" },
+    { name: "中东", code: "me", slug: "middle-east" },
+  ],
 }

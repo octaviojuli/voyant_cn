@@ -60,7 +60,8 @@ export function ActionLedgerEntrySheet({
   entryId: string | null
   locale: string
 }) {
-  const t = useAdminMessages().actionLedgerPage.entrySheet
+  const page = useAdminMessages().actionLedgerPage
+  const t = page.entrySheet
   const client = useVoyantActionLedgerContext()
   const entryDetailQuery = useQuery({
     queryKey: actionLedgerQueryKeys.entry(entryId ?? ""),
@@ -79,9 +80,11 @@ export function ActionLedgerEntrySheet({
           {entry ? (
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <Badge variant={RISK_VARIANT[entry.evaluatedRisk] ?? "outline"}>
-                {entry.evaluatedRisk}
+                {page.filtersPopover.riskOptions[entry.evaluatedRisk] ?? entry.evaluatedRisk}
               </Badge>
-              <Badge variant={STATUS_VARIANT[entry.status] ?? "outline"}>{entry.status}</Badge>
+              <Badge variant={STATUS_VARIANT[entry.status] ?? "outline"}>
+                {page.filtersPopover.statusOptions[entry.status] ?? entry.status}
+              </Badge>
               <span className="font-mono text-muted-foreground text-xs">{entry.id}</span>
             </div>
           ) : null}
@@ -109,6 +112,7 @@ function ActionLedgerEntryDetail({
   locale: string
   messages: EntrySheetMessages
 }) {
+  const typeLabels = useAdminMessages().actionLedgerPage.filtersPopover
   return (
     <div className="space-y-6">
       <DetailGrid>
@@ -148,7 +152,7 @@ function ActionLedgerEntryDetail({
         <DetailGrid>
           <DetailField
             label={messages.actor.principalType}
-            value={entry.principalType}
+            value={typeLabels.principalTypeOptions[entry.principalType] ?? entry.principalType}
             noValue={messages.noValue}
           />
           <DetailField
@@ -197,7 +201,7 @@ function ActionLedgerEntryDetail({
         <DetailGrid>
           <DetailField
             label={messages.targetFlow.targetType}
-            value={entry.targetType}
+            value={targetTypeLabel(entry.targetType, typeLabels.targetTypeOptions)}
             noValue={messages.noValue}
           />
           <DetailField
@@ -519,6 +523,21 @@ function DetailField({
       </div>
     </div>
   )
+}
+
+type TargetTypeOptionLabels = ReturnType<
+  typeof useAdminMessages
+>["actionLedgerPage"]["filtersPopover"]["targetTypeOptions"]
+
+/**
+ * Target types are freeform strings on the wire — known types render the
+ * localized filter-option label, unknown ones fall back to the raw value.
+ */
+function targetTypeLabel(value: string, labels: TargetTypeOptionLabels) {
+  if (value !== "any" && value in labels) {
+    return labels[value as keyof TargetTypeOptionLabels]
+  }
+  return value
 }
 
 function formatDateTime(value: string, locale: string) {

@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMessage } from "@voyant-travel/i18n"
 import {
   Badge,
   Button,
@@ -30,6 +31,7 @@ import {
   useRoomingAssignment,
 } from "../hooks/use-mice-lists.js"
 import { useRoomingMutation } from "../hooks/use-rooming-mutation.js"
+import { useMiceUiMessagesOrDefault } from "../i18n/index.js"
 import type { DelegateRecord, RoomingAssignmentDelegateRecord } from "../schemas.js"
 
 const ROOMING_PAGE_LIMIT = 500
@@ -52,6 +54,7 @@ function delegateLabel(delegate: DelegateRecord): string {
  * occupant workflow opens per assignment and replaces the full room delegate set.
  */
 export function ProgramRoomingSection({ programId }: ProgramRoomingSectionProps) {
+  const m = useMiceUiMessagesOrDefault()
   const { data, isLoading } = useProgramRooming(programId)
   const assignments = data?.data ?? []
   const capped = assignments.length === ROOMING_PAGE_LIMIT
@@ -61,10 +64,10 @@ export function ProgramRoomingSection({ programId }: ProgramRoomingSectionProps)
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-semibold text-lg tracking-tight">Rooming</h2>
+        <h2 className="font-semibold text-lg tracking-tight">{m.roomingSection.heading}</h2>
         <Button size="sm" onClick={() => setShowCreate(true)}>
           <Plus className="size-4" aria-hidden="true" />
-          New assignment
+          {m.roomingSection.create}
         </Button>
       </div>
 
@@ -72,11 +75,11 @@ export function ProgramRoomingSection({ programId }: ProgramRoomingSectionProps)
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Room block</TableHead>
-              <TableHead>Room type</TableHead>
-              <TableHead>Stay</TableHead>
-              <TableHead>Bed</TableHead>
-              <TableHead>Sharing group</TableHead>
+              <TableHead>{m.roomingSection.roomBlockColumn}</TableHead>
+              <TableHead>{m.roomingSection.roomTypeColumn}</TableHead>
+              <TableHead>{m.roomingSection.stayColumn}</TableHead>
+              <TableHead>{m.roomingSection.bedColumn}</TableHead>
+              <TableHead>{m.roomingSection.sharingGroupColumn}</TableHead>
               <TableHead> </TableHead>
             </TableRow>
           </TableHeader>
@@ -84,7 +87,7 @@ export function ProgramRoomingSection({ programId }: ProgramRoomingSectionProps)
             {!isLoading && assignments.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No rooming assignments yet.
+                  {m.roomingSection.empty}
                 </TableCell>
               </TableRow>
             ) : (
@@ -96,7 +99,10 @@ export function ProgramRoomingSection({ programId }: ProgramRoomingSectionProps)
                   <TableCell>{assignmentLabel(assignment.roomTypeId)}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
                     {assignment.checkIn || assignment.checkOut
-                      ? `${assignment.checkIn ?? "?"} to ${assignment.checkOut ?? "?"}`
+                      ? formatMessage(m.roomingSection.stayRange, {
+                          checkIn: assignment.checkIn ?? "?",
+                          checkOut: assignment.checkOut ?? "?",
+                        })
                       : "-"}
                   </TableCell>
                   <TableCell>
@@ -116,7 +122,7 @@ export function ProgramRoomingSection({ programId }: ProgramRoomingSectionProps)
                       onClick={() => setManageAssignmentId(assignment.id)}
                     >
                       <Users className="size-4" aria-hidden="true" />
-                      Occupants
+                      {m.roomingSection.occupantsAction}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -128,7 +134,7 @@ export function ProgramRoomingSection({ programId }: ProgramRoomingSectionProps)
 
       {capped ? (
         <p className="text-muted-foreground text-xs">
-          Showing the first {ROOMING_PAGE_LIMIT} assignments.
+          {formatMessage(m.roomingSection.capped, { count: ROOMING_PAGE_LIMIT })}
         </p>
       ) : null}
 
@@ -159,6 +165,7 @@ function CreateRoomingAssignmentDialog({
   open,
   onOpenChange,
 }: CreateRoomingAssignmentDialogProps) {
+  const m = useMiceUiMessagesOrDefault()
   const { create } = useRoomingMutation()
   const [roomBlockId, setRoomBlockId] = useState("")
   const [roomTypeId, setRoomTypeId] = useState("")
@@ -201,76 +208,88 @@ function CreateRoomingAssignmentDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New rooming assignment</DialogTitle>
+          <DialogTitle>{m.roomingSection.createDialog.title}</DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="rooming-room-block">Room block</Label>
+              <Label htmlFor="rooming-room-block">
+                {m.roomingSection.createDialog.roomBlockLabel}
+              </Label>
               <Input
                 id="rooming-room-block"
                 value={roomBlockId}
                 onChange={(e) => setRoomBlockId(e.target.value)}
-                placeholder="rb_..."
+                placeholder={m.roomingSection.createDialog.roomBlockPlaceholder}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="rooming-room-type">Room type</Label>
+              <Label htmlFor="rooming-room-type">
+                {m.roomingSection.createDialog.roomTypeLabel}
+              </Label>
               <Input
                 id="rooming-room-type"
                 value={roomTypeId}
                 onChange={(e) => setRoomTypeId(e.target.value)}
-                placeholder="rt_..."
+                placeholder={m.roomingSection.createDialog.roomTypePlaceholder}
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="rooming-check-in">Check-in</Label>
+              <Label htmlFor="rooming-check-in">{m.roomingSection.createDialog.checkInLabel}</Label>
               <DatePicker
                 value={checkIn || null}
                 onChange={(value) => setCheckIn(value ?? "")}
-                placeholder="Check-in"
+                placeholder={m.roomingSection.createDialog.checkInLabel}
                 className="w-full"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="rooming-check-out">Check-out</Label>
+              <Label htmlFor="rooming-check-out">
+                {m.roomingSection.createDialog.checkOutLabel}
+              </Label>
               <DatePicker
                 value={checkOut || null}
                 onChange={(value) => setCheckOut(value ?? "")}
-                placeholder="Check-out"
+                placeholder={m.roomingSection.createDialog.checkOutLabel}
                 className="w-full"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="rooming-bed-config">Bed configuration</Label>
+              <Label htmlFor="rooming-bed-config">
+                {m.roomingSection.createDialog.bedConfigLabel}
+              </Label>
               <Input
                 id="rooming-bed-config"
                 value={bedConfig}
                 onChange={(e) => setBedConfig(e.target.value)}
-                placeholder="Twin"
+                placeholder={m.roomingSection.createDialog.bedConfigPlaceholder}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="rooming-sharing-group">Sharing group</Label>
+              <Label htmlFor="rooming-sharing-group">
+                {m.roomingSection.createDialog.sharingGroupLabel}
+              </Label>
               <Input
                 id="rooming-sharing-group"
                 value={sharingGroupId}
                 onChange={(e) => setSharingGroupId(e.target.value)}
-                placeholder="group-a"
+                placeholder={m.roomingSection.createDialog.sharingGroupPlaceholder}
               />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="rooming-special-requests">Special requests</Label>
+            <Label htmlFor="rooming-special-requests">
+              {m.roomingSection.createDialog.specialRequestsLabel}
+            </Label>
             <Textarea
               id="rooming-special-requests"
               value={specialRequests}
               onChange={(e) => setSpecialRequests(e.target.value)}
-              placeholder="Accessible room, late arrival, dietary notes"
+              placeholder={m.roomingSection.createDialog.specialRequestsPlaceholder}
             />
           </div>
         </DialogBody>
@@ -280,7 +299,7 @@ function CreateRoomingAssignmentDialog({
             onClick={() => handleOpenChange(false)}
             disabled={create.isPending}
           >
-            Cancel
+            {m.common.cancel}
           </Button>
           <Button onClick={() => void submit()} disabled={create.isPending}>
             {create.isPending ? (
@@ -288,7 +307,7 @@ function CreateRoomingAssignmentDialog({
             ) : (
               <BedDouble className="size-4" aria-hidden="true" />
             )}
-            Create assignment
+            {m.roomingSection.createDialog.submit}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -315,6 +334,7 @@ function ManageRoomingOccupantsDialog({
   assignmentId,
   onOpenChange,
 }: ManageRoomingOccupantsDialogProps) {
+  const m = useMiceUiMessagesOrDefault()
   const open = assignmentId !== null
   const { setDelegates } = useRoomingMutation()
   const { data: assignmentData, isLoading: assignmentLoading } = useRoomingAssignment(
@@ -388,11 +408,11 @@ function ManageRoomingOccupantsDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Assign room occupants</DialogTitle>
+          <DialogTitle>{m.roomingSection.occupantsDialog.title}</DialogTitle>
         </DialogHeader>
         <DialogBody>
           {loading && !assignment ? (
-            <div className="py-6 text-center text-muted-foreground text-sm">Loading...</div>
+            <div className="py-6 text-center text-muted-foreground text-sm">{m.common.loading}</div>
           ) : (
             <div className="space-y-3">
               <div className="rounded-md border">
@@ -400,16 +420,20 @@ function ManageRoomingOccupantsDialog({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12"> </TableHead>
-                      <TableHead>Delegate</TableHead>
-                      <TableHead className="w-24">Primary</TableHead>
-                      <TableHead className="w-40">Bed label</TableHead>
+                      <TableHead>{m.roomingSection.occupantsDialog.delegateColumn}</TableHead>
+                      <TableHead className="w-24">
+                        {m.roomingSection.occupantsDialog.primaryColumn}
+                      </TableHead>
+                      <TableHead className="w-40">
+                        {m.roomingSection.occupantsDialog.bedLabelColumn}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {delegates.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center text-muted-foreground">
-                          No delegates yet.
+                          {m.delegatesSection.empty}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -423,7 +447,10 @@ function ManageRoomingOccupantsDialog({
                                 onCheckedChange={(checked) =>
                                   toggleDelegate(delegate.id, checked === true)
                                 }
-                                aria-label={`Assign ${delegateLabel(delegate)}`}
+                                aria-label={formatMessage(
+                                  m.roomingSection.occupantsDialog.assignAria,
+                                  { delegate: delegateLabel(delegate) },
+                                )}
                               />
                             </TableCell>
                             <TableCell className="font-medium">{delegateLabel(delegate)}</TableCell>
@@ -434,14 +461,17 @@ function ManageRoomingOccupantsDialog({
                                   setPrimary(delegate.id, checked === true)
                                 }
                                 disabled={!selected}
-                                aria-label={`Mark ${delegateLabel(delegate)} as primary`}
+                                aria-label={formatMessage(
+                                  m.roomingSection.occupantsDialog.markPrimaryAria,
+                                  { delegate: delegateLabel(delegate) },
+                                )}
                               />
                             </TableCell>
                             <TableCell>
                               <Input
                                 value={selected?.bedLabel ?? ""}
                                 onChange={(e) => setBedLabel(delegate.id, e.target.value)}
-                                placeholder="A"
+                                placeholder={m.roomingSection.occupantsDialog.bedLabelPlaceholder}
                                 disabled={!selected}
                               />
                             </TableCell>
@@ -454,7 +484,7 @@ function ManageRoomingOccupantsDialog({
               </div>
               {delegates.length === DELEGATES_PAGE_LIMIT ? (
                 <p className="text-muted-foreground text-xs">
-                  Showing the first {DELEGATES_PAGE_LIMIT} delegates.
+                  {formatMessage(m.delegatesSection.capped, { count: DELEGATES_PAGE_LIMIT })}
                 </p>
               ) : null}
             </div>
@@ -466,13 +496,13 @@ function ManageRoomingOccupantsDialog({
             onClick={() => handleOpenChange(false)}
             disabled={setDelegates.isPending}
           >
-            Cancel
+            {m.common.cancel}
           </Button>
           <Button onClick={() => void submit()} disabled={!assignmentId || setDelegates.isPending}>
             {setDelegates.isPending ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : null}
-            Save occupants
+            {m.roomingSection.occupantsDialog.submit}
           </Button>
         </DialogFooter>
       </DialogContent>

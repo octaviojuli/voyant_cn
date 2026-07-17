@@ -1,5 +1,6 @@
 "use client"
 
+import { formatMessage } from "@voyant-travel/i18n"
 import { PersonCombobox } from "@voyant-travel/relationships-react/ui"
 import {
   Badge,
@@ -30,6 +31,11 @@ import { useEffect, useState } from "react"
 import { useBookingLinkMutation } from "../hooks/use-booking-link-mutation.js"
 import { useDelegateMutation } from "../hooks/use-delegate-mutation.js"
 import { useProgramDelegates, useProgramSessions } from "../hooks/use-mice-lists.js"
+import {
+  type MiceDelegateRole,
+  type MiceDelegateStatus,
+  useMiceUiMessagesOrDefault,
+} from "../i18n/index.js"
 import type { DelegateRecord } from "../schemas.js"
 
 /** Delegate roles + statuses the MICE backend accepts (`validation-delegates`). */
@@ -86,6 +92,7 @@ export interface ProgramDelegatesSectionProps {
  * roster is part of a program, not a top-level surface.
  */
 export function ProgramDelegatesSection({ programId }: ProgramDelegatesSectionProps) {
+  const m = useMiceUiMessagesOrDefault()
   const { data, isLoading } = useProgramDelegates({
     programId,
     limit: DELEGATES_PAGE_LIMIT,
@@ -99,10 +106,10 @@ export function ProgramDelegatesSection({ programId }: ProgramDelegatesSectionPr
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-semibold text-lg tracking-tight">Delegates</h2>
+        <h2 className="font-semibold text-lg tracking-tight">{m.delegatesSection.heading}</h2>
         <Button size="sm" onClick={() => setShowCreate(true)}>
           <Plus className="size-4" aria-hidden="true" />
-          Add delegate
+          {m.delegatesSection.add}
         </Button>
       </div>
 
@@ -110,10 +117,10 @@ export function ProgramDelegatesSection({ programId }: ProgramDelegatesSectionPr
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Delegate</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Booking</TableHead>
+              <TableHead>{m.delegatesSection.delegateColumn}</TableHead>
+              <TableHead>{m.delegatesSection.roleColumn}</TableHead>
+              <TableHead>{m.delegatesSection.statusColumn}</TableHead>
+              <TableHead>{m.delegatesSection.bookingColumn}</TableHead>
               <TableHead> </TableHead>
             </TableRow>
           </TableHeader>
@@ -121,17 +128,20 @@ export function ProgramDelegatesSection({ programId }: ProgramDelegatesSectionPr
             {!isLoading && delegates.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  No delegates yet.
+                  {m.delegatesSection.empty}
                 </TableCell>
               </TableRow>
             ) : (
               delegates.map((d) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.personId ?? d.bookingId ?? d.id}</TableCell>
-                  <TableCell className="capitalize">{d.role}</TableCell>
+                  <TableCell className="capitalize">
+                    {m.delegatesSection.roleLabels[d.role as MiceDelegateRole] ?? d.role}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={STATUS_VARIANT[d.status] ?? "outline"} className="capitalize">
-                      {statusLabel(d.status)}
+                      {m.delegatesSection.statusLabels[d.status as MiceDelegateStatus] ??
+                        statusLabel(d.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
@@ -141,11 +151,11 @@ export function ProgramDelegatesSection({ programId }: ProgramDelegatesSectionPr
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="sm" onClick={() => setEnrollTarget(d)}>
                         <UserPlus className="size-4" aria-hidden="true" />
-                        Enroll
+                        {m.delegatesSection.enrollAction}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => setBookingTarget(d)}>
                         <Link2 className="size-4" aria-hidden="true" />
-                        Booking
+                        {m.delegatesSection.bookingAction}
                       </Button>
                     </div>
                   </TableCell>
@@ -158,7 +168,7 @@ export function ProgramDelegatesSection({ programId }: ProgramDelegatesSectionPr
 
       {capped ? (
         <p className="text-muted-foreground text-xs">
-          Showing the first {DELEGATES_PAGE_LIMIT} delegates.
+          {formatMessage(m.delegatesSection.capped, { count: DELEGATES_PAGE_LIMIT })}
         </p>
       ) : null}
 
@@ -188,6 +198,7 @@ interface CreateDelegateDialogProps {
 }
 
 function CreateDelegateDialog({ programId, open, onOpenChange }: CreateDelegateDialogProps) {
+  const m = useMiceUiMessagesOrDefault()
   const { create } = useDelegateMutation()
   const [role, setRole] = useState<DelegateRole>("attendee")
   const [status, setStatus] = useState<DelegateStatus>("invited")
@@ -219,12 +230,12 @@ function CreateDelegateDialog({ programId, open, onOpenChange }: CreateDelegateD
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add delegate</DialogTitle>
+          <DialogTitle>{m.delegatesSection.createDialog.title}</DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="delegate-role">Role</Label>
+              <Label htmlFor="delegate-role">{m.delegatesSection.createDialog.roleLabel}</Label>
               <Select value={role} onValueChange={(value) => setRole(value as DelegateRole)}>
                 <SelectTrigger id="delegate-role" className="w-full">
                   <SelectValue />
@@ -232,14 +243,14 @@ function CreateDelegateDialog({ programId, open, onOpenChange }: CreateDelegateD
                 <SelectContent>
                   {DELEGATE_ROLES.map((r) => (
                     <SelectItem key={r} value={r} className="capitalize">
-                      {r}
+                      {m.delegatesSection.roleLabels[r] ?? r}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="delegate-status">Status</Label>
+              <Label htmlFor="delegate-status">{m.delegatesSection.createDialog.statusLabel}</Label>
               <Select value={status} onValueChange={(value) => setStatus(value as DelegateStatus)}>
                 <SelectTrigger id="delegate-status" className="w-full">
                   <SelectValue />
@@ -247,7 +258,7 @@ function CreateDelegateDialog({ programId, open, onOpenChange }: CreateDelegateD
                 <SelectContent>
                   {DELEGATE_STATUSES.map((s) => (
                     <SelectItem key={s} value={s} className="capitalize">
-                      {statusLabel(s)}
+                      {m.delegatesSection.statusLabels[s] ?? statusLabel(s)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -255,12 +266,12 @@ function CreateDelegateDialog({ programId, open, onOpenChange }: CreateDelegateD
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Person (optional)</Label>
+            <Label>{m.delegatesSection.createDialog.personLabel}</Label>
             <PersonCombobox
               value={personId}
               onChange={setPersonId}
-              placeholder="Search people"
-              emptyText="No people found."
+              placeholder={m.delegatesSection.createDialog.personPlaceholder}
+              emptyText={m.delegatesSection.createDialog.personEmpty}
               disabled={create.isPending}
             />
           </div>
@@ -271,13 +282,13 @@ function CreateDelegateDialog({ programId, open, onOpenChange }: CreateDelegateD
             onClick={() => handleOpenChange(false)}
             disabled={create.isPending}
           >
-            Cancel
+            {m.common.cancel}
           </Button>
           <Button onClick={() => void submit()} disabled={create.isPending}>
             {create.isPending ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : null}
-            Add delegate
+            {m.delegatesSection.createDialog.submit}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -292,6 +303,7 @@ interface EnrollDelegateDialogProps {
 }
 
 function EnrollDelegateDialog({ programId, delegate, onOpenChange }: EnrollDelegateDialogProps) {
+  const m = useMiceUiMessagesOrDefault()
   const open = delegate !== null
   const { enroll } = useDelegateMutation()
   const { data: sessionsData } = useProgramSessions(programId, { enabled: open })
@@ -320,14 +332,14 @@ function EnrollDelegateDialog({ programId, delegate, onOpenChange }: EnrollDeleg
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Enroll delegate in session</DialogTitle>
+          <DialogTitle>{m.delegatesSection.enrollDialog.title}</DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="enroll-session">Session</Label>
+            <Label htmlFor="enroll-session">{m.delegatesSection.enrollDialog.sessionLabel}</Label>
             <Select value={sessionId} onValueChange={(value) => setSessionId(value ?? "")}>
               <SelectTrigger id="enroll-session" className="w-full">
-                <SelectValue placeholder="Select a session" />
+                <SelectValue placeholder={m.delegatesSection.enrollDialog.sessionPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {sessions.map((s) => (
@@ -339,12 +351,12 @@ function EnrollDelegateDialog({ programId, delegate, onOpenChange }: EnrollDeleg
             </Select>
             {sessions.length === 0 ? (
               <p className="text-muted-foreground text-xs">
-                This program has no sessions yet — add one in the Agenda first.
+                {m.delegatesSection.enrollDialog.noSessions}
               </p>
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="enroll-status">Status</Label>
+            <Label htmlFor="enroll-status">{m.delegatesSection.enrollDialog.statusLabel}</Label>
             <Select value={status} onValueChange={(value) => setStatus(value as EnrollmentStatus)}>
               <SelectTrigger id="enroll-status" className="w-full">
                 <SelectValue />
@@ -352,7 +364,7 @@ function EnrollDelegateDialog({ programId, delegate, onOpenChange }: EnrollDeleg
               <SelectContent>
                 {ENROLLMENT_STATUSES.map((s) => (
                   <SelectItem key={s} value={s} className="capitalize">
-                    {s}
+                    {m.delegatesSection.enrollmentStatusLabels[s] ?? s}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -365,13 +377,13 @@ function EnrollDelegateDialog({ programId, delegate, onOpenChange }: EnrollDeleg
             onClick={() => handleOpenChange(false)}
             disabled={enroll.isPending}
           >
-            Cancel
+            {m.common.cancel}
           </Button>
           <Button onClick={() => void submit()} disabled={!sessionId || enroll.isPending}>
             {enroll.isPending ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : null}
-            Enroll
+            {m.delegatesSection.enrollDialog.submit}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -386,6 +398,7 @@ interface LinkBookingDialogProps {
 }
 
 function LinkBookingDialog({ programId, delegate, onOpenChange }: LinkBookingDialogProps) {
+  const m = useMiceUiMessagesOrDefault()
   const open = delegate !== null
   const { linkDelegateBooking } = useBookingLinkMutation()
   const [bookingId, setBookingId] = useState("")
@@ -416,21 +429,25 @@ function LinkBookingDialog({ programId, delegate, onOpenChange }: LinkBookingDia
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Link delegate booking</DialogTitle>
+          <DialogTitle>{m.delegatesSection.linkBookingDialog.title}</DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="delegate-booking-id">Booking ID</Label>
+            <Label htmlFor="delegate-booking-id">
+              {m.delegatesSection.linkBookingDialog.bookingIdLabel}
+            </Label>
             <Input
               id="delegate-booking-id"
               value={bookingId}
               onChange={(e) => setBookingId(e.target.value)}
-              placeholder="book_..."
+              placeholder={m.delegatesSection.linkBookingDialog.bookingIdPlaceholder}
             />
           </div>
           {delegate ? (
             <p className="text-muted-foreground text-xs">
-              Delegate {delegate.personId ?? delegate.id}
+              {formatMessage(m.delegatesSection.linkBookingDialog.delegateLine, {
+                delegate: delegate.personId ?? delegate.id,
+              })}
             </p>
           ) : null}
         </DialogBody>
@@ -440,7 +457,7 @@ function LinkBookingDialog({ programId, delegate, onOpenChange }: LinkBookingDia
             onClick={() => handleOpenChange(false)}
             disabled={linkDelegateBooking.isPending}
           >
-            Cancel
+            {m.common.cancel}
           </Button>
           <Button
             onClick={() => void submit()}
@@ -451,7 +468,7 @@ function LinkBookingDialog({ programId, delegate, onOpenChange }: LinkBookingDia
             ) : (
               <Link2 className="size-4" aria-hidden="true" />
             )}
-            Link booking
+            {m.delegatesSection.linkBookingDialog.submit}
           </Button>
         </DialogFooter>
       </DialogContent>

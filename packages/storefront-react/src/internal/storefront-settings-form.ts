@@ -1,3 +1,5 @@
+import { storefrontSettingsUiEn } from "../i18n/en.js"
+import type { StorefrontSettingsUiMessages } from "../i18n/messages.js"
 import type { StorefrontSettingsPatchInput, StorefrontSettingsRecord } from "../index.js"
 
 export type SupportLinkRow = {
@@ -40,12 +42,12 @@ export type FormState = {
   bankInstructions: string
 }
 
-export const paymentMethods: Array<{ code: PaymentMethodCode; label: string }> = [
-  { code: "card", label: "Card" },
-  { code: "bank_transfer", label: "Bank transfer" },
-  { code: "cash", label: "Cash" },
-  { code: "travel_credit", label: "Travel credit" },
-  { code: "invoice", label: "Invoice" },
+export const paymentMethods: Array<{ code: PaymentMethodCode }> = [
+  { code: "card" },
+  { code: "bank_transfer" },
+  { code: "cash" },
+  { code: "travel_credit" },
+  { code: "invoice" },
 ]
 
 export const loadingSectionKeys = ["branding", "support", "legal", "payment"] as const
@@ -160,7 +162,10 @@ export function toFormState(settings?: StorefrontSettingsRecord): FormState {
   }
 }
 
-export function validateForm(form: FormState) {
+export function validateForm(
+  form: FormState,
+  messages: StorefrontSettingsUiMessages["validation"] = storefrontSettingsUiEn.validation,
+) {
   const urls = [
     form.logoUrl,
     form.faviconUrl,
@@ -171,32 +176,32 @@ export function validateForm(form: FormState) {
     ...form.supportLinks.map((link) => link.url),
   ]
   if (urls.some((url) => !urlLooksValid(url))) {
-    return "URLs must be valid http or https links."
+    return messages.invalidUrl
   }
 
   if (!colorLooksValid(form.primaryColor) || !colorLooksValid(form.accentColor)) {
-    return "Brand colors must use #RGB or #RRGGBB format."
+    return messages.invalidColor
   }
 
   const deposit = form.depositPercent ? Number(form.depositPercent) : null
   if (deposit !== null && (!Number.isFinite(deposit) || deposit < 0 || deposit > 100)) {
-    return "Deposit percent must be between 0 and 100."
+    return messages.depositPercentRange
   }
 
   const balanceDue = form.balanceDueDaysBeforeDeparture
     ? Number(form.balanceDueDaysBeforeDeparture)
     : null
   if (balanceDue !== null && (!Number.isInteger(balanceDue) || balanceDue < 0)) {
-    return "Balance due days must be a whole number greater than or equal to 0."
+    return messages.balanceDueDaysInvalid
   }
 
   const bankDueDays = form.bankTransferDueDays ? Number(form.bankTransferDueDays) : null
   if (bankDueDays !== null && (!Number.isInteger(bankDueDays) || bankDueDays < 0)) {
-    return "Bank transfer due days must be a whole number greater than or equal to 0."
+    return messages.bankDueDaysInvalid
   }
 
   if (form.defaultMethod !== "none" && !form.enabledMethods[form.defaultMethod]) {
-    return "The default payment method must be enabled."
+    return messages.defaultMethodDisabled
   }
 
   return null

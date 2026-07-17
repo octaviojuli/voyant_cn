@@ -180,6 +180,21 @@ describe("identity-ui i18n", () => {
     expect(html).toContain("Telefon")
     expect(html).toContain("Vanzari")
   })
+
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <IdentityUiMessagesProvider locale="zh-CN">
+        <IdentityMessageProbe />
+      </IdentityUiMessagesProvider>,
+    )
+
+    expect(html).toContain("编辑地址")
+    expect(html).toContain("编辑联系方式")
+    expect(html).toContain("编辑指定联系人")
+    expect(html).toContain("账单")
+    expect(html).toContain("电话")
+    expect(html).toContain("销售")
+  })
 })
 
 function IdentityMessageProbe() {

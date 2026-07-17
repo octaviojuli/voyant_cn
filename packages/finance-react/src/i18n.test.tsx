@@ -90,6 +90,24 @@ describe("finance-ui i18n", () => {
     expect(html).toContain("Ciorna")
     expect(html).toContain("Transfer Bancar")
   })
+
+  it("renders Chinese copy with the package provider via region fallback", () => {
+    const html = renderToStaticMarkup(
+      <FinanceUiMessagesProvider locale="zh-CN">
+        <div>
+          <InvoiceDialog open onOpenChange={() => {}} />
+          <SupplierPaymentDialog open onOpenChange={() => {}} />
+          <FinanceMessageProbe />
+        </div>
+      </FinanceUiMessagesProvider>,
+    )
+
+    expect(html).toContain("编辑账单")
+    expect(html).toContain("登记供应商付款")
+    expect(html).toContain("定金类型")
+    expect(html).toContain("草稿")
+    expect(html).toContain("银行转账")
+  })
 })
 
 function FinanceMessageProbe() {

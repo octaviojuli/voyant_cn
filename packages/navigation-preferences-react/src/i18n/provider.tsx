@@ -10,10 +10,12 @@ import type { ReactNode } from "react"
 import { navigationPreferencesEn } from "./en.js"
 import type { NavigationPreferencesMessages } from "./messages.js"
 import { navigationPreferencesRo } from "./ro.js"
+import { navigationPreferencesZh } from "./zh.js"
 
 export const navigationPreferencesMessageDefinitions = {
   en: navigationPreferencesEn,
   ro: navigationPreferencesRo,
+  zh: navigationPreferencesZh,
 } satisfies LocaleMessageDefinitions<NavigationPreferencesMessages>
 
 export type NavigationPreferencesMessageOverrides =

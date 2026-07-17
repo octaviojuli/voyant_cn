@@ -11,6 +11,7 @@ import {
 import { RefreshCcw } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { useOptionalOperatorAdminMessages } from "../providers/operator-admin-messages.js"
 import { ThemeProvider } from "../providers/theme.js"
 
 export interface AdminRootHeadOptions {
@@ -28,10 +29,11 @@ export interface AdminRootHeadOptions {
 /**
  * Inline theme + language detection, run before hydration so the first paint
  * doesn't flash the wrong theme or language. Load-bearing: keep in sync with
- * the ThemeProvider storage key (`theme`) and locale storage key
- * (`admin-locale`).
+ * the ThemeProvider storage key (`theme`), the locale storage key
+ * (`admin-locale`), and the DEFAULT_ADMIN_LOCALES allowlist in
+ * `providers/locale.tsx`.
  */
-const ADMIN_BOOTSTRAP_SCRIPT = `(function(){var t=localStorage.getItem("theme");if(t==="dark"||(!t||t==="system")&&matchMedia("(prefers-color-scheme:dark)").matches){document.documentElement.classList.add("dark")}var l=localStorage.getItem("admin-locale")||(navigator.language||"en");l=l.toLowerCase().split("-")[0];document.documentElement.lang=l==="ro"?"ro":"en"})()`
+const ADMIN_BOOTSTRAP_SCRIPT = `(function(){var t=localStorage.getItem("theme");if(t==="dark"||(!t||t==="system")&&matchMedia("(prefers-color-scheme:dark)").matches){document.documentElement.classList.add("dark")}var l=localStorage.getItem("admin-locale")||(navigator.language||"en");l=l.toLowerCase().split("-")[0];document.documentElement.lang=l==="ro"?"ro":l==="zh"?"zh":"en"})()`
 
 /**
  * The root route `head()` payload for a Voyant admin app: charset/viewport,
@@ -94,10 +96,17 @@ export interface AdminRootErrorBoundaryProps {
 export function AdminRootErrorBoundary({
   error,
   reset,
-  fallbackMessage = "Something went wrong while loading this page.",
+  fallbackMessage,
   homeHref = "/",
 }: AdminRootErrorBoundaryProps) {
-  const message = error instanceof Error && error.message ? error.message : fallbackMessage
+  // Optional: the root error boundary replaces the root component, so the
+  // app's message provider is usually gone — fall back to English copy then.
+  const messages = useOptionalOperatorAdminMessages()
+  const resolvedFallbackMessage =
+    fallbackMessage ??
+    messages?.errorBoundaryFallbackMessage ??
+    "Something went wrong while loading this page."
+  const message = error instanceof Error && error.message ? error.message : resolvedFallbackMessage
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="theme">
@@ -107,17 +116,17 @@ export function AdminRootErrorBoundary({
             <EmptyMedia variant="icon">
               <RefreshCcw className="size-5" />
             </EmptyMedia>
-            <EmptyTitle>Something went wrong</EmptyTitle>
+            <EmptyTitle>{messages?.errorBoundaryTitle ?? "Something went wrong"}</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
             <Alert variant="destructive" className="text-left">
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{messages?.errorBoundaryRequestFailed ?? "Request failed"}</AlertTitle>
               <AlertDescription>{message}</AlertDescription>
             </Alert>
             <div className="flex items-center gap-3">
-              <Button onClick={() => reset()}>Try again</Button>
+              <Button onClick={() => reset()}>{messages?.tryAgain ?? "Try again"}</Button>
               <Button variant="outline" onClick={() => window.location.assign(homeHref)}>
-                Go to dashboard
+                {messages?.goToDashboard ?? "Go to dashboard"}
               </Button>
             </div>
           </EmptyContent>

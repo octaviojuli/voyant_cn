@@ -42,6 +42,7 @@ export {
   distributionUiEn,
   distributionUiMessageDefinitions,
   distributionUiRo,
+  distributionUiZh,
   getDistributionUiI18n,
   resolveDistributionUiMessages,
   useDistributionUiI18n,

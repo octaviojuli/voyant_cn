@@ -173,6 +173,8 @@ export const adminTripsMessagesEnPart1 = {
       requirementAtLeastOneTraveler: "at least one traveler",
       requirementTravelerName: "traveler {position} name",
       requirementTravelerEmail: "traveler {position} email",
+      datesOverlap:
+        'These dates overlap with "{title}". Adjust the schedule before adding to the trip.',
     },
     failureMessages: {
       priceChanged: "Prices changed. Review the updated totals, then reserve again.",
@@ -253,6 +255,18 @@ export const adminTripsMessagesEnPart1 = {
       billingLabel: "Billing",
       travelersWithCount: "Travelers ({count})",
       travelerNumberedFallback: "Traveler {number}",
+      componentDisplay: {
+        cabinTitle: "Cabin {cabin}",
+        bagSingular: "1 bag",
+        bagPlural: "{count} bags",
+        assistanceSingular: "1 assistance request",
+        assistancePlural: "{count} assistance requests",
+        extraSingular: "1 extra",
+        extraPlural: "{count} extras",
+        nightsShort: "{count}n",
+        daysShort: "{count}d",
+        seatsRemaining: "{count} left",
+      },
       verticals: {
         productLabel: "Product",
         productDescription: "Tour, activity, or transfer from the catalog",

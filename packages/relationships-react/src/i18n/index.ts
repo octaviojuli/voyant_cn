@@ -19,3 +19,4 @@ export {
   useCrmUiMessagesOrDefault,
 } from "./provider.js"
 export { crmUiRo } from "./ro.js"
+export { crmUiZh } from "./zh.js"
