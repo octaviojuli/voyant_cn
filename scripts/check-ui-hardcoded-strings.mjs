@@ -6,6 +6,10 @@ const rootDir = process.cwd()
 const filePatterns = [".ts", ".tsx"]
 const ignoredDirectoryNames = new Set(["dist", "i18n", "node_modules"])
 const ignoredFileSuffixes = [".d.ts", ".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx"]
+// Dictionary modules are copy by definition. Some packages keep them outside
+// an `i18n/` directory (e.g. storefront's `messages-ro.ts`), so also skip by
+// basename: en/ro/zh dictionaries, messages files, and i18n entry modules.
+const dictionaryFilePattern = /^(?:messages(?:-[\w.]+)?|(?:en|ro|zh)(?:-[\w.]+)?|i18n)\.tsx?$/
 const ignoredLineStarts = ["import ", "export "]
 const ignoredLineIncludes = [
   ">=",
@@ -128,8 +132,17 @@ function shouldIgnoreLine(trimmed) {
   )
 }
 
+// Seam-fed fallbacks like `navMessages.suppliers ?? "Suppliers"` or
+// `messages?.title ?? "Fallback"` ship English only as the default for a
+// message the locale bundle overrides at runtime — by design, not drift.
+const messageFallbackPattern = /\b[\w?.]*(?:essages|nav\w*|labels?)[\w?.]*\s*\?\?\s*["'`]/
+
 function shouldIgnoreSuspiciousLine(trimmed) {
   if (ignoredLineIncludes.some((fragment) => trimmed.includes(fragment))) {
+    return true
+  }
+
+  if (messageFallbackPattern.test(trimmed)) {
     return true
   }
 
@@ -221,13 +234,22 @@ async function collectOptInRoots() {
   const packageNames = await readdir(packagesDir)
 
   for (const packageName of packageNames) {
-    if (!packageName.endsWith("-ui")) {
+    // Upstream named its UI packages `*-ui`; this repo uses `*-react`. Opt in
+    // by the real signal — a package-owned i18n entrypoint — so the scan can
+    // never be silently skipped by a naming mismatch again.
+    if (!packageName.endsWith("-ui") && !packageName.endsWith("-react")) {
       continue
     }
 
-    const i18nEntry = path.join(packagesDir, packageName, "src", "i18n", "index.ts")
-    if (await exists(i18nEntry)) {
-      roots.push(path.join(packagesDir, packageName, "src"))
+    const candidateEntries = [
+      path.join(packagesDir, packageName, "src", "i18n", "index.ts"),
+      path.join(packagesDir, packageName, "src", "i18n.tsx"),
+    ]
+    for (const i18nEntry of candidateEntries) {
+      if (await exists(i18nEntry)) {
+        roots.push(path.join(packagesDir, packageName, "src"))
+        break
+      }
     }
   }
 
@@ -283,7 +305,8 @@ async function collectSourceFiles(rootPath) {
 
       if (
         filePatterns.some((suffix) => entry.name.endsWith(suffix)) &&
-        !ignoredFileSuffixes.some((suffix) => entry.name.endsWith(suffix))
+        !ignoredFileSuffixes.some((suffix) => entry.name.endsWith(suffix)) &&
+        !dictionaryFilePattern.test(entry.name)
       ) {
         results.push(nextPath)
       }
