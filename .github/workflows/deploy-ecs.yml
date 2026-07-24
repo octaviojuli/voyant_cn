@@ -12,7 +12,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     env:
       ECS_HOST: ${{ secrets.ECS_HOST }}
     steps:
@@ -34,6 +34,13 @@ jobs:
           username: ${{ secrets.ECS_USER }}
           key: ${{ secrets.ECS_SSH_KEY }}
           port: ${{ secrets.ECS_SSH_PORT || 22 }}
-          command_timeout: 35m
+          command_timeout: 55m
           script: |
-            sudo -iu voyant bash /opt/voyant/app/deploy/ecs/deploy.sh
+            set -e
+            if [ ! -d /opt/voyant/app/.git ]; then
+              command -v git >/dev/null 2>&1 || { sudo apt-get update -y && sudo apt-get install -y git; }
+              sudo mkdir -p /opt/voyant
+              sudo git clone https://github.com/${{ github.repository }}.git /opt/voyant/app \
+                || sudo git clone https://ghproxy.net/https://github.com/${{ github.repository }}.git /opt/voyant/app
+            fi
+            sudo APP_HOST='${{ secrets.ECS_HOST }}' bash /opt/voyant/app/deploy/ecs/bootstrap.sh
