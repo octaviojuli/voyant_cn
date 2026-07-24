@@ -2,6 +2,8 @@ import { queryOptions } from "@tanstack/react-query"
 import type { VoyantFetcher } from "@voyant-travel/react"
 import type { ChartConfig } from "@voyant-travel/ui/components/chart"
 
+import type { OperatorAdminMessages } from "../providers/operator-admin-messages.js"
+
 export interface DashboardQueryClient {
   baseUrl: string
   fetcher: VoyantFetcher
@@ -200,22 +202,28 @@ export function getStatusColor(status: string): string {
   return map[status] ?? "#efefeb"
 }
 
-export const revenueChartConfig = {
-  revenue: { label: "Revenue", color: "#ff4405" },
-  bookings: { label: "Bookings", color: "#86cb3c" },
-} satisfies ChartConfig
+export function buildRevenueChartConfig(messages: OperatorAdminMessages) {
+  return {
+    revenue: { label: messages.dashboard.chartRevenueLabel, color: "var(--chart-1)" },
+    bookings: { label: messages.dashboard.chartBookingsLabel, color: "#86cb3c" },
+  } satisfies ChartConfig
+}
 
-export const bookingStatusConfig = {
-  confirmed: { label: "Confirmed", color: "#86cb3c" },
-  completed: { label: "Completed", color: "#6172f3" },
-  in_progress: { label: "In Progress", color: "hsl(47 96% 53%)" },
-  draft: { label: "Draft", color: "#efefeb" },
-  cancelled: { label: "Cancelled", color: "#ff4405" },
-} satisfies ChartConfig
+export function buildBookingStatusConfig(messages: OperatorAdminMessages) {
+  return {
+    confirmed: { label: messages.dashboard.statusConfirmedLabel, color: "#86cb3c" },
+    completed: { label: messages.dashboard.statusCompletedLabel, color: "#6172f3" },
+    in_progress: { label: messages.dashboard.statusInProgressLabel, color: "hsl(47 96% 53%)" },
+    draft: { label: messages.dashboard.statusDraftLabel, color: "#efefeb" },
+    cancelled: { label: messages.dashboard.statusCancelledLabel, color: "#ff4405" },
+  } satisfies ChartConfig
+}
 
-export const monthlyBookingsConfig = {
-  count: { label: "Bookings", color: "#ff4405" },
-} satisfies ChartConfig
+export function buildMonthlyBookingsConfig(messages: OperatorAdminMessages) {
+  return {
+    count: { label: messages.dashboard.chartBookingsLabel, color: "var(--chart-1)" },
+  } satisfies ChartConfig
+}
 
 export function buildMonthSeries() {
   const now = new Date()
