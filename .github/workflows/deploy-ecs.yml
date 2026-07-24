@@ -1,0 +1,39 @@
+name: deploy-ecs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-ecs
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      ECS_HOST: ${{ secrets.ECS_HOST }}
+    steps:
+      - name: Check deployment secrets
+        id: gate
+        run: |
+          if [ -z "$ECS_HOST" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "ECS_HOST secret 未配置,跳过部署(配置 ECS_HOST/ECS_USER/ECS_SSH_KEY 后自动生效)。"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy over SSH
+        if: steps.gate.outputs.configured == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: ${{ secrets.ECS_USER }}
+          key: ${{ secrets.ECS_SSH_KEY }}
+          port: ${{ secrets.ECS_SSH_PORT || 22 }}
+          command_timeout: 35m
+          script: |
+            sudo -iu voyant bash /opt/voyant/app/deploy/ecs/deploy.sh

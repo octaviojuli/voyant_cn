@@ -1,0 +1,21 @@
+# systemd 单元:/etc/systemd/system/voyant-operator.service
+# 安装后: systemctl daemon-reload && systemctl enable --now voyant-operator
+[Unit]
+Description=Voyant operator (zh-CN)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=voyant
+WorkingDirectory=/opt/voyant/app/starters/operator
+EnvironmentFile=/opt/voyant/app/starters/operator/.env
+Environment=PORT=8080
+Environment=NODE_OPTIONS=--conditions=development --max-old-space-size=4096
+ExecStart=/opt/voyant/node24/bin/node dist/server/server.js
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
