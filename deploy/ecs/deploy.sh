@@ -33,7 +33,19 @@ fi
 
 echo "[$(date +%H:%M:%S)] ==> 启动/确认 PostgreSQL"
 docker compose -f deploy/ecs/docker-compose.postgres.yml --env-file deploy/ecs/.env up -d
-until docker exec voyant-postgres pg_isready -U voyant -d voyant &>/dev/null; do sleep 2; done
+# 首次启动的容器会先 initdb 并拉起一个仅限内部的临时服务,pg_isready 在该窗口会误报就绪;
+# 要求 TCP 探测连续 3 次通过,确保正式服务已监听 127.0.0.1:5432。
+ready=0
+for i in $(seq 1 90); do
+  if docker exec voyant-postgres pg_isready -h 127.0.0.1 -U voyant -d voyant &>/dev/null; then
+    ready=$((ready + 1))
+    [ "$ready" -ge 3 ] && break
+  else
+    ready=0
+  fi
+  sleep 2
+done
+[ "$ready" -ge 3 ] || { echo "!! PostgreSQL 未在预期时间内就绪"; docker logs voyant-postgres --tail 30; exit 1; }
 
 if [ "$PREBUILT" = false ]; then
   echo "[$(date +%H:%M:%S)] ==> 安装依赖(npmmirror)"
@@ -49,7 +61,16 @@ else
 fi
 
 echo "[$(date +%H:%M:%S)] ==> 执行数据库迁移"
-NODE_OPTIONS="--import tsx" pnpm db:migrate
+migrated=false
+for i in 1 2 3; do
+  if NODE_OPTIONS="--import tsx" pnpm db:migrate; then
+    migrated=true
+    break
+  fi
+  echo "[$(date +%H:%M:%S)] 迁移失败,10 秒后重试($i/3)"
+  sleep 10
+done
+[ "$migrated" = true ]
 
 if [ "$SEED_ZH" = true ]; then
   echo "==> 灌入示例数据(基线 + 中文)"
