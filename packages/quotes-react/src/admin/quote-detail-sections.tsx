@@ -92,6 +92,7 @@ export function QuoteDetailsCard({ quote, stages, onUpdateField }: QuoteDetailsC
         <InlineField
           icon={Calendar}
           label={t.fields.expectedClose}
+          // i18n-literal-ok: ISO-8601 date format hint for a machine-format input, not prose copy
           placeholder="YYYY-MM-DD"
           value={quote.expectedCloseDate}
           onSave={(next) => onUpdateField({ expectedCloseDate: next })}

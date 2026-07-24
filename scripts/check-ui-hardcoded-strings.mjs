@@ -10,7 +10,9 @@ const ignoredFileSuffixes = [".d.ts", ".test.ts", ".test.tsx", ".spec.ts", ".spe
 // an `i18n/` directory (e.g. storefront's `messages-ro.ts`), so also skip by
 // basename: en/ro/zh dictionaries, messages files, and i18n entry modules.
 const dictionaryFilePattern = /^(?:messages(?:-[\w.]+)?|(?:en|ro|zh)(?:-[\w.]+)?|i18n)\.tsx?$/
-const ignoredLineStarts = ["import ", "export "]
+// `type ` declarations carry generics (`Foo<T> = Bar<T> & {`) that trip the
+// JSX-text heuristic but can never render user copy.
+const ignoredLineStarts = ["import ", "export ", "type "]
 const ignoredLineIncludes = [
   ">=",
   "<=",
@@ -110,7 +112,7 @@ function looksLikeTailwindUtility(value) {
       (/^(?:absolute|block|contents|flex|grid|hidden|inline|relative|sticky|truncate)$/.test(
         bareToken,
       ) ||
-        /(?:^|:)(?:accent|animate|auto|bg|border|bottom|capitalize|center|col|cursor|duration|ease|flex|font|gap|grid|h|inset|items|justify|left|line|lowercase|m|mb|min|ml|mr|mt|mx|my|opacity|overflow|p|pb|pl|pointer|pr|pt|px|py|resize|right|ring|rounded|row|scroll|shadow|shrink|size|sm|space|sr|tabular|text|top|touch|tracking|transition|uppercase|w|whitespace|z)-/.test(
+        /(?:^|:)(?:accent|animate|auto|bg|border|bottom|break|capitalize|center|col|cursor|duration|ease|flex|font|gap|grid|h|inset|items|justify|left|line|lowercase|m|mb|min|ml|mr|mt|mx|my|opacity|overflow|p|pb|pl|pointer|pr|pt|px|py|resize|right|ring|rounded|row|scroll|shadow|shrink|size|sm|space|sr|tabular|text|top|touch|tracking|transition|uppercase|w|whitespace|z)-/.test(
           token,
         ))
     )
@@ -285,7 +287,18 @@ async function collectOptInRoots() {
  * shape produces false positives from the JSX-text heuristic. Translate the
  * UI strings and rerun the scanner to confirm before removing an entry.
  */
-const HARDCODED_FILE_ALLOWLIST = new Set([].map((relative) => path.join(rootDir, relative)))
+const HARDCODED_FILE_ALLOWLIST = new Set(
+  [
+    // Legacy non-rendered option/label constants. Their English `label`
+    // values are superseded by dictionary maps at render time (the pages
+    // resolve display labels from the package i18n bundle keyed by `value`),
+    // so the literals never reach the UI. Remove entries once the constants
+    // drop their vestigial `label` fields.
+    "packages/distribution-react/src/constants.ts",
+    "packages/distribution-react/src/suppliers/constants.ts",
+    "packages/bookings-react/src/requirements/constants.ts",
+  ].map((relative) => path.join(rootDir, relative)),
+)
 
 async function collectSourceFiles(rootPath) {
   const results = []
@@ -317,13 +330,61 @@ async function collectSourceFiles(rootPath) {
   return results.sort()
 }
 
+// Inline locale dictionary blocks (`en: {`, `ro: {`, `zh: {` — bare or
+// quoted keys, e.g. setup-step `messages` maps) and package-local
+// `const defaultMessages = {` fallback bundles are copy by definition:
+// structural parity across locales is enforced by their TypeScript message
+// types, so the scanner skips the whole object instead of flagging each
+// translated line.
+const inlineDictionaryOpenPattern = /^\s*(?:"?(?:en|ro|zh)"?)\s*:\s*\{/
+const defaultMessagesOpenPattern = /^\s*(?:export\s+)?const\s+defaultMessages\b[^=]*=\s*\{\s*$/
+
+function countBraceDelta(line) {
+  let delta = 0
+  for (const char of line) {
+    if (char === "{") delta += 1
+    else if (char === "}") delta -= 1
+  }
+  return delta
+}
+
 async function findSuspiciousLines(filePath) {
   const findings = []
   const source = await readFile(filePath, "utf8")
   const lines = source.split("\n")
 
+  let dictionarySkipDepth = 0
+  let inBlockComment = false
+
   for (const [index, line] of lines.entries()) {
-    const trimmed = line.trim()
+    // Lines inside `/* … */` block comments (including multi-line JSX
+    // `{/* … */}` comments) are prose, never renderable copy. A simple
+    // open/close flag is enough: code after `*/` on the closing line is
+    // rare and gets picked up again from the next line onward.
+    if (inBlockComment) {
+      if (line.includes("*/")) inBlockComment = false
+      continue
+    }
+    let effectiveLine = line
+    const blockCommentStart = line.indexOf("/*")
+    if (blockCommentStart !== -1 && !line.slice(blockCommentStart).includes("*/")) {
+      inBlockComment = true
+      effectiveLine = line.slice(0, blockCommentStart)
+    }
+
+    if (dictionarySkipDepth > 0) {
+      dictionarySkipDepth = Math.max(0, dictionarySkipDepth + countBraceDelta(effectiveLine))
+      continue
+    }
+    if (
+      inlineDictionaryOpenPattern.test(effectiveLine) ||
+      defaultMessagesOpenPattern.test(effectiveLine)
+    ) {
+      dictionarySkipDepth = Math.max(0, countBraceDelta(effectiveLine))
+      continue
+    }
+
+    const trimmed = effectiveLine.trim()
     if (
       shouldIgnoreLine(trimmed) ||
       shouldIgnoreSuspiciousLine(trimmed) ||
@@ -333,7 +394,7 @@ async function findSuspiciousLines(filePath) {
     }
 
     if (
-      suspiciousPatterns.some((pattern) => pattern.test(line)) ||
+      suspiciousPatterns.some((pattern) => pattern.test(effectiveLine)) ||
       looksLikeStandaloneJsxText(lines, index)
     ) {
       findings.push({

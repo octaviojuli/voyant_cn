@@ -19,6 +19,7 @@ export function createSelectedNavigationPreferencesAdminExtension(): AdminExtens
       {
         id: "navigation",
         path: "/navigation",
+        // i18n-literal-ok: contractual plain-English route title (AdminSettingsPageContribution.title: string); UI reads the localized `label` below
         title: "Navigation",
         label: (messages) => messages.settings.navigation,
         icon: PanelLeft,

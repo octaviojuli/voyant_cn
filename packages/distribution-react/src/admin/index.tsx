@@ -44,6 +44,7 @@ export interface CreateDistributionChannelPushAdminExtensionOptions {
 /** Admin surface owned exclusively by the channel-push extension. */
 export function createDistributionChannelPushAdminExtension({
   basePath = "/channel-sync",
+  // i18n-literal-ok: default for the host-supplied localized label option (seam-fed fallback)
   label = "Distribution",
 }: CreateDistributionChannelPushAdminExtensionOptions = {}): AdminExtension {
   return defineAdminExtension({

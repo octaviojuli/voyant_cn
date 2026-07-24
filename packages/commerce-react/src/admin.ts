@@ -86,6 +86,7 @@ export function createSelectedCommerceAdminExtension({
       {
         id: "markets",
         path: "/markets",
+        // i18n-literal-ok: contractual plain-English route title (AdminSettingsPageContribution.title: string); UI reads the localized `label` below
         title: "Markets",
         label: (messages) => messages.settings.markets,
         icon: Globe2,

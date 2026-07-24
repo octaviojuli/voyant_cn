@@ -6,6 +6,7 @@ import {
   type ProfitabilityExportFilters,
   ProfitabilityPage,
 } from "../../components/profitability-page.js"
+import { useFinanceUiMessagesOrDefault } from "../../i18n/index.js"
 import { useVoyantFinanceContext } from "../../provider.js"
 
 function exportUrl(
@@ -30,7 +31,8 @@ function exportUrl(
  */
 // fallow-ignore-next-line unused-export
 export default function FinanceProfitabilityRoutePage() {
-  useAdminBreadcrumbs([{ label: "Profitability" }])
+  const messages = useFinanceUiMessagesOrDefault()
+  useAdminBreadcrumbs([{ label: messages.profitability.title }])
   const { baseUrl } = useVoyantFinanceContext()
 
   const openExport = (kind: "departures" | "products", filters: ProfitabilityExportFilters) => {

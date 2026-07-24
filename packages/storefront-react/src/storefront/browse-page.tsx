@@ -119,6 +119,7 @@ function SearchUnavailable(): React.ReactElement {
       <CardContent className="space-y-3 text-sm">
         <p>{t.unavailableBody}</p>
         <p>
+          {/* i18n-literal-ok: literal route path shown as a technical example, locale-neutral */}
           <code>/shop/book/products/&lt;productId&gt;</code>
         </p>
       </CardContent>

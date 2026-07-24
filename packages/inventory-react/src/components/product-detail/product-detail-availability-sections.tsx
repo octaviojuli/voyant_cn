@@ -187,7 +187,9 @@ export function ProductSchedulesSection({
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{describeRRule(rule.recurrenceRule)}</span>
+                  <span className="text-sm font-medium">
+                    {describeRRule(rule.recurrenceRule, productMessages.rrule)}
+                  </span>
                   {!rule.active ? (
                     <Badge variant="outline" className="text-xs">
                       {productMessages.inactiveBadge}
@@ -208,7 +210,7 @@ export function ProductSchedulesSection({
                 </p>
               </div>
               <ActionMenu
-                label={`${productMessages.schedulesTitle}: ${describeRRule(rule.recurrenceRule)}`}
+                label={`${productMessages.schedulesTitle}: ${describeRRule(rule.recurrenceRule, productMessages.rrule)}`}
               >
                 <DropdownMenuItem onClick={() => onEdit(rule)}>
                   <Pencil className="h-4 w-4" />

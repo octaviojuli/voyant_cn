@@ -248,6 +248,7 @@ export function CustomFieldDefinitionSheet({
                   id="custom-field-key"
                   value={values.key}
                   onChange={(event) => setValue("key", event.target.value)}
+                  // i18n-literal-ok: snake_case machine-key example rendered in a font-mono input, not copy
                   placeholder="lead_source"
                   className="font-mono"
                 />
@@ -287,6 +288,7 @@ export function CustomFieldDefinitionSheet({
                         onChange={(event) =>
                           updateOption(option.rowKey, { value: event.target.value })
                         }
+                        // i18n-literal-ok: machine option-value example rendered in a font-mono input, not copy
                         placeholder="value"
                         className="font-mono"
                       />

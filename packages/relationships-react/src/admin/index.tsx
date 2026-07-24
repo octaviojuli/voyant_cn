@@ -262,6 +262,7 @@ export function createSelectedRelationshipsAdminExtension({
       {
         id: "custom-fields",
         path: "/custom-fields",
+        // i18n-literal-ok: contractual plain-English route title (AdminSettingsPageContribution.title: string); UI reads the localized `label` below
         title: "Custom Fields",
         label: (messages) => messages.settings.customFields,
         icon: SlidersHorizontal,

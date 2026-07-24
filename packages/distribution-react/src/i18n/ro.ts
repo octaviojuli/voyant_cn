@@ -246,6 +246,7 @@ export const distributionUiRo = {
           "Reincercarea a gasit legaturi in asteptare, dar lipseste o mapare produs-canal.",
         ok: "Reincercarea s-a finalizat pentru {bookingId}, dar serverul nu a raportat legaturi procesate.",
         failed: "Reincercarea a esuat pentru {bookingId}: {message}",
+        unknownError: "eroare necunoscuta",
       },
       reconcile: {
         title: "Rezultat reconciliere",

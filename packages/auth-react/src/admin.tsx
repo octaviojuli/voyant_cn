@@ -14,6 +14,7 @@ export function createSelectedAuthTeamAdminExtension(): AdminExtension {
       {
         id: "team",
         path: "/team",
+        // i18n-literal-ok: contractual plain-English route title (AdminSettingsPageContribution.title: string); UI reads the localized `label` below
         title: "Team",
         label: (messages) => messages.settings.team,
         icon: Users,

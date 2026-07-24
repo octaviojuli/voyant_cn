@@ -639,7 +639,9 @@ function retryFeedbackBody(
     case "failed":
       return formatTemplate(messages.feedback.retry.failed, {
         bookingId,
-        message: result.outcomes?.find((outcome) => outcome.error)?.error ?? "unknown error",
+        message:
+          result.outcomes?.find((outcome) => outcome.error)?.error ??
+          messages.feedback.retry.unknownError,
       })
     case "ok":
       return formatTemplate(messages.feedback.retry.ok, { bookingId })

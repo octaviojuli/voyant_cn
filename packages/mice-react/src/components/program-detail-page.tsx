@@ -30,6 +30,7 @@ function metaLine(
   paxTemplate: string,
 ): string | null {
   const parts: string[] = []
+  // i18n-literal-ok: "?" placeholder and arrow glyph are locale-neutral symbols, not copy
   if (start || end) parts.push(`${start ?? "?"} → ${end ?? "?"}`)
   if (pax != null) parts.push(formatMessage(paxTemplate, { count: pax }))
   return parts.length ? parts.join(" · ") : null
