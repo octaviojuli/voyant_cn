@@ -4,7 +4,7 @@ export type * from "./messages/numberingAndPayments.js"
 export type * from "./messages/profitability.js"
 export type * from "./messages/suppliers.js"
 
-import type { TaxRegimeCodeOption, TaxesPageMessageKey } from "./messages/core.js"
+import type { TaxesPageMessageKey, TaxRegimeCodeOption } from "./messages/core.js"
 import type {
   CommonMessages,
   InvoiceDetailPageMessages,
