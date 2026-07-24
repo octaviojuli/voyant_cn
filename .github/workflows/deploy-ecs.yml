@@ -12,7 +12,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 110
+    timeout-minutes: 90
     env:
       ECS_HOST: ${{ secrets.ECS_HOST }}
     steps:
@@ -26,6 +26,47 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Checkout
+        if: steps.gate.outputs.configured == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Node 24
+        if: steps.gate.outputs.configured == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        if: steps.gate.outputs.configured == 'true'
+        run: |
+          corepack enable
+          HUSKY=0 pnpm install --frozen-lockfile
+
+      - name: Build operator app
+        if: steps.gate.outputs.configured == 'true'
+        working-directory: starters/operator
+        run: NODE_OPTIONS="--import tsx --max-old-space-size=12288" npx voyant build
+
+      - name: Pack workspace (source + node_modules + dist)
+        if: steps.gate.outputs.configured == 'true'
+        run: |
+          mkdir -p bundle
+          tar --exclude=.git --exclude=./bundle -czf bundle/voyant-app.tar.gz .
+
+      - name: Upload bundle to server
+        if: steps.gate.outputs.configured == 'true'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: ${{ secrets.ECS_USER }}
+          key: ${{ secrets.ECS_SSH_KEY }}
+          port: ${{ secrets.ECS_SSH_PORT || 22 }}
+          timeout: 30s
+          command_timeout: 40m
+          source: bundle/voyant-app.tar.gz
+          target: /tmp/
+          strip_components: 1
+
       - name: Deploy over SSH
         if: steps.gate.outputs.configured == 'true'
         uses: appleboy/ssh-action@v1.2.0
@@ -34,7 +75,7 @@ jobs:
           username: ${{ secrets.ECS_USER }}
           key: ${{ secrets.ECS_SSH_KEY }}
           port: ${{ secrets.ECS_SSH_PORT || 22 }}
-          command_timeout: 100m
+          command_timeout: 40m
           script: |
             set -e
             if [ ! -d /opt/voyant/app/.git ]; then
@@ -42,9 +83,16 @@ jobs:
               sudo mkdir -p /opt/voyant
               sudo git clone https://github.com/${{ github.repository }}.git /opt/voyant/app \
                 || sudo git clone https://ghproxy.net/https://github.com/${{ github.repository }}.git /opt/voyant/app
-            else
-              # 先把部署脚本本身更新到最新 main,再执行(bootstrap 内部不拉代码)
-              sudo -iu voyant git -C /opt/voyant/app fetch origin main || true
-              sudo -iu voyant git -C /opt/voyant/app reset --hard origin/main || true
+              sudo chown -R "$(id -un)" /opt/voyant/app || true
             fi
-            sudo APP_HOST='${{ secrets.ECS_HOST }}' bash /opt/voyant/app/deploy/ecs/bootstrap.sh
+            # 同步脚本与源码到当前 main(untar 前先 reset,保证 git 树干净)
+            sudo git config --global --add safe.directory /opt/voyant/app || true
+            sudo git -C /opt/voyant/app fetch origin main || true
+            sudo git -C /opt/voyant/app checkout -f main || true
+            sudo git -C /opt/voyant/app reset --hard origin/main || true
+            # 清理旧依赖后铺上 CI 构建好的 node_modules 与 dist(同一 commit 的内容)
+            sudo find /opt/voyant/app -maxdepth 3 -name node_modules -type d -prune -exec rm -rf {} +
+            sudo tar -xzf /tmp/voyant-app.tar.gz -C /opt/voyant/app
+            sudo rm -f /tmp/voyant-app.tar.gz
+            id -u voyant >/dev/null 2>&1 && sudo chown -R voyant:voyant /opt/voyant/app || true
+            sudo APP_HOST='${{ secrets.ECS_HOST }}' bash /opt/voyant/app/deploy/ecs/bootstrap.sh --prebuilt

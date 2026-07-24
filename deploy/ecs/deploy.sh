@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 部署/更新脚本(以 voyant 用户在 ECS 上执行;CI 也调用它)。
-# 用法: bash deploy/ecs/deploy.sh [--skip-pull] [--seed-zh]
+# 用法: bash deploy/ecs/deploy.sh [--skip-pull] [--seed-zh] [--prebuilt]
+# --prebuilt: node_modules 与 dist 已由 CI 构建并同步到本机,跳过安装与构建。
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/opt/voyant/app}"
@@ -10,10 +11,12 @@ cd "$APP_DIR"
 
 SKIP_PULL=false
 SEED_ZH=false
+PREBUILT=false
 for arg in "$@"; do
   case "$arg" in
     --skip-pull) SKIP_PULL=true ;;
     --seed-zh) SEED_ZH=true ;;
+    --prebuilt) PREBUILT=true ;;
   esac
 done
 
@@ -32,13 +35,18 @@ echo "[$(date +%H:%M:%S)] ==> 启动/确认 PostgreSQL"
 docker compose -f deploy/ecs/docker-compose.postgres.yml --env-file deploy/ecs/.env up -d
 until docker exec voyant-postgres pg_isready -U voyant -d voyant &>/dev/null; do sleep 2; done
 
-echo "[$(date +%H:%M:%S)] ==> 安装依赖(npmmirror)"
-pnpm config set registry https://registry.npmmirror.com
-HUSKY=0 pnpm install --frozen-lockfile
+if [ "$PREBUILT" = false ]; then
+  echo "[$(date +%H:%M:%S)] ==> 安装依赖(npmmirror)"
+  pnpm config set registry https://registry.npmmirror.com
+  HUSKY=0 pnpm install --frozen-lockfile
 
-echo "[$(date +%H:%M:%S)] ==> 构建 operator 应用"
-cd starters/operator
-NODE_OPTIONS="--import tsx --max-old-space-size=8192" npx voyant build
+  echo "[$(date +%H:%M:%S)] ==> 构建 operator 应用"
+  cd starters/operator
+  NODE_OPTIONS="--import tsx --max-old-space-size=8192" npx voyant build
+else
+  echo "[$(date +%H:%M:%S)] ==> 预构建模式:跳过安装与构建"
+  cd starters/operator
+fi
 
 echo "[$(date +%H:%M:%S)] ==> 执行数据库迁移"
 NODE_OPTIONS="--import tsx" pnpm db:migrate

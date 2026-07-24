@@ -3,7 +3,7 @@
 # 首次运行:自动完成 setup-server.sh、生成 .env(随机口令)、安装 systemd 与
 # Nginx,然后以 --seed-zh 做首次部署;全部完成后写入标记文件。之后的运行
 # 直接转入常规部署。所有步骤均有幂等守卫,可安全重复执行。
-# 用法: sudo APP_HOST=<公网IP或域名> bash deploy/ecs/bootstrap.sh
+# 用法: sudo APP_HOST=<公网IP或域名> bash deploy/ecs/bootstrap.sh [deploy.sh 附加参数,如 --prebuilt]
 set -euo pipefail
 
 APP_DIR=/opt/voyant/app
@@ -69,9 +69,9 @@ EOF
     echo "!! 跳过 Nginx,继续部署;可稍后处理端口冲突。"
   fi
 
-  echo "==> 首次部署(--skip-pull --seed-zh)"
-  sudo -iu voyant bash "$APP_DIR/deploy/ecs/deploy.sh" --skip-pull --seed-zh
+  echo "==> 首次部署(--skip-pull --seed-zh $*)"
+  sudo -iu voyant bash "$APP_DIR/deploy/ecs/deploy.sh" --skip-pull --seed-zh "$@"
   touch "$MARKER"
 else
-  sudo -iu voyant bash "$APP_DIR/deploy/ecs/deploy.sh"
+  sudo -iu voyant bash "$APP_DIR/deploy/ecs/deploy.sh" --skip-pull "$@"
 fi
