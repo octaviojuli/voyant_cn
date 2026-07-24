@@ -4,7 +4,7 @@ export type * from "./messages/numberingAndPayments.js"
 export type * from "./messages/profitability.js"
 export type * from "./messages/suppliers.js"
 
-import type { TaxesPageMessageKey } from "./messages/core.js"
+import type { TaxesPageMessageKey, TaxRegimeCodeOption } from "./messages/core.js"
 import type {
   CommonMessages,
   InvoiceDetailPageMessages,
@@ -38,7 +38,9 @@ export type FinanceUiMessages = {
   paymentDetailPage: PaymentDetailPageMessages
   invoiceDetailPage: InvoiceDetailPageMessages
   paymentPolicy: PaymentPolicyMessages
-  taxesPage: Record<TaxesPageMessageKey, string>
+  taxesPage: Record<TaxesPageMessageKey, string> & {
+    taxCodeLabels: Record<TaxRegimeCodeOption, string>
+  }
   supplierPaymentDialog: SupplierPaymentDialogMessages
   recordBookingPaymentDialog: RecordBookingPaymentDialogMessages
   profitability: ProfitabilityMessages

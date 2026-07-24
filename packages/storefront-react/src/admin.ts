@@ -18,8 +18,9 @@ export function createSelectedStorefrontAdminExtension(): AdminExtension {
       {
         id: "storefront",
         path: "/storefront",
+        // i18n-literal-ok: contractual plain-English route title (AdminSettingsPageContribution.title: string); UI reads the localized `label` below
         title: "Storefront",
-        label: "Storefront",
+        label: (messages) => messages.settings.storefront,
         icon: Paintbrush,
         group: "general",
         order: 25,

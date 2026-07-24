@@ -1,6 +1,7 @@
 "use client"
 
 import { NotificationSettingsForm } from "../components/notification-settings-form.js"
+import { useNotificationsUiMessagesOrDefault } from "../i18n/index.js"
 
 /**
  * Packaged admin host for the tenant-wide notification settings page
@@ -8,13 +9,12 @@ import { NotificationSettingsForm } from "../components/notification-settings-fo
  * wiring through `@voyant-travel/notifications-react`.
  */
 export function NotificationSettingsHost() {
+  const messages = useNotificationsUiMessagesOrDefault()
   return (
     <div className="container mx-auto space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold">Notification settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Tenant-wide quiet hours, blackout dates, recipient rate limits, and suppression window.
-        </p>
+        <h1 className="text-2xl font-semibold">{messages.settings.heading}</h1>
+        <p className="text-sm text-muted-foreground">{messages.settings.description}</p>
       </div>
       <NotificationSettingsForm />
     </div>

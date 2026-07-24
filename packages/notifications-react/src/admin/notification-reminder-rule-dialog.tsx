@@ -28,20 +28,26 @@ import {
   useNotificationTemplates,
 } from "../index.js"
 
-const reminderRuleFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  status: z.enum(["draft", "active", "archived"]).default("draft"),
-  targetType: z.enum([
-    "booking_confirmed",
-    "booking_payment_schedule",
-    "payment_complete",
-    "booking_cancelled_non_payment",
-  ]),
-  channel: z.enum(["email", "sms"]),
-  // Optional default template — stages own per-channel templates and
-  // override this. Empty string is normalized to null in the payload.
-  templateId: z.string().optional(),
-})
+// Factory so validation messages resolve against the active locale
+// (schema-at-module-scope cannot see the messages context).
+function createReminderRuleFormSchema(
+  messages: ReturnType<typeof useNotificationsUiMessagesOrDefault>,
+) {
+  return z.object({
+    name: z.string().min(1, messages.admin.reminderRuleDialog.nameRequired),
+    status: z.enum(["draft", "active", "archived"]).default("draft"),
+    targetType: z.enum([
+      "booking_confirmed",
+      "booking_payment_schedule",
+      "payment_complete",
+      "booking_cancelled_non_payment",
+    ]),
+    channel: z.enum(["email", "sms"]),
+    // Optional default template — stages own per-channel templates and
+    // override this. Empty string is normalized to null in the payload.
+    templateId: z.string().optional(),
+  })
+}
 
 const reminderTargetValues = [
   "booking_confirmed",
@@ -50,8 +56,8 @@ const reminderTargetValues = [
   "booking_payment_schedule",
 ] as const
 
-type FormValues = z.input<typeof reminderRuleFormSchema>
-type FormOutput = z.output<typeof reminderRuleFormSchema>
+type FormValues = z.input<ReturnType<typeof createReminderRuleFormSchema>>
+type FormOutput = z.output<ReturnType<typeof createReminderRuleFormSchema>>
 
 function slugifyReminderRule(value: string) {
   const slug = value
@@ -80,6 +86,7 @@ export function NotificationReminderRuleDialog({
   const t = messages.admin.reminderRuleDialog
   const common = messages.admin.common
   const { create, update } = useNotificationReminderRuleMutation()
+  const reminderRuleFormSchema = createReminderRuleFormSchema(messages)
   const form = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(reminderRuleFormSchema),
     defaultValues: {

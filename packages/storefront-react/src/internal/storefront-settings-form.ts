@@ -102,6 +102,7 @@ function urlLooksValid(value: string) {
   if (!value.trim()) return true
   try {
     const url = new URL(value)
+    // i18n-literal-ok: URL scheme tokens compared against URL.protocol, not copy
     return url.protocol === "http:" || url.protocol === "https:"
   } catch {
     return false

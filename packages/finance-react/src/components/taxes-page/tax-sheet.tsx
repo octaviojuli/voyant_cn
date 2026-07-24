@@ -36,6 +36,7 @@ import {
   nextTaxClassLineKey,
   TAX_CLASS_APPLIES_TO_OPTIONS,
   TAX_CODE_OPTIONS,
+  taxCodeLabel,
   toSlug,
   useTaxesPageApi,
 } from "./shared.js"
@@ -230,7 +231,10 @@ export function TaxSheet({
                   <Select
                     value={form.regimeCode}
                     onValueChange={(value) => setField("regimeCode")(value as TaxRegimeCode)}
-                    items={TAX_CODE_OPTIONS.map((code) => ({ value: code, label: code }))}
+                    items={TAX_CODE_OPTIONS.map((code) => ({
+                      value: code,
+                      label: taxCodeLabel(messages, code),
+                    }))}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />
@@ -238,7 +242,7 @@ export function TaxSheet({
                     <SelectContent>
                       {TAX_CODE_OPTIONS.map((code) => (
                         <SelectItem key={code} value={code}>
-                          {code}
+                          {taxCodeLabel(messages, code)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -209,6 +209,7 @@ export type DistributionUiMessages = {
         noMapping: string
         ok: string
         failed: string
+        unknownError: string
       }
       reconcile: {
         title: string

@@ -45,7 +45,10 @@ import {
 } from "./dashboard-empty-states.js"
 import { KpiCard } from "./dashboard-kpi-card.js"
 import {
+  buildBookingStatusConfig,
+  buildMonthlyBookingsConfig,
   buildMonthSeries,
+  buildRevenueChartConfig,
   formatCurrency,
   getDashboardBookingsAggregatesQueryOptions,
   getDashboardFinanceAggregatesQueryOptions,
@@ -143,20 +146,9 @@ export function DashboardPage({ emptyStates = {} }: DashboardPageProps = {}) {
       ? ((currentMonthBookings - prevMonthBookings) / prevMonthBookings) * 100
       : 0
 
-  const revenueChartConfig = {
-    revenue: { label: messages.dashboard.chartRevenueLabel, color: "var(--chart-1)" },
-    bookings: { label: messages.dashboard.chartBookingsLabel, color: "#86cb3c" },
-  }
-  const bookingStatusConfig = {
-    confirmed: { label: messages.dashboard.statusConfirmedLabel, color: "#86cb3c" },
-    completed: { label: messages.dashboard.statusCompletedLabel, color: "#6172f3" },
-    in_progress: { label: messages.dashboard.statusInProgressLabel, color: "hsl(47 96% 53%)" },
-    draft: { label: messages.dashboard.statusDraftLabel, color: "#efefeb" },
-    cancelled: { label: messages.dashboard.statusCancelledLabel, color: "#ff4405" },
-  }
-  const monthlyBookingsConfig = {
-    count: { label: messages.dashboard.chartBookingsLabel, color: "var(--chart-1)" },
-  }
+  const revenueChartConfig = buildRevenueChartConfig(messages)
+  const bookingStatusConfig = buildBookingStatusConfig(messages)
+  const monthlyBookingsConfig = buildMonthlyBookingsConfig(messages)
 
   const localizedStatusBreakdown = (bookings?.countsByStatus ?? [])
     .filter((entry) => entry.count > 0)

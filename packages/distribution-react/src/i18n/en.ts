@@ -243,6 +243,7 @@ export const distributionUiEn = {
         noMapping: "Retry reached pending links, but a channel product mapping is missing.",
         ok: "Retry completed for {bookingId}, but the server did not report processed links.",
         failed: "Retry failed for {bookingId}: {message}",
+        unknownError: "unknown error",
       },
       reconcile: {
         title: "Reconcile result",

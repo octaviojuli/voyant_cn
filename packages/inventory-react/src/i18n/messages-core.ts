@@ -88,6 +88,7 @@ export type ProductsUiCoreMessages = {
       editItinerary: string
       deleteItinerary: string
       addDay: string
+      viewFullProduct: string
     }
     sections: {
       overview: {

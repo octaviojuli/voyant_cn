@@ -86,8 +86,9 @@ export function createSelectedCommerceAdminExtension({
       {
         id: "markets",
         path: "/markets",
+        // i18n-literal-ok: contractual plain-English route title (AdminSettingsPageContribution.title: string); UI reads the localized `label` below
         title: "Markets",
-        label: "Markets",
+        label: (messages) => messages.settings.markets,
         icon: Globe2,
         group: "general",
         order: 35,
@@ -117,6 +118,11 @@ export function createSelectedCommerceAdminExtension({
             title: "Limba, moneda si piata",
             description: "Defineste piata principala, limba si moneda de vanzare.",
             action: "Configureaza pietele",
+          },
+          zh: {
+            title: "语言、货币与市场",
+            description: "设定主市场、语言与销售货币。",
+            action: "配置市场",
           },
         },
         prefill: parseMarketSetupPrefill,

@@ -19,8 +19,9 @@ export function createSelectedNavigationPreferencesAdminExtension(): AdminExtens
       {
         id: "navigation",
         path: "/navigation",
+        // i18n-literal-ok: contractual plain-English route title (AdminSettingsPageContribution.title: string); UI reads the localized `label` below
         title: "Navigation",
-        label: "Navigation",
+        label: (messages) => messages.settings.navigation,
         icon: PanelLeft,
         group: "general",
         order: 15,
@@ -50,6 +51,11 @@ export function createSelectedNavigationPreferencesAdminExtension(): AdminExtens
             title: "Navigarea spatiului de lucru",
             description: "Alege zonele de produs afisate echipei in navigarea principala.",
             action: "Alege navigarea",
+          },
+          zh: {
+            title: "工作台导航",
+            description: "选择团队在主导航中可见的产品板块。",
+            action: "选择导航",
           },
         },
         isComplete: hasOrganizationNavigation,

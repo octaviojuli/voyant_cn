@@ -245,6 +245,11 @@ export function createSelectedInventoryAdminExtension({
             description: "Continua in Produse pentru a crea primul produs de calatorie vandabil.",
             action: "Deschide produsele",
           },
+          zh: {
+            title: "创建首个产品",
+            description: "前往产品模块，创建第一个可售旅行产品。",
+            action: "打开产品",
+          },
         },
         isComplete: hasInventoryProduct,
       },

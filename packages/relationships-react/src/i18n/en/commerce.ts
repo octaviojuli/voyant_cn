@@ -129,4 +129,68 @@ export const crmUiEnCommerceMessages = {
     loadFailed: "Failed to load quotes.",
     empty: "No quotes found.",
   },
+  customFields: {
+    page: {
+      title: "Custom fields",
+      description: "Manage runtime CRM fields that operators can add without changing code.",
+      addField: "Add field",
+      entityFilterLabel: "Entity",
+      allEntities: "All entities",
+      loadFailed: "Could not load custom fields.",
+      requestFailed: "The request failed.",
+      emptyTitle: "No custom fields yet",
+      emptyDescription:
+        "Add a field definition to collect structured data on people, organizations, quotes, or activities.",
+      requiredBadge: "Required",
+      searchableBadge: "Searchable",
+      optionCount: "{count} options",
+      edit: "Edit",
+      delete: "Delete",
+      deleteTitle: "Delete custom field?",
+      deleteDescription:
+        'This removes the definition for "{label}". Existing stored values for this key will no longer be surfaced by the custom-field API.',
+      deleteConfirm: "Delete",
+    },
+    sheet: {
+      editTitle: "Edit custom field",
+      createTitle: "New custom field",
+      fields: {
+        entity: "Entity",
+        fieldType: "Field type",
+        label: "Label",
+        key: "Key",
+        searchable: "Searchable",
+        searchableDescription: "Include this field in custom-field search and filtering workflows.",
+        options: "Options",
+        optionsDescription:
+          "Labels are shown to operators; values are stored in custom-field JSON.",
+      },
+      placeholders: {
+        label: "Lead source",
+        optionLabel: "Label",
+      },
+      actions: {
+        addOption: "Add option",
+        create: "Create field",
+      },
+      validation: {
+        labelRequired: "Label is required.",
+        keyRequired: "Key is required.",
+        optionsRequired: "Add at least one option with both label and value.",
+      },
+    },
+    fieldTypeLabels: {
+      varchar: "Short text",
+      text: "Long text",
+      double: "Number",
+      monetary: "Money",
+      date: "Date",
+      boolean: "Yes/no",
+      enum: "Single choice",
+      set: "Multiple choice",
+      json: "JSON",
+      address: "Address",
+      phone: "Phone",
+    },
+  },
 } as const

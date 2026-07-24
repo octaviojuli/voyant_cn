@@ -92,9 +92,11 @@ export type {
 // directly from "@voyant-travel/admin/dashboard/dashboard-page" instead.
 export {
   type BookingsAggregates,
-  bookingStatusConfig,
+  buildBookingStatusConfig,
   buildDashboardSixMonthWindow,
+  buildMonthlyBookingsConfig,
   buildMonthSeries,
+  buildRevenueChartConfig,
   DashboardApiError,
   type DashboardQueryClient,
   dashboardQueryKeys,
@@ -105,10 +107,8 @@ export {
   getDashboardProductsAggregatesQueryOptions,
   getDashboardSuppliersAggregatesQueryOptions,
   getStatusColor,
-  monthlyBookingsConfig,
   type ProductsAggregates,
   pickPrimaryCurrency,
-  revenueChartConfig,
   type SuppliersAggregates,
 } from "./dashboard/dashboard-query-options.js"
 export {

@@ -91,6 +91,7 @@ export const distributionUiZhSyncMessages = {
         noMapping: "重试已到达待处理链接，但缺少渠道产品映射。",
         ok: "{bookingId} 的重试已完成，但服务器未报告已处理的链接。",
         failed: "{bookingId} 重试失败：{message}",
+        unknownError: "未知错误",
       },
       reconcile: {
         title: "对账结果",

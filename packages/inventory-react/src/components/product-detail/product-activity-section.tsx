@@ -98,6 +98,13 @@ function ActivityRow({
   entry: ProductActionLedgerEntryRecord
   timestamp: string
 }) {
+  const messages = useProductDetailMessages()
+  // Reuse the central action-ledger label maps so the activity feed matches
+  // the Logs page; fall back to the raw identifier for unknown values.
+  const statusLabels: Partial<Record<string, string>> =
+    messages.actionLedgerPage.filtersPopover.statusOptions
+  const riskLabels: Partial<Record<string, string>> =
+    messages.actionLedgerPage.filtersPopover.riskOptions
   return (
     <li className="flex items-start gap-2.5 px-4 py-2.5">
       <Activity className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -110,13 +117,13 @@ function ActivityRow({
             variant={actionLedgerStatusVariant[entry.status] ?? "secondary"}
             className="px-1.5 py-0 text-[10px]"
           >
-            {entry.status.replace(/_/g, " ")}
+            {statusLabels[entry.status] ?? entry.status.replace(/_/g, " ")}
           </Badge>
           <Badge
             variant={actionLedgerRiskVariant[entry.evaluatedRisk] ?? "outline"}
             className="px-1.5 py-0 text-[10px]"
           >
-            {entry.evaluatedRisk}
+            {riskLabels[entry.evaluatedRisk] ?? entry.evaluatedRisk}
           </Badge>
         </div>
         <p className="mt-0.5 truncate text-[11px] text-muted-foreground">

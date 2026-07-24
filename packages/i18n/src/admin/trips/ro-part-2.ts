@@ -35,6 +35,10 @@ export const adminTripsMessagesRoPart2 = {
       tripNotesLabel: "Note calatorie",
       addToTrip: "Adauga la calatorie",
     },
+    defaults: {
+      componentTitle: "Exemplu: Bucuresti - Istanbul",
+      tripTitle: "Calatorie compusa",
+    },
     emptyTimeline: "Nicio componenta inca",
     componentFallback: "Componenta {index}",
     componentTaxLine: "taxe {amount}",

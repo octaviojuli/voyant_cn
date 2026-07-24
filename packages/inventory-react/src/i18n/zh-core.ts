@@ -103,6 +103,7 @@ export const productsUiCoreZh = {
       editItinerary: "编辑行程方案",
       deleteItinerary: "删除行程方案",
       addDay: "添加行程日",
+      viewFullProduct: "查看完整产品",
     },
     sections: {
       overview: {

@@ -25,7 +25,7 @@ import {
   type UpdateCustomFieldDefinitionInput,
   useCustomFieldDefinitionMutation,
 } from "../hooks/use-custom-field-definition-mutation.js"
-import { useCrmUiMessagesOrDefault } from "../i18n/index.js"
+import { type CrmUiMessages, useCrmUiMessagesOrDefault } from "../i18n/index.js"
 import type { CustomFieldDefinitionRecord } from "../schemas.js"
 
 export const entityTypes = ["organization", "person", "quote", "activity"] as const
@@ -75,20 +75,6 @@ const defaultFormValues: FormValues = {
   options: [],
 }
 
-export const fieldTypeLabels: Record<FieldType, string> = {
-  varchar: "Short text",
-  text: "Long text",
-  double: "Number",
-  monetary: "Money",
-  date: "Date",
-  boolean: "Yes/no",
-  enum: "Single choice",
-  set: "Multiple choice",
-  json: "JSON",
-  address: "Address",
-  phone: "Phone",
-}
-
 export function CustomFieldDefinitionSheet({
   open,
   onOpenChange,
@@ -101,6 +87,8 @@ export function CustomFieldDefinitionSheet({
   onSuccess: () => void
 }) {
   const messages = useCrmUiMessagesOrDefault()
+  const sheetMessages = messages.customFields.sheet
+  const fieldTypeLabels = messages.customFields.fieldTypeLabels
   const isEditing = Boolean(definition)
   const { create, update } = useCustomFieldDefinitionMutation()
   const [values, setValues] = useState<FormValues>(defaultFormValues)
@@ -134,7 +122,7 @@ export function CustomFieldDefinitionSheet({
   )
   const fieldTypeItems = useMemo(
     () => fieldTypes.map((value) => ({ value, label: fieldTypeLabels[value] })),
-    [],
+    [fieldTypeLabels],
   )
 
   const setValue = <TKey extends keyof FormValues>(key: TKey, value: FormValues[TKey]) =>
@@ -148,7 +136,7 @@ export function CustomFieldDefinitionSheet({
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const nextErrors = validateForm(values, supportsOptions)
+    const nextErrors = validateForm(values, supportsOptions, sheetMessages.validation)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
@@ -187,13 +175,13 @@ export function CustomFieldDefinitionSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" size="lg">
         <SheetHeader>
-          <SheetTitle>{isEditing ? "Edit custom field" : "New custom field"}</SheetTitle>
+          <SheetTitle>{isEditing ? sheetMessages.editTitle : sheetMessages.createTitle}</SheetTitle>
         </SheetHeader>
         <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <SheetBody className="grid gap-5">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <Label>Entity</Label>
+                <Label>{sheetMessages.fields.entity}</Label>
                 {isEditing ? (
                   <ReadOnlyPill>{entityLabels[values.entityType]}</ReadOnlyPill>
                 ) : (
@@ -217,7 +205,7 @@ export function CustomFieldDefinitionSheet({
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label>Field type</Label>
+                <Label>{sheetMessages.fields.fieldType}</Label>
                 {isEditing ? (
                   <ReadOnlyPill>{fieldTypeLabels[values.fieldType]}</ReadOnlyPill>
                 ) : (
@@ -243,23 +231,24 @@ export function CustomFieldDefinitionSheet({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="custom-field-label">Label</Label>
+                <Label htmlFor="custom-field-label">{sheetMessages.fields.label}</Label>
                 <Input
                   id="custom-field-label"
                   value={values.label}
                   onChange={(event) => setValue("label", event.target.value)}
-                  placeholder="Lead source"
+                  placeholder={sheetMessages.placeholders.label}
                   autoFocus
                 />
                 {errors.label ? <p className="text-xs text-destructive">{errors.label}</p> : null}
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="custom-field-key">Key</Label>
+                <Label htmlFor="custom-field-key">{sheetMessages.fields.key}</Label>
                 <Input
                   id="custom-field-key"
                   value={values.key}
                   onChange={(event) => setValue("key", event.target.value)}
+                  // i18n-literal-ok: snake_case machine-key example rendered in a font-mono input, not copy
                   placeholder="lead_source"
                   className="font-mono"
                 />
@@ -269,8 +258,8 @@ export function CustomFieldDefinitionSheet({
 
             <div className="grid gap-3 rounded-md border p-4">
               <ToggleRow
-                label="Searchable"
-                description="Include this field in custom-field search and filtering workflows."
+                label={sheetMessages.fields.searchable}
+                description={sheetMessages.fields.searchableDescription}
                 checked={values.isSearchable}
                 onCheckedChange={(checked) => setValue("isSearchable", checked)}
               />
@@ -279,9 +268,9 @@ export function CustomFieldDefinitionSheet({
             {supportsOptions ? (
               <div className="grid gap-3">
                 <div>
-                  <Label>Options</Label>
+                  <Label>{sheetMessages.fields.options}</Label>
                   <p className="text-xs text-muted-foreground">
-                    Labels are shown to operators; values are stored in custom-field JSON.
+                    {sheetMessages.fields.optionsDescription}
                   </p>
                 </div>
                 <div className="grid gap-2">
@@ -292,13 +281,14 @@ export function CustomFieldDefinitionSheet({
                         onChange={(event) =>
                           updateOption(option.rowKey, { label: event.target.value })
                         }
-                        placeholder="Label"
+                        placeholder={sheetMessages.placeholders.optionLabel}
                       />
                       <Input
                         value={option.value}
                         onChange={(event) =>
                           updateOption(option.rowKey, { value: event.target.value })
                         }
+                        // i18n-literal-ok: machine option-value example rendered in a font-mono input, not copy
                         placeholder="value"
                         className="font-mono"
                       />
@@ -335,7 +325,7 @@ export function CustomFieldDefinitionSheet({
                   }
                 >
                   <Plus className="mr-1.5 size-3.5" />
-                  Add option
+                  {sheetMessages.actions.addOption}
                 </Button>
               </div>
             ) : null}
@@ -346,7 +336,7 @@ export function CustomFieldDefinitionSheet({
             </Button>
             <Button type="submit" size="sm" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-              {isEditing ? messages.common.saveChanges : "Create field"}
+              {isEditing ? messages.common.saveChanges : sheetMessages.actions.create}
             </Button>
           </SheetFooter>
         </form>
@@ -385,17 +375,21 @@ function ReadOnlyPill({ children }: { children: string }) {
   )
 }
 
-function validateForm(values: FormValues, supportsOptions: boolean): FormErrors {
+function validateForm(
+  values: FormValues,
+  supportsOptions: boolean,
+  validationMessages: CrmUiMessages["customFields"]["sheet"]["validation"],
+): FormErrors {
   const errors: FormErrors = {}
-  if (!values.label.trim()) errors.label = "Label is required."
-  if (!values.key.trim()) errors.key = "Key is required."
+  if (!values.label.trim()) errors.label = validationMessages.labelRequired
+  if (!values.key.trim()) errors.key = validationMessages.keyRequired
 
   if (supportsOptions) {
     const validOptions = values.options.filter(
       (option) => option.label.trim() && option.value.trim(),
     )
     if (validOptions.length !== values.options.length || validOptions.length === 0) {
-      errors.options = "Add at least one option with both label and value."
+      errors.options = validationMessages.optionsRequired
     }
   }
 

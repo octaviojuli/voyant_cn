@@ -64,7 +64,7 @@ export function PendingComponentCard({
       <div className="flex justify-end">
         <Button onClick={onCommit} disabled={!valid || committing || commitDisabled}>
           {committing ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-          Add to trip
+          {t.addToTrip}
         </Button>
       </div>
     </div>

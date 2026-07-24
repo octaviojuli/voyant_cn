@@ -97,8 +97,7 @@ export function ProductQuickViewSheet({
         {onViewFull && product ? (
           <SheetFooter>
             <Button type="button" className="w-full" onClick={() => onViewFull(product)}>
-              {/* i18n-literal-ok scoped quick-view CTA, paired with ArrowRight */}
-              View full product
+              {detail.actions.viewFullProduct}
               <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
             </Button>
           </SheetFooter>

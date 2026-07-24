@@ -62,7 +62,13 @@ describe("Auth team-management admin surface", () => {
     const extension = createSelectedAuthTeamAdminExtension()
     const page = extension.settingsPages?.[0]
 
-    expect(page).toMatchObject({ id: "team", path: "/team", title: "Team", label: "Team" })
+    expect(page).toMatchObject({ id: "team", path: "/team", title: "Team" })
+    expect(page?.label).toBeTypeOf("function")
+    expect(
+      typeof page?.label === "function"
+        ? page.label({ settings: { team: "Localized team" } } as never)
+        : undefined,
+    ).toBe("Localized team")
     expect(page?.icon).toBeTypeOf("object")
     expect(page?.routeMessagesProvider).toBeTypeOf("function")
     expect(extension.setupSteps?.[0]).toMatchObject({

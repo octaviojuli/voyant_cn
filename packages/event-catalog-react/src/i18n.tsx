@@ -56,10 +56,38 @@ export const eventCatalogUiEn: EventCatalogUiMessages = {
   },
 }
 
+export const eventCatalogUiZh: EventCatalogUiMessages = {
+  navigation: { title: "事件目录" },
+  page: {
+    title: "事件目录",
+    selectedContracts: "已选定 {count} 个事件契约",
+    selectedContractsLoading: "已选定的事件契约",
+    requestFailed: "事件目录请求失败",
+    requestFailedWithStatus: "事件目录请求失败（{status}）",
+    eventsLabel: "事件",
+    contractLabel: "事件契约",
+    filterLabel: "筛选事件",
+    filterPlaceholder: "筛选事件",
+    loading: "加载中…",
+    noMatchingEvents: "没有匹配的事件。",
+    owner: "归属",
+    sourceModule: "来源模块",
+    visibility: "可见性",
+    category: "类别",
+    redactedFields: "已脱敏字段",
+    noneDeclared: "未声明。",
+    payloadSchema: "载荷 Schema",
+  },
+}
+
 const fallbackLocale = "en"
 
+// Locale resolution happens in the shared runtime (`resolveLocaleMessages`),
+// which tries the exact tag first and then the primary subtag, so regional
+// tags such as "zh-CN" fall back to the "zh" definition registered here.
 export const eventCatalogMessageDefinitions = {
   en: eventCatalogUiEn,
+  zh: eventCatalogUiZh,
 } satisfies LocaleMessageDefinitions<EventCatalogUiMessages>
 
 const eventCatalogUiContext =

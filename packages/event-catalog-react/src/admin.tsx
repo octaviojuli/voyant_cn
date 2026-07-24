@@ -18,6 +18,7 @@ export function createEventCatalogAdminExtension(
   options: CreateEventCatalogAdminExtensionOptions = {},
 ): AdminExtension {
   const path = options.path ?? "/docs/events"
+  // i18n-literal-ok: contractual plain-English route/nav title fallback for the host-supplied option
   const title = options.title ?? "Event catalog"
 
   return withAdminRouteMessagesProvider(

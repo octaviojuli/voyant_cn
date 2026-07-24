@@ -461,6 +461,11 @@ export function createSelectedFinanceAdminExtension({
             description: "Verifica clasele si regimurile fiscale inainte de emiterea documentelor.",
             action: "Deschide setarile fiscale",
           },
+          zh: {
+            title: "税务设置",
+            description: "开具客户文书前，先核对税类与税制。",
+            action: "打开税务设置",
+          },
         },
         isComplete: hasFiscalSettings,
       },
