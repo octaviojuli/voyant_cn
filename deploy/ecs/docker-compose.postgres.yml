@@ -1,0 +1,23 @@
+# ECS 上自建 PostgreSQL(仅数据库走 Docker;应用为裸 Node 进程)。
+# 用法: docker compose -f deploy/ecs/docker-compose.postgres.yml up -d
+services:
+  postgres:
+    image: postgres:16
+    container_name: voyant-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: voyant
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/ecs/.env}
+      POSTGRES_DB: voyant
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - voyant_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voyant -d voyant"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  voyant_pgdata:
