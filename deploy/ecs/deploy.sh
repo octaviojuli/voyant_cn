@@ -96,12 +96,20 @@ for i in 1 2 3; do
 done
 [ "$migrated" = true ]
 
-if [ "$SEED_ZH" = true ]; then
-  echo "==> 灌入示例数据(基线 + 中文)"
+# 种子完成与否用独立哨兵跟踪:上次部署若没种上,后续部署自动补种。
+SEED_MARKER=/opt/voyant/.seed-done
+if [ "$SEED_ZH" = true ] || [ ! -f "$SEED_MARKER" ]; then
+  echo "[$(date +%H:%M:%S)] ==> 灌入示例数据(基线 + 中文)"
   cd "$APP_DIR/examples/operator-demo"
   set -a; . "$APP_DIR/starters/operator/.env"; set +a
-  NODE_OPTIONS="--import tsx" pnpm seed -- --confirm || true
-  NODE_OPTIONS="--import tsx" pnpm seed:zh-cn -- --confirm || true
+  # 种子走源码解析(与运行时同款条件),避免解析到未构建的 dist
+  if NODE_OPTIONS="--import tsx --conditions=development" pnpm seed -- --confirm \
+    && NODE_OPTIONS="--import tsx --conditions=development" pnpm seed:zh-cn -- --confirm; then
+    touch "$SEED_MARKER"
+    echo "[$(date +%H:%M:%S)] ==> 示例数据灌入完成"
+  else
+    echo "!! 示例数据灌入失败(不阻断部署,下次部署将自动重试)"
+  fi
   cd "$APP_DIR/starters/operator"
 fi
 
