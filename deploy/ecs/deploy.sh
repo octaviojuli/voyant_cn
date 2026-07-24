@@ -60,6 +60,30 @@ else
   cd starters/operator
 fi
 
+# 迁移执行器从部署处解析各模块包,但部分包(db/availability 等)只是传递
+# 依赖,新装环境的 node_modules 里够不到。按迁移计划补齐工作区符号链接:
+# 只影响 voyant migrate 的解析,不改变应用运行时的模块图。
+echo "[$(date +%H:%M:%S)] ==> 校验迁移计划包的可解析性"
+node - <<'LINKEOF'
+const fs = require("fs"), path = require("path")
+const planPath = path.join(".voyant", "migration-plan.generated.json")
+if (!fs.existsSync(planPath)) { console.log("(无迁移计划文件,跳过)"); process.exit(0) }
+const plan = JSON.parse(fs.readFileSync(planPath, "utf8"))
+const migrations = Array.isArray(plan) ? plan : plan.migrations ?? []
+fs.mkdirSync(path.join("node_modules", "@voyant-travel"), { recursive: true })
+for (const m of migrations) {
+  const src = m && m.source
+  if (!src || src.kind !== "package" || typeof src.packageName !== "string") continue
+  const short = src.packageName.split("/")[1]
+  if (!short) continue
+  const linkPath = path.join("node_modules", "@voyant-travel", short)
+  if (fs.existsSync(linkPath)) continue
+  if (!fs.existsSync(path.join("..", "..", "packages", short, "package.json"))) continue
+  fs.symlinkSync(path.join("..", "..", "..", "..", "packages", short), linkPath)
+  console.log("  linked", src.packageName)
+}
+LINKEOF
+
 echo "[$(date +%H:%M:%S)] ==> 执行数据库迁移"
 migrated=false
 for i in 1 2 3; do
