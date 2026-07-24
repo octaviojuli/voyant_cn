@@ -1,24 +1,29 @@
+import { formatMessage } from "@voyant-travel/i18n"
+
 const WEEKDAYS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] as const
 type Weekday = (typeof WEEKDAYS)[number]
 
-const WEEKDAY_LABELS: Record<Weekday, string> = {
-  MO: "Mon",
-  TU: "Tue",
-  WE: "Wed",
-  TH: "Thu",
-  FR: "Fri",
-  SA: "Sat",
-  SU: "Sun",
-}
-
-const WEEKDAY_FULL_LABELS: Record<Weekday, string> = {
-  MO: "Monday",
-  TU: "Tuesday",
-  WE: "Wednesday",
-  TH: "Thursday",
-  FR: "Friday",
-  SA: "Saturday",
-  SU: "Sunday",
+/**
+ * Localized label bundle for RRULE descriptions. The host dictionary provides
+ * this as `messages.products.core.rrule` (en/ro/zh stay in structural parity
+ * via the typed zh dictionary in `@voyant-travel/i18n`).
+ */
+export interface RRuleLabels {
+  everyDay: string
+  everyNDays: string
+  everyWeek: string
+  everyNWeeks: string
+  everyMonth: string
+  everyNMonths: string
+  everyWeekdayFull: string
+  onWeekdays: string
+  onMonthDay: string
+  onMonthDays: string
+  noWeekdays: string
+  noMonthDays: string
+  listSeparator: string
+  weekdayShort: Record<Weekday, string>
+  weekdayFull: Record<Weekday, string>
 }
 
 type Frequency = "DAILY" | "WEEKLY" | "MONTHLY"
@@ -57,25 +62,41 @@ function parseRRule(rrule: string): ParsedRRule {
   return { frequency, interval, byWeekdays, byMonthDays }
 }
 
-export function describeRRule(rrule: string): string {
+export function describeRRule(rrule: string, labels: RRuleLabels): string {
   const { frequency, interval, byWeekdays, byMonthDays } = parseRRule(rrule)
-  const unit = frequency === "DAILY" ? "day" : frequency === "WEEKLY" ? "week" : "month"
-  const cadence = interval > 1 ? `Every ${interval} ${unit}s` : `Every ${unit}`
+  const cadence =
+    frequency === "DAILY"
+      ? interval > 1
+        ? formatMessage(labels.everyNDays, { n: interval })
+        : labels.everyDay
+      : frequency === "WEEKLY"
+        ? interval > 1
+          ? formatMessage(labels.everyNWeeks, { n: interval })
+          : labels.everyWeek
+        : interval > 1
+          ? formatMessage(labels.everyNMonths, { n: interval })
+          : labels.everyMonth
 
   if (frequency === "WEEKLY") {
-    if (byWeekdays.length === 0) return `${cadence} (no weekdays)`
+    if (byWeekdays.length === 0) return formatMessage(labels.noWeekdays, { cadence })
     const ordered = WEEKDAYS.filter((day) => byWeekdays.includes(day))
     const first = ordered[0]
     if (interval === 1 && ordered.length === 1 && first) {
-      return `Every ${WEEKDAY_FULL_LABELS[first]}`
+      return formatMessage(labels.everyWeekdayFull, { weekday: labels.weekdayFull[first] })
     }
-    return `${cadence} on ${ordered.map((day) => WEEKDAY_LABELS[day]).join(", ")}`
+    return formatMessage(labels.onWeekdays, {
+      cadence,
+      days: ordered.map((day) => labels.weekdayShort[day]).join(labels.listSeparator),
+    })
   }
 
   if (frequency === "MONTHLY") {
-    if (byMonthDays.length === 0) return `${cadence} (no days)`
+    if (byMonthDays.length === 0) return formatMessage(labels.noMonthDays, { cadence })
     const ordered = [...byMonthDays].sort((a, b) => a - b)
-    return `${cadence} on day${ordered.length === 1 ? "" : "s"} ${ordered.join(", ")}`
+    return formatMessage(ordered.length === 1 ? labels.onMonthDay : labels.onMonthDays, {
+      cadence,
+      days: ordered.join(labels.listSeparator),
+    })
   }
 
   return cadence
