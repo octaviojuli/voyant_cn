@@ -83,29 +83,45 @@ jobs:
           username: ${{ secrets.ECS_USER }}
           key: ${{ secrets.ECS_SSH_KEY }}
           port: ${{ secrets.ECS_SSH_PORT || 22 }}
-          command_timeout: 50m
+          command_timeout: 80m
           script: |
             set -e
+            log() { echo "[$(date +%H:%M:%S)] $*"; }
+            log "SSH 会话开始"
             if [ ! -d /opt/voyant/app/.git ]; then
               command -v git >/dev/null 2>&1 || { sudo apt-get update -y && sudo apt-get install -y git; }
               sudo mkdir -p /opt/voyant
-              sudo git clone https://github.com/${{ github.repository }}.git /opt/voyant/app \
-                || sudo git clone https://ghproxy.net/https://github.com/${{ github.repository }}.git /opt/voyant/app
+              sudo timeout 600 git clone https://github.com/${{ github.repository }}.git /opt/voyant/app \
+                || sudo timeout 600 git clone https://ghproxy.net/https://github.com/${{ github.repository }}.git /opt/voyant/app
               sudo chown -R "$(id -un)" /opt/voyant/app || true
             fi
-            # 同步脚本与源码到当前 main(untar 前先 reset,保证 git 树干净)
+            # 同步 git 元数据(尽力而为;部署内容以下面的部署包为准,包内含当前 commit 全部源码)
+            log "同步服务器 git 检出(180s 上限,失败不阻断)"
             sudo git config --global --add safe.directory /opt/voyant/app || true
-            sudo git -C /opt/voyant/app fetch origin main || true
+            sudo timeout 180 git -C /opt/voyant/app fetch origin main \
+              || sudo timeout 300 git -C /opt/voyant/app fetch https://ghproxy.net/https://github.com/${{ github.repository }}.git main || true
             sudo git -C /opt/voyant/app checkout -f main || true
-            sudo git -C /opt/voyant/app reset --hard origin/main || true
-            # 从 Release 附件下载部署包:优先 ghproxy 镜像,直连兜底,校验 sha256
+            sudo git -C /opt/voyant/app reset --hard FETCH_HEAD || true
+            # 从 Release 附件下载部署包:多镜像轮询;低于 50KB/s 持续 60s 即放弃换源,单源最长 20 分钟
             BUNDLE_URL="https://github.com/${{ github.repository }}/releases/download/deploy-bundle/voyant-app.tar.gz"
-            sudo curl -fL --retry 3 --connect-timeout 15 -o /tmp/voyant-app.tar.gz "https://ghproxy.net/${BUNDLE_URL}" \
-              || sudo curl -fL --retry 3 --connect-timeout 15 -o /tmp/voyant-app.tar.gz "${BUNDLE_URL}"
+            ok=false
+            for base in "https://ghproxy.net/" "https://gh-proxy.com/" "https://ghfast.top/" ""; do
+              log "尝试下载源: ${base:-github 直连}"
+              if sudo curl -fL --retry 1 --connect-timeout 15 --max-time 1200 \
+                   --speed-limit 51200 --speed-time 60 \
+                   -o /tmp/voyant-app.tar.gz "${base}${BUNDLE_URL}"; then
+                log "下载完成: $(ls -lh /tmp/voyant-app.tar.gz | awk '{print $5}')"
+                ok=true; break
+              fi
+              log "该源失败或过慢,换下一个"
+            done
+            [ "$ok" = true ] || { log "所有下载源均失败"; exit 1; }
             echo "${{ steps.pack.outputs.sha256 }}  /tmp/voyant-app.tar.gz" | sha256sum -c -
-            # 清理旧依赖后铺上 CI 构建好的 node_modules 与 dist(同一 commit 的内容)
+            log "清理旧依赖"
             sudo find /opt/voyant/app -maxdepth 3 -name node_modules -type d -prune -exec rm -rf {} +
+            log "解压部署包"
             sudo tar -xzf /tmp/voyant-app.tar.gz -C /opt/voyant/app
             sudo rm -f /tmp/voyant-app.tar.gz
             id -u voyant >/dev/null 2>&1 && sudo chown -R voyant:voyant /opt/voyant/app || true
+            log "进入 bootstrap(--prebuilt)"
             sudo APP_HOST='${{ secrets.ECS_HOST }}' bash /opt/voyant/app/deploy/ecs/bootstrap.sh --prebuilt
