@@ -543,6 +543,25 @@ JSON 字段名、数据库表名/列名、TypeScript 类型名、事件名,以�
 | Super-admin | 超级管理员 | 标准词 |
 | Reset token | 重置令牌 | 标准技术译法 |
 
+### 遗留清扫补遗(2026-07-24,待人工复核)
+
+深度排查后补齐的漏译区域(自定义字段页、税码、事件目录、零星文案)新拟词条:
+
+| 英文 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| Custom field / Field definition | 自定义字段 / 字段定义 | CRM 运行时字段;设置导航同用 |
+| Field types: Short text / Long text / Number / Money / Date / Yes-no / Single choice / Multiple choice / JSON / Address / Phone | 短文本 / 长文本 / 数字 / 金额 / 日期 / 是/否 / 单选 / 多选 / JSON / 地址 / 电话 | 表单字段类型标准词;JSON 保留原文 |
+| Lead source(示例占位) | 线索来源 | CRM 常用示例 |
+| Tax codes: standard / reduced / exempt / reverse_charge / margin_scheme_art311 / zero_rated / out_of_scope / other | 标准税率 / 低税率 / 免税 / 反向征收 / 差额征税(第311条) / 零税率 / 不征税 / 其他 | 增值税税码标准译法;代码值不变 |
+| Custom condition(税则摘要兜底) | 自定义条件 | 未识别政策条件的显示兜底 |
+| View full product | 查看完整产品 | 快速预览抽屉动作 |
+| Add to trip(拼装面板) | 加入行程 | 与行程封套词族一致 |
+| Composed trip(默认标题) | 组合行程 | Composed FIT Trip 词族;默认值可改 |
+| Event contract / Payload schema | 事件契约 / 载荷 Schema | 事件目录(开发者向页面);Schema 保留原文 |
+| Owner(事件归属包) | 归属 | 指向所属模块而非人员,沿用"归属缺口"先例 |
+| Source module / Redacted fields | 来源模块 / 已脱敏字段 | 事件目录词族 |
+| Setup steps: Business profile / Workspace navigation / Invite your team | 企业资料 / 工作台导航 / 邀请团队成员 | 新手引导步骤标题 |
+
 ## 裁决记录(备查)
 
 1. **Invoice = 账单**:定稿采用"账单";另有"收据"建议,待凯撒财务同事过目后再定,阶段 1 按"账单"推进。
