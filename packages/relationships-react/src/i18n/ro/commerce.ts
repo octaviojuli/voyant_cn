@@ -129,4 +129,70 @@ export const crmUiRoCommerceMessages = {
     loadFailed: "Incarcarea ofertelor a esuat.",
     empty: "Nu au fost gasite oferte.",
   },
+  customFields: {
+    page: {
+      title: "Campuri personalizate",
+      description:
+        "Gestioneaza campurile CRM de runtime pe care operatorii le pot adauga fara modificari de cod.",
+      addField: "Adauga camp",
+      entityFilterLabel: "Entitate",
+      allEntities: "Toate entitatile",
+      loadFailed: "Nu s-au putut incarca campurile personalizate.",
+      requestFailed: "Cererea a esuat.",
+      emptyTitle: "Niciun camp personalizat inca",
+      emptyDescription:
+        "Adauga o definitie de camp pentru a colecta date structurate despre persoane, organizatii, oferte sau activitati.",
+      requiredBadge: "Obligatoriu",
+      searchableBadge: "Cautabil",
+      optionCount: "{count} optiuni",
+      edit: "Editeaza",
+      delete: "Sterge",
+      deleteTitle: "Stergi campul personalizat?",
+      deleteDescription:
+        'Aceasta elimina definitia pentru "{label}". Valorile deja stocate pentru aceasta cheie nu vor mai fi expuse de API-ul de campuri personalizate.',
+      deleteConfirm: "Sterge",
+    },
+    sheet: {
+      editTitle: "Editeaza campul personalizat",
+      createTitle: "Camp personalizat nou",
+      fields: {
+        entity: "Entitate",
+        fieldType: "Tip de camp",
+        label: "Eticheta",
+        key: "Cheie",
+        searchable: "Cautabil",
+        searchableDescription:
+          "Include acest camp in fluxurile de cautare si filtrare pe campuri personalizate.",
+        options: "Optiuni",
+        optionsDescription:
+          "Etichetele sunt afisate operatorilor; valorile sunt stocate in JSON-ul campurilor personalizate.",
+      },
+      placeholders: {
+        label: "Sursa lead",
+        optionLabel: "Eticheta",
+      },
+      actions: {
+        addOption: "Adauga optiune",
+        create: "Creeaza camp",
+      },
+      validation: {
+        labelRequired: "Eticheta este obligatorie.",
+        keyRequired: "Cheia este obligatorie.",
+        optionsRequired: "Adauga cel putin o optiune cu eticheta si valoare.",
+      },
+    },
+    fieldTypeLabels: {
+      varchar: "Text scurt",
+      text: "Text lung",
+      double: "Numar",
+      monetary: "Valoare monetara",
+      date: "Data",
+      boolean: "Da/nu",
+      enum: "Alegere unica",
+      set: "Alegere multipla",
+      json: "JSON",
+      address: "Adresa",
+      phone: "Telefon",
+    },
+  },
 } as const

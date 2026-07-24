@@ -36,7 +36,6 @@ import {
   CustomFieldDefinitionSheet,
   type EntityType,
   entityTypes,
-  fieldTypeLabels,
 } from "./custom-field-definition-sheet.js"
 
 const PAGE_SIZE = 25
@@ -69,6 +68,8 @@ export function CustomFieldDefinitionsPage({
   const total = query.data?.total ?? 0
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
   const entityLabels = messages.common.entityTypeLabels
+  const pageMessages = messages.customFields.page
+  const fieldTypeLabels = messages.customFields.fieldTypeLabels
 
   return (
     <div
@@ -77,10 +78,8 @@ export function CustomFieldDefinitionsPage({
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
-          <h2 className="text-lg font-semibold tracking-tight">Custom fields</h2>
-          <p className="text-sm text-muted-foreground">
-            Manage runtime CRM fields that operators can add without changing code.
-          </p>
+          <h2 className="text-lg font-semibold tracking-tight">{pageMessages.title}</h2>
+          <p className="text-sm text-muted-foreground">{pageMessages.description}</p>
         </div>
         <Button
           size="sm"
@@ -90,13 +89,13 @@ export function CustomFieldDefinitionsPage({
           }}
         >
           <Plus className="mr-1.5 size-3.5" />
-          Add field
+          {pageMessages.addField}
         </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Entity
+          {pageMessages.entityFilterLabel}
         </Label>
         <Select
           value={entityFilter}
@@ -109,7 +108,7 @@ export function CustomFieldDefinitionsPage({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL_ENTITIES}>All entities</SelectItem>
+            <SelectItem value={ALL_ENTITIES}>{pageMessages.allEntities}</SelectItem>
             {entityTypes.map((entityType) => (
               <SelectItem key={entityType} value={entityType}>
                 {entityLabels[entityType]}
@@ -123,8 +122,8 @@ export function CustomFieldDefinitionsPage({
         <Alert variant="destructive">
           <AlertCircle className="size-4" />
           <AlertDescription>
-            Could not load custom fields.{" "}
-            {query.error instanceof Error ? query.error.message : "The request failed."}
+            {pageMessages.loadFailed}{" "}
+            {query.error instanceof Error ? query.error.message : pageMessages.requestFailed}
           </AlertDescription>
         </Alert>
       ) : query.isPending ? (
@@ -133,10 +132,9 @@ export function CustomFieldDefinitionsPage({
         <div className="rounded-md border bg-card text-card-foreground shadow-sm">
           {definitions.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
-              <p className="text-sm font-medium">No custom fields yet</p>
+              <p className="text-sm font-medium">{pageMessages.emptyTitle}</p>
               <p className="max-w-md text-sm text-muted-foreground">
-                Add a field definition to collect structured data on people, organizations, quotes,
-                or activities.
+                {pageMessages.emptyDescription}
               </p>
             </div>
           ) : (
@@ -151,13 +149,20 @@ export function CustomFieldDefinitionsPage({
                       <span className="text-sm font-medium">{definition.label}</span>
                       <Badge variant="outline">{entityLabels[definition.entityType]}</Badge>
                       <Badge variant="secondary">{fieldTypeLabels[definition.fieldType]}</Badge>
-                      {definition.isRequired ? <Badge>Required</Badge> : null}
-                      {definition.isSearchable ? <Badge variant="outline">Searchable</Badge> : null}
+                      {definition.isRequired ? <Badge>{pageMessages.requiredBadge}</Badge> : null}
+                      {definition.isSearchable ? (
+                        <Badge variant="outline">{pageMessages.searchableBadge}</Badge>
+                      ) : null}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <span className="font-mono">{definition.key}</span>
                       {definition.options?.length ? (
-                        <span>{definition.options.length} options</span>
+                        <span>
+                          {pageMessages.optionCount.replace(
+                            "{count}",
+                            String(definition.options.length),
+                          )}
+                        </span>
                       ) : null}
                     </div>
                   </div>
@@ -176,7 +181,7 @@ export function CustomFieldDefinitionsPage({
                         }}
                       >
                         <Pencil className="size-4" />
-                        Edit
+                        {pageMessages.edit}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -185,7 +190,7 @@ export function CustomFieldDefinitionsPage({
                         onClick={() => setDeleting(definition)}
                       >
                         <Trash2 className="size-4" />
-                        Delete
+                        {pageMessages.delete}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -198,7 +203,9 @@ export function CustomFieldDefinitionsPage({
 
       <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
         <span>
-          Showing {definitions.length} of {total}
+          {messages.common.pageSummary
+            .replace("{shown}", String(definitions.length))
+            .replace("{total}", String(total))}
         </span>
         <div className="flex items-center gap-2">
           <Button
@@ -240,10 +247,9 @@ export function CustomFieldDefinitionsPage({
       >
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete custom field?</AlertDialogTitle>
+            <AlertDialogTitle>{pageMessages.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the definition for "{deleting?.label}". Existing stored values for this
-              key will no longer be surfaced by the custom-field API.
+              {pageMessages.deleteDescription.replace("{label}", deleting?.label ?? "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -261,7 +267,7 @@ export function CustomFieldDefinitionsPage({
               }}
             >
               {remove.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              Delete
+              {pageMessages.deleteConfirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

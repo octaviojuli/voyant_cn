@@ -4,6 +4,19 @@ export const crmRecordStatuses = ["active", "inactive", "archived"] as const
 export const crmActivityTypes = ["note", "call", "email", "meeting", "task", "follow_up"] as const
 export const crmActivityStatuses = ["planned", "done", "cancelled"] as const
 export const crmEntityTypes = ["none", "person", "organization", "quote", "activity"] as const
+export const crmCustomFieldTypes = [
+  "varchar",
+  "text",
+  "double",
+  "monetary",
+  "date",
+  "boolean",
+  "enum",
+  "set",
+  "json",
+  "address",
+  "phone",
+] as const
 const crmQuoteStatuses = ["open", "won", "lost", "archived"] as const
 const crmQuoteVersionStatuses = [
   "draft",
@@ -19,6 +32,7 @@ export type CrmRecordStatus = (typeof crmRecordStatuses)[number]
 export type CrmActivityType = (typeof crmActivityTypes)[number]
 export type CrmActivityStatus = (typeof crmActivityStatuses)[number]
 export type CrmEntityType = (typeof crmEntityTypes)[number]
+export type CrmCustomFieldType = (typeof crmCustomFieldTypes)[number]
 export type CrmQuoteStatus = (typeof crmQuoteStatuses)[number]
 export type CrmQuoteVersionStatus = (typeof crmQuoteVersionStatuses)[number]
 
@@ -647,5 +661,54 @@ export type CrmUiMessages = {
     }
     loadFailed: string
     empty: string
+  }
+  customFields: {
+    page: {
+      title: string
+      description: string
+      addField: string
+      entityFilterLabel: string
+      allEntities: string
+      loadFailed: string
+      requestFailed: string
+      emptyTitle: string
+      emptyDescription: string
+      requiredBadge: string
+      searchableBadge: string
+      optionCount: string
+      edit: string
+      delete: string
+      deleteTitle: string
+      deleteDescription: string
+      deleteConfirm: string
+    }
+    sheet: {
+      editTitle: string
+      createTitle: string
+      fields: {
+        entity: string
+        fieldType: string
+        label: string
+        key: string
+        searchable: string
+        searchableDescription: string
+        options: string
+        optionsDescription: string
+      }
+      placeholders: {
+        label: string
+        optionLabel: string
+      }
+      actions: {
+        addOption: string
+        create: string
+      }
+      validation: {
+        labelRequired: string
+        keyRequired: string
+        optionsRequired: string
+      }
+    }
+    fieldTypeLabels: Record<CrmCustomFieldType, string>
   }
 }
