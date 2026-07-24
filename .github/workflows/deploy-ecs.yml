@@ -9,6 +9,9 @@ concurrency:
   group: deploy-ecs
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -45,27 +48,32 @@ jobs:
       - name: Build operator app
         if: steps.gate.outputs.configured == 'true'
         working-directory: starters/operator
-        run: NODE_OPTIONS="--import tsx --max-old-space-size=12288" npx voyant build
+        run: |
+          NODE_OPTIONS="--import tsx --max-old-space-size=12288" npx voyant build
+          # 断言构建真实产出了服务端入口,防止"假成功"被打包上线
+          test -f dist/server/server.js
+          du -sh dist
 
       - name: Pack workspace (source + node_modules + dist)
         if: steps.gate.outputs.configured == 'true'
+        id: pack
         run: |
           mkdir -p bundle
           tar --exclude=.git --exclude=./bundle -czf bundle/voyant-app.tar.gz .
+          ls -lh bundle/voyant-app.tar.gz
+          echo "sha256=$(sha256sum bundle/voyant-app.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
-      - name: Upload bundle to server
+      - name: Publish bundle as release asset
         if: steps.gate.outputs.configured == 'true'
-        uses: appleboy/scp-action@v0.1.7
+        uses: softprops/action-gh-release@v2
         with:
-          host: ${{ secrets.ECS_HOST }}
-          username: ${{ secrets.ECS_USER }}
-          key: ${{ secrets.ECS_SSH_KEY }}
-          port: ${{ secrets.ECS_SSH_PORT || 22 }}
-          timeout: 30s
-          command_timeout: 40m
-          source: bundle/voyant-app.tar.gz
-          target: /tmp/
-          strip_components: 1
+          tag_name: deploy-bundle
+          name: Deploy bundle (auto)
+          prerelease: true
+          files: bundle/voyant-app.tar.gz
+          body: >
+            自动部署产物,由 deploy-ecs workflow 每次覆盖更新;
+            服务器经 ghproxy 镜像高速下载。请勿手动改动。
 
       - name: Deploy over SSH
         if: steps.gate.outputs.configured == 'true'
@@ -75,7 +83,7 @@ jobs:
           username: ${{ secrets.ECS_USER }}
           key: ${{ secrets.ECS_SSH_KEY }}
           port: ${{ secrets.ECS_SSH_PORT || 22 }}
-          command_timeout: 40m
+          command_timeout: 50m
           script: |
             set -e
             if [ ! -d /opt/voyant/app/.git ]; then
@@ -90,6 +98,11 @@ jobs:
             sudo git -C /opt/voyant/app fetch origin main || true
             sudo git -C /opt/voyant/app checkout -f main || true
             sudo git -C /opt/voyant/app reset --hard origin/main || true
+            # 从 Release 附件下载部署包:优先 ghproxy 镜像,直连兜底,校验 sha256
+            BUNDLE_URL="https://github.com/${{ github.repository }}/releases/download/deploy-bundle/voyant-app.tar.gz"
+            sudo curl -fL --retry 3 --connect-timeout 15 -o /tmp/voyant-app.tar.gz "https://ghproxy.net/${BUNDLE_URL}" \
+              || sudo curl -fL --retry 3 --connect-timeout 15 -o /tmp/voyant-app.tar.gz "${BUNDLE_URL}"
+            echo "${{ steps.pack.outputs.sha256 }}  /tmp/voyant-app.tar.gz" | sha256sum -c -
             # 清理旧依赖后铺上 CI 构建好的 node_modules 与 dist(同一 commit 的内容)
             sudo find /opt/voyant/app -maxdepth 3 -name node_modules -type d -prune -exec rm -rf {} +
             sudo tar -xzf /tmp/voyant-app.tar.gz -C /opt/voyant/app
