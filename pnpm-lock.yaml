@@ -5287,15 +5287,9 @@ importers:
       '@voyant-travel/auth-react':
         specifier: workspace:^
         version: link:../../packages/auth-react
-      '@voyant-travel/availability':
-        specifier: workspace:^
-        version: link:../../packages/availability
       '@voyant-travel/bookings-react':
         specifier: workspace:^
         version: link:../../packages/bookings-react
-      '@voyant-travel/catalog-authoring':
-        specifier: workspace:^
-        version: link:../../packages/catalog-authoring
       '@voyant-travel/catalog-react':
         specifier: workspace:^
         version: link:../../packages/catalog-react
@@ -5311,9 +5305,6 @@ importers:
       '@voyant-travel/cruises-react':
         specifier: workspace:^
         version: link:../../packages/cruises-react
-      '@voyant-travel/db':
-        specifier: workspace:^
-        version: link:../../packages/db
       '@voyant-travel/distribution-react':
         specifier: workspace:^
         version: link:../../packages/distribution-react
@@ -5332,9 +5323,6 @@ importers:
       '@voyant-travel/hono':
         specifier: workspace:^
         version: link:../../packages/hono
-      '@voyant-travel/identity':
-        specifier: workspace:^
-        version: link:../../packages/identity
       '@voyant-travel/inventory-react':
         specifier: workspace:^
         version: link:../../packages/inventory-react
@@ -5344,18 +5332,9 @@ importers:
       '@voyant-travel/mice-react':
         specifier: workspace:^
         version: link:../../packages/mice-react
-      '@voyant-travel/navigation-preferences':
-        specifier: workspace:^
-        version: link:../../packages/navigation-preferences
-      '@voyant-travel/operations':
-        specifier: workspace:^
-        version: link:../../packages/operations
       '@voyant-travel/operations-react':
         specifier: workspace:^
         version: link:../../packages/operations-react
-      '@voyant-travel/operator-settings':
-        specifier: workspace:^
-        version: link:../../packages/operator-settings
       '@voyant-travel/operator-standard':
         specifier: workspace:^
         version: link:../../packages/operator-standard
@@ -5371,9 +5350,6 @@ importers:
       '@voyant-travel/runtime':
         specifier: workspace:^
         version: link:../../packages/runtime
-      '@voyant-travel/setup':
-        specifier: workspace:^
-        version: link:../../packages/setup
       '@voyant-travel/storefront-react':
         specifier: workspace:^
         version: link:../../packages/storefront-react
@@ -5386,9 +5362,6 @@ importers:
       '@voyant-travel/utils':
         specifier: workspace:^
         version: link:../../packages/utils
-      '@voyant-travel/workflows-orchestrator':
-        specifier: workspace:^
-        version: link:../../packages/workflows-orchestrator
       better-auth:
         specifier: 1.6.23
         version: 1.6.23(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.0)(@tanstack/react-start@1.168.27(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.3)(rollup@4.60.2)(vite@8.1.3(@types/node@25.5.2)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.22.4)(yaml@2.8.3)))(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260702.1)(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.0)(@types/pg@8.20.0)(@upstash/redis@1.38.0)(kysely@0.29.2)(pg@8.22.0)(postgres@3.4.9))(mongodb@7.1.0(socks@2.8.7))(pg@8.22.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(solid-js@1.9.11)(vitest@4.1.9(@opentelemetry/api@1.9.0)(@types/node@25.5.2)(jsdom@29.1.1(@noble/hashes@2.2.0))(msw@2.12.14(@types/node@25.5.2)(typescript@6.0.3))(vite@8.1.3(@types/node@25.5.2)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.22.4)(yaml@2.8.3)))(vue@3.5.39(typescript@6.0.3))
