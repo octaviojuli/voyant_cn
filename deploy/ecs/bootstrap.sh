@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 # 零手工初始化 + 部署入口(root 执行;由 GitHub Actions SSH 调用,也可手动执行)。
 # 首次运行:自动完成 setup-server.sh、生成 .env(随机口令)、安装 systemd 与
-# Nginx,然后以 --seed-zh 做首次部署。服务器已初始化时直接转入常规部署,
-# 可安全重复执行。
+# Nginx,然后以 --seed-zh 做首次部署;全部完成后写入标记文件。之后的运行
+# 直接转入常规部署。所有步骤均有幂等守卫,可安全重复执行。
 # 用法: sudo APP_HOST=<公网IP或域名> bash deploy/ecs/bootstrap.sh
 set -euo pipefail
 
 APP_DIR=/opt/voyant/app
+MARKER=/opt/voyant/.bootstrap-done
 APP_HOST="${APP_HOST:-$(hostname -I | awk '{print $1}')}"
 
-first_run=false
-if ! id -u voyant &>/dev/null || [ ! -f "$APP_DIR/starters/operator/.env" ]; then
-  first_run=true
-  echo "==> 检测到未初始化服务器,开始自动初始化(APP_HOST=$APP_HOST)"
+if [ ! -f "$MARKER" ]; then
+  echo "==> 检测到未完成初始化的服务器,开始自动初始化(APP_HOST=$APP_HOST)"
   bash "$APP_DIR/deploy/ecs/setup-server.sh"
   chown -R voyant:voyant /opt/voyant
 
@@ -54,13 +53,25 @@ EOF
     # server_name 置为通配,绑定域名后再改回具体域名并配 certbot
     sed 's/server_name .*/server_name _;/' "$APP_DIR/deploy/ecs/nginx-voyant.conf" > /etc/nginx/conf.d/voyant.conf
     rm -f /etc/nginx/sites-enabled/default
-    nginx -t && systemctl reload nginx
   fi
-fi
+  # 部分 ECS 镜像预装 Apache 并占用 80 端口;若在运行则停用给 Nginx 让位
+  if systemctl is-active --quiet apache2 2>/dev/null; then
+    echo "==> 检测到 Apache 占用 80 端口,停用 apache2"
+    systemctl disable --now apache2 || true
+  fi
+  systemctl enable nginx || true
+  # Nginx 起不来(通常是 80 被其他程序占用)不阻断部署:应用仍监听 8080
+  if nginx -t && systemctl restart nginx; then
+    echo "==> Nginx 已启动"
+  else
+    echo "!! Nginx 启动失败,当前 80/443 端口占用情况:"
+    ss -tlnp | grep -E ':(80|443)\s' || true
+    echo "!! 跳过 Nginx,继续部署;可稍后处理端口冲突。"
+  fi
 
-if [ "$first_run" = true ]; then
   echo "==> 首次部署(--skip-pull --seed-zh)"
   sudo -iu voyant bash "$APP_DIR/deploy/ecs/deploy.sh" --skip-pull --seed-zh
+  touch "$MARKER"
 else
   sudo -iu voyant bash "$APP_DIR/deploy/ecs/deploy.sh"
 fi
