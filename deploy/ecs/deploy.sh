@@ -28,19 +28,19 @@ if [ "$SKIP_PULL" = false ]; then
   git reset --hard origin/main
 fi
 
-echo "==> 启动/确认 PostgreSQL"
+echo "[$(date +%H:%M:%S)] ==> 启动/确认 PostgreSQL"
 docker compose -f deploy/ecs/docker-compose.postgres.yml --env-file deploy/ecs/.env up -d
 until docker exec voyant-postgres pg_isready -U voyant -d voyant &>/dev/null; do sleep 2; done
 
-echo "==> 安装依赖(npmmirror)"
+echo "[$(date +%H:%M:%S)] ==> 安装依赖(npmmirror)"
 pnpm config set registry https://registry.npmmirror.com
 HUSKY=0 pnpm install --frozen-lockfile
 
-echo "==> 构建 operator 应用"
+echo "[$(date +%H:%M:%S)] ==> 构建 operator 应用"
 cd starters/operator
 NODE_OPTIONS="--import tsx --max-old-space-size=8192" npx voyant build
 
-echo "==> 执行数据库迁移"
+echo "[$(date +%H:%M:%S)] ==> 执行数据库迁移"
 NODE_OPTIONS="--import tsx" pnpm db:migrate
 
 if [ "$SEED_ZH" = true ]; then
@@ -52,7 +52,7 @@ if [ "$SEED_ZH" = true ]; then
   cd "$APP_DIR/starters/operator"
 fi
 
-echo "==> 重启服务并做健康检查"
+echo "[$(date +%H:%M:%S)] ==> 重启服务并做健康检查"
 sudo systemctl restart voyant-operator
 for i in $(seq 1 30); do
   if curl -sf -o /dev/null http://127.0.0.1:8080/healthz; then
