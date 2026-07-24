@@ -76,6 +76,11 @@ export function createSelectedOperatorSettingsAdminExtension(): AdminExtension {
             description: "Adauga numele si datele de contact folosite in documentele clientilor.",
             action: "Deschide setarile operatorului",
           },
+          zh: {
+            title: "企业资料",
+            description: "填写用于客户文书的企业名称与联系方式。",
+            action: "打开运营方设置",
+          },
         },
         prefill: parseOperatorProfileSetupPrefill,
         isComplete: hasBusinessProfile,

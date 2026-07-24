@@ -19,7 +19,7 @@ export function createSelectedStorefrontAdminExtension(): AdminExtension {
         id: "storefront",
         path: "/storefront",
         title: "Storefront",
-        label: "Storefront",
+        label: (messages) => messages.settings.storefront,
         icon: Paintbrush,
         group: "general",
         order: 25,

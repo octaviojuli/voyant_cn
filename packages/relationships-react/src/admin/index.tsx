@@ -263,7 +263,7 @@ export function createSelectedRelationshipsAdminExtension({
         id: "custom-fields",
         path: "/custom-fields",
         title: "Custom Fields",
-        label: "Custom fields",
+        label: (messages) => messages.settings.customFields,
         icon: SlidersHorizontal,
         group: "general",
         order: 75,
