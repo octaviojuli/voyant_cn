@@ -256,6 +256,9 @@ importers:
       '@voyant-travel/finance':
         specifier: workspace:^
         version: link:../../packages/finance
+      '@voyant-travel/flights':
+        specifier: workspace:^
+        version: link:../../packages/flights
       '@voyant-travel/identity':
         specifier: workspace:^
         version: link:../../packages/identity
