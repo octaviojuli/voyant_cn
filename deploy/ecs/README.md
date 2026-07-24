@@ -12,7 +12,16 @@
 - 能访问 npmmirror(依赖与 Node 走国内镜像,不依赖 GitHub 直连速度;
   代码拉取如遇 GitHub 不稳,见下文镜像说明)
 
-## 首次部署步骤
+## 零手工初始化(推荐)
+
+配好下文的 GitHub Secrets 后,首次 push `main` 时 `deploy-ecs.yml` 会检测
+空白服务器并自动执行 `bootstrap.sh`:克隆代码、运行 `setup-server.sh`、
+生成随机口令的 `.env`、安装 systemd 与 Nginx,然后以 `--seed-zh` 完成首次
+部署。整个过程无需登录服务器;下面的手动步骤仅在需要自定义时使用。
+自动生成的配置默认用服务器 IP 做访问地址,绑定域名后请更新
+`starters/operator/.env` 的 4 个 URL 项与 Nginx 的 `server_name`。
+
+## 首次部署步骤(手动方式)
 
 ```bash
 # 1. root 初始化(装 Node 24、pnpm、Docker、创建 voyant 用户、必要时加 swap)
