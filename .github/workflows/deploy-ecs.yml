@@ -42,5 +42,9 @@ jobs:
               sudo mkdir -p /opt/voyant
               sudo git clone https://github.com/${{ github.repository }}.git /opt/voyant/app \
                 || sudo git clone https://ghproxy.net/https://github.com/${{ github.repository }}.git /opt/voyant/app
+            else
+              # 先把部署脚本本身更新到最新 main,再执行(bootstrap 内部不拉代码)
+              sudo -iu voyant git -C /opt/voyant/app fetch origin main || true
+              sudo -iu voyant git -C /opt/voyant/app reset --hard origin/main || true
             fi
             sudo APP_HOST='${{ secrets.ECS_HOST }}' bash /opt/voyant/app/deploy/ecs/bootstrap.sh
