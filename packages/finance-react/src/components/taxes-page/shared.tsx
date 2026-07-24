@@ -367,6 +367,11 @@ export function formatRate(value: number | null) {
   return value == null ? "-" : `${value}%`
 }
 
+export function taxCodeLabel(messages: FinanceUiMessages, code: TaxRegimeCode | string) {
+  const labels: Partial<Record<string, string>> = messages.taxesPage.taxCodeLabels
+  return labels[code] ?? code
+}
+
 export function appliesToLabel(messages: FinanceUiMessages, appliesTo: TaxClassAppliesTo) {
   const taxMessages = messages.taxesPage
   switch (appliesTo) {
@@ -411,7 +416,7 @@ function summarizeConditionRow(
   if (condition.fact === "accommodationCountries") {
     return `${taxMessages.policyFactAccommodationCountries} ${taxMessages.policyOperatorContains} ${condition.value}`
   }
-  return "custom"
+  return taxMessages.customCondition
 }
 
 export function normalizeCondition(

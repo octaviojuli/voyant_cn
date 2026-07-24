@@ -37,6 +37,10 @@ export const adminTripsZhPart2: Pick<AdminTripsMessages["trips"], "storefrontCom
       tripNotesLabel: "行程备注",
       addToTrip: "添加到行程",
     },
+    defaults: {
+      componentTitle: "示例:上海 → 北京",
+      tripTitle: "组合行程",
+    },
     emptyTimeline: "暂无行程组件",
     componentFallback: "组件 {index}",
     componentTaxLine: "税费 {amount}",

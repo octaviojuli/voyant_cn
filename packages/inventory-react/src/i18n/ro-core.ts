@@ -103,6 +103,7 @@ export const productsUiCoreRo = {
       editItinerary: "Editeaza itinerarul",
       deleteItinerary: "Sterge itinerarul",
       addDay: "Adauga zi",
+      viewFullProduct: "Vezi produsul complet",
     },
     sections: {
       overview: {

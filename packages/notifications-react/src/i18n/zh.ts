@@ -352,6 +352,7 @@ export const notificationsUiZh: NotificationsUiMessages = {
       createTitle: "新建提醒规则",
       nameLabel: "名称",
       namePlaceholder: "付款 3 天后到期",
+      nameRequired: "名称为必填项",
       targetLabel: "目标",
       statusLabel: "状态",
       channelLabel: "发送方式",

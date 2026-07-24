@@ -359,6 +359,7 @@ export const notificationsUiEn: NotificationsUiMessages = {
       createTitle: "New Reminder Rule",
       nameLabel: "Name",
       namePlaceholder: "Payment due in 3 days",
+      nameRequired: "Name is required",
       targetLabel: "Target",
       statusLabel: "Status",
       channelLabel: "Channel",

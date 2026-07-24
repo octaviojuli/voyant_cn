@@ -195,6 +195,7 @@ export const adminTripsMessagesRoPart1 = {
       removeComponent: "Elimina componenta",
       removeTraveler: "Elimina calatorul",
       configureHint: "Configureaza, apoi adauga la calatorie.",
+      addToTrip: "Adauga la calatorie",
       loadingOptions: "Se incarca optiunile…",
       departureLabel: "Plecare",
       departuresUnavailable: "Plecarile nu sunt disponibile.",

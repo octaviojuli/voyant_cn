@@ -191,6 +191,7 @@ export const adminTripsZhPart1: Pick<
       removeComponent: "移除组件",
       removeTraveler: "移除出行人",
       configureHint: "配置完成后再添加到行程。",
+      addToTrip: "加入行程",
       loadingOptions: "选项加载中…",
       departureLabel: "班期",
       departuresUnavailable: "班期不可用。",

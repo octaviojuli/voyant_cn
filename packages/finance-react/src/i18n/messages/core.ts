@@ -55,6 +55,16 @@ export const paymentMethods = [
 ] as const
 
 export const supplierPaymentStatuses = ["pending", "completed", "failed", "refunded"] as const
+export const taxRegimeCodes = [
+  "standard",
+  "reduced",
+  "exempt",
+  "reverse_charge",
+  "margin_scheme_art311",
+  "zero_rated",
+  "out_of_scope",
+  "other",
+] as const
 export const invoiceNumberSeriesScopes = ["invoice", "proforma", "credit_note"] as const
 export const invoiceNumberResetStrategies = ["never", "annual", "monthly"] as const
 
@@ -64,6 +74,7 @@ export type PaymentMethod = (typeof paymentMethods)[number]
 export type SupplierPaymentMethod = (typeof supplierPaymentMethods)[number]
 export type SupplierPaymentStatus = SupplierPaymentRecord["status"]
 export type CreditNoteStatus = CreditNoteRecord["status"]
+export type TaxRegimeCodeOption = (typeof taxRegimeCodes)[number]
 
 export type TaxesPageMessageKey =
   | "title"
@@ -158,6 +169,7 @@ export type TaxesPageMessageKey =
   | "policyValueLabel"
   | "policyValueYes"
   | "policyValueNo"
+  | "customCondition"
   | "policyActionsLabel"
   | "policySideSell"
   | "policySideBuy"

@@ -35,6 +35,10 @@ export const adminTripsMessagesEnPart2 = {
       tripNotesLabel: "Trip notes",
       addToTrip: "Add to trip",
     },
+    defaults: {
+      componentTitle: "Example: Bucharest to Istanbul",
+      tripTitle: "Composed trip",
+    },
     emptyTimeline: "No trip components yet",
     componentFallback: "Component {index}",
     componentTaxLine: "tax {amount}",

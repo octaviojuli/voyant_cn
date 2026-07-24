@@ -363,6 +363,7 @@ export const notificationsUiRo: NotificationsUiMessages = {
       createTitle: "Regulă de reamintire nouă",
       nameLabel: "Nume",
       namePlaceholder: "Plată scadentă în 3 zile",
+      nameRequired: "Numele este obligatoriu",
       targetLabel: "Țintă",
       statusLabel: "Stare",
       channelLabel: "Canal",

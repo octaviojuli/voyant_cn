@@ -103,6 +103,7 @@ export const productsUiCoreEn = {
       editItinerary: "Edit itinerary",
       deleteItinerary: "Delete itinerary",
       addDay: "Add day",
+      viewFullProduct: "View full product",
     },
     sections: {
       overview: {

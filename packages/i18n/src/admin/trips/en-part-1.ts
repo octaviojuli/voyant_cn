@@ -193,6 +193,7 @@ export const adminTripsMessagesEnPart1 = {
       removeComponent: "Remove component",
       removeTraveler: "Remove traveler",
       configureHint: "Configure, then add to the trip.",
+      addToTrip: "Add to trip",
       loadingOptions: "Loading options…",
       departureLabel: "Departure",
       departuresUnavailable: "Departures unavailable.",

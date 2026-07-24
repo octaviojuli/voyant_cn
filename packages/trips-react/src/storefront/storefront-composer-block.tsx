@@ -76,6 +76,10 @@ export interface StorefrontComposerMessages {
     tripNotesLabel: string
     addToTrip: string
   }
+  defaults: {
+    componentTitle: string
+    tripTitle: string
+  }
   emptyTimeline: string
   componentFallback: string
   componentTaxLine: string
@@ -195,7 +199,7 @@ export function StorefrontComposerBlock({
     error: null,
   })
   const [template, setTemplate] = useState<ComponentTemplate>("product")
-  const [componentTitle, setComponentTitle] = useState("Bucharest to Istanbul")
+  const [componentTitle, setComponentTitle] = useState(t.defaults.componentTitle)
   const [entityId, setEntityId] = useState("")
   const [sourceKind, setSourceKind] = useState("owned")
   const [manualAmount, setManualAmount] = useState("95")
@@ -215,8 +219,7 @@ export function StorefrontComposerBlock({
   const createMutation = useMutation({
     mutationFn: () =>
       createTrip(client, {
-        // i18n-literal-ok: trip title persisted on the envelope, not user-displayed here.
-        title: "Composed trip",
+        title: t.defaults.tripTitle,
         description: notes,
         travelerParty: referenceTravelerParty,
         constraints: { channel: "storefront-reference" },
@@ -230,8 +233,7 @@ export function StorefrontComposerBlock({
       const trip =
         state.trip ??
         (await createTrip(client, {
-          // i18n-literal-ok
-          title: "Composed trip",
+          title: t.defaults.tripTitle,
           travelerParty: referenceTravelerParty,
           constraints: { channel: "storefront-reference" },
         }))

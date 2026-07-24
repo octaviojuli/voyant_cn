@@ -349,6 +349,7 @@ export type NotificationsUiMessages = {
       createTitle: string
       nameLabel: string
       namePlaceholder: string
+      nameRequired: string
       targetLabel: string
       statusLabel: string
       channelLabel: string
