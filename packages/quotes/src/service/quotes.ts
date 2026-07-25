@@ -61,10 +61,19 @@ export const quotesService = {
     return row ?? null
   },
 
-  async createQuote(db: PostgresJsDatabase, data: CreateQuoteInput, actorId?: string | null) {
+  async createQuote(
+    db: PostgresJsDatabase,
+    data: CreateQuoteInput,
+    actorId?: string | null,
+    runtime: QuotesRouteRuntime = {},
+  ) {
+    // Default the headline currency from the deployment (default market) when
+    // the caller did not pick one explicitly — an explicit value always wins.
+    const valueCurrency =
+      data.valueCurrency ?? (await runtime.resolveDefaultQuoteCurrency?.(db)) ?? null
     const [row] = await db
       .insert(quotes)
-      .values({ ...data, createdBy: actorId ?? null, updatedBy: actorId ?? null })
+      .values({ ...data, valueCurrency, createdBy: actorId ?? null, updatedBy: actorId ?? null })
       .returning()
     return row
   },

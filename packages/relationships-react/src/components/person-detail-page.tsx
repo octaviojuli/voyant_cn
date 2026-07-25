@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@voyant-travel/ui/components/tabs"
 import { ArrowLeft, GitMerge, Loader2, Pencil } from "lucide-react"
 import { type ReactNode, useEffect, useState } from "react"
-import { useCrmUiMessagesOrDefault } from "../i18n/index.js"
+import { useCrmUiI18nOrDefault, useCrmUiMessagesOrDefault } from "../i18n/index.js"
 import type { UpdatePersonInput } from "../index.js"
 import {
   useActivities,
@@ -74,7 +74,7 @@ export function PersonDetailPage({
   onPersonOpen,
   slots,
 }: PersonDetailPageProps) {
-  const messages = useCrmUiMessagesOrDefault()
+  const { locale, messages } = useCrmUiI18nOrDefault()
   const [activeTab, setActiveTab] = useState<PersonDetailTab>("overview")
   const [editOpen, setEditOpen] = useState(false)
   const [mergeOpen, setMergeOpen] = useState(false)
@@ -162,7 +162,7 @@ export function PersonDetailPage({
   const paymentMethods = paymentMethodsQuery.data?.data ?? []
   const communications = communicationsQuery.data?.data ?? []
   const organization = organizationQuery.data ?? null
-  const displayName = personDisplayName(person, messages.personCard.unnamed)
+  const displayName = personDisplayName(person, messages.personCard.unnamed, locale)
 
   return (
     <div data-slot="person-detail-page" className={cn("flex min-h-screen flex-col", className)}>

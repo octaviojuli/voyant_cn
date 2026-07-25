@@ -61,6 +61,7 @@ import {
 } from "@voyant-travel/inventory/schema"
 import { availabilitySlots, availabilityStartTimes } from "@voyant-travel/operations"
 import { bookingQuoteDetails } from "@voyant-travel/quotes/booking-extension"
+import { pipelines, quotes, stages } from "@voyant-travel/quotes/schema"
 import { organizations, people } from "@voyant-travel/relationships/schema"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/postgres-js"
@@ -77,6 +78,7 @@ import {
   ZH_MARKET,
   ZH_ORG,
   ZH_PEOPLE,
+  ZH_PIPELINE_L10N,
   ZH_PRICE_CATALOG,
   ZH_PRODUCTS,
   ZH_SUPPLIER,
@@ -387,6 +389,39 @@ async function seedCnCrm(
   return { orgId, personIds }
 }
 
+// ---------- 3b. 销售管道本地化(基础种子英文管道 → 中文) ----------
+// 只改展示文案(管道名/阶段名/演示报价标题),按英文原名匹配;已改过或
+// 用户自行改名的记录匹配不到就跳过,幂等且不会覆盖人工修改。
+
+async function localizeQuotePipeline(db: Db): Promise<number> {
+  console.log("→ localizing base quote pipeline to Chinese…")
+  let touched = 0
+  const { pipeline, stages: stageNames, quoteTitles } = ZH_PIPELINE_L10N
+  const [pipelineRow] = await db
+    .update(pipelines)
+    .set({ name: pipeline.to })
+    .where(eq(pipelines.name, pipeline.from))
+    .returning({ id: pipelines.id })
+  if (pipelineRow) touched++
+  for (const s of stageNames) {
+    const rows = await db
+      .update(stages)
+      .set({ name: s.to })
+      .where(eq(stages.name, s.from))
+      .returning({ id: stages.id })
+    touched += rows.length
+  }
+  for (const q of quoteTitles) {
+    const rows = await db
+      .update(quotes)
+      .set({ title: q.to })
+      .where(eq(quotes.title, q.from))
+      .returning({ id: quotes.id })
+    touched += rows.length
+  }
+  return touched
+}
+
 // ---------- 4. Bookings (已确认 + 预留中) ----------
 
 async function seedCnBookings(
@@ -536,6 +571,7 @@ async function main() {
     const productIds = await seedCnProducts(db, { ownerUserId, taxClassId, supplierId })
     const cruiseId = await seedCnCruise(db, { supplierId })
     const { orgId, personIds } = await seedCnCrm(db, { ownerUserId })
+    const pipelineTouched = await localizeQuotePipeline(db)
     const bookingIds = await seedCnBookings(db, { ownerUserId, orgId, personIds, productIds })
     const templates = await seedZhCnTemplates(db, {})
 
@@ -547,6 +583,7 @@ async function main() {
         (p, i) => `产品:${p.name}(30 天班期 · 成人/儿童 CNY 价目)→ ${productIds[i]}`,
       ),
       `邮轮:${ZH_CRUISE.cruise.name}(${ZH_CRUISE.ship.name} · ${ZH_CRUISE.sailingOffsets.length} 个班期)→ ${cruiseId}`,
+      `销售管道:${ZH_PIPELINE_L10N.pipeline.to}(含阶段/演示报价改中文,更新 ${pipelineTouched} 条)`,
       `组织:${ZH_ORG.name} → ${orgId}`,
       ...ZH_PEOPLE.map((person, i) => `联系人:${person.fullName} → ${personIds[i]}`),
       ...ZH_BOOKINGS.map(

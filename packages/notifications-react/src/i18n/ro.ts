@@ -196,6 +196,11 @@ export const notificationsUiRo: NotificationsUiMessages = {
       searchPlaceholder: "Caută șabloane...",
       empty:
         "Niciun șablon de notificare încă. Creează unul pentru a trimite emailuri și SMS-uri personalizate.",
+      columnTemplate: "Șablon",
+      columnChannel: "Canal",
+      columnStatus: "Status",
+      columnUpdated: "Actualizat",
+      columnActions: "Acțiuni",
     },
     templateDialog: {
       editTitle: "Editează șablonul de notificare",

@@ -19,6 +19,7 @@ describe("Operator project config", () => {
     expect(config).not.toHaveProperty("presetLineage")
     expect(config.deployment?.migrations).toBeUndefined()
     expect(config.access?.presets?.map((preset) => preset.id)).toEqual([
+      "admin",
       "agent-customer",
       "agent-staff",
       "automation",
@@ -26,6 +27,7 @@ describe("Operator project config", () => {
       "commerce-read",
       "editor",
       "full-access",
+      "owner",
       "public-catalog-reader",
       "read-only",
     ])

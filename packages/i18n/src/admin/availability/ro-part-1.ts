@@ -11,6 +11,12 @@ export const adminAvailabilityMessagesRoPart1 = {
   verbDeactivated: "Dezactivate",
   tabSlots: "Listă",
   bulkStatusPlaceholder: "Schimbă statusul",
+  pagination: {
+    showing: "Afisare {start}-{end} din {total}",
+    page: "Pagina {page} / {pageCount}",
+    previous: "Anterior",
+    next: "Urmator",
+  },
   tabRules: "Reguli",
   tabStartTimes: "Ore de plecare",
   tabCloseouts: "Closeout-uri",

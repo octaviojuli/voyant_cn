@@ -192,6 +192,11 @@ export const notificationsUiEn: NotificationsUiMessages = {
       searchPlaceholder: "Search templates...",
       empty:
         "No notification templates yet. Create one to start sending branded emails and SMS messages.",
+      columnTemplate: "Template",
+      columnChannel: "Channel",
+      columnStatus: "Status",
+      columnUpdated: "Updated",
+      columnActions: "Actions",
     },
     templateDialog: {
       editTitle: "Edit Notification Template",

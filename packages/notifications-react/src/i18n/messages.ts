@@ -187,6 +187,11 @@ export type NotificationsUiMessages = {
       newTemplate: string
       searchPlaceholder: string
       empty: string
+      columnTemplate: string
+      columnChannel: string
+      columnStatus: string
+      columnUpdated: string
+      columnActions: string
     }
     templateDialog: {
       editTitle: string

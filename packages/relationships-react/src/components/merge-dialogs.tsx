@@ -13,7 +13,7 @@ import {
 import { Alert, AlertDescription } from "@voyant-travel/ui/components/alert"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
-import { useCrmUiMessagesOrDefault } from "../i18n/index.js"
+import { useCrmUiI18nOrDefault, useCrmUiMessagesOrDefault } from "../i18n/index.js"
 import type { OrganizationRecord, PersonRecord } from "../index.js"
 import { useOrganizationMutation, usePersonMutation } from "../index.js"
 import { OrganizationCombobox } from "./organization-combobox.js"
@@ -32,7 +32,7 @@ export function PersonMergeDialog({
   keepPerson,
   onMerged,
 }: PersonMergeDialogProps) {
-  const messages = useCrmUiMessagesOrDefault()
+  const { formatPersonName, messages } = useCrmUiI18nOrDefault()
   const dialogMessages = messages.personDetail.mergeDialog
   const { merge } = usePersonMutation()
   const [mergeId, setMergeId] = useState<string | null>(null)
@@ -197,11 +197,4 @@ export function OrganizationMergeDialog({
       </DialogContent>
     </Dialog>
   )
-}
-
-function formatPersonName(person: Pick<PersonRecord, "firstName" | "lastName">) {
-  return [person.firstName, person.lastName]
-    .map((part) => part?.trim())
-    .filter(Boolean)
-    .join(" ")
 }

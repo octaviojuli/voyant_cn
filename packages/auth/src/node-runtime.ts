@@ -24,7 +24,7 @@ import {
 } from "@voyant-travel/hono/middleware/error-boundary"
 import { getRequestId } from "@voyant-travel/hono/observability"
 import type { AccessCatalog } from "@voyant-travel/types/api-keys"
-import { scopesForRole } from "@voyant-travel/types/member-roles"
+import { scopesForRoleWithPresets } from "@voyant-travel/types/member-roles"
 import { eq, sql } from "drizzle-orm"
 import { type Context, Hono } from "hono"
 import {
@@ -397,19 +397,7 @@ export function createOperatorAuthNodeRuntime<Env extends OperatorAuthNodeEnv>(
   const FULL_ACCESS_SCOPES = ["*"]
 
   function scopesForOperatorRole(role: string | null | undefined): string[] | null {
-    const base = scopesForRole(role)
-    if (!base) return null
-    const normalizedRole = (role ?? "").trim().toLowerCase()
-    const presetId =
-      normalizedRole === "member"
-        ? "editor"
-        : normalizedRole === "guest"
-          ? "viewer"
-          : normalizedRole
-    const selected = runtimeOptions.accessCatalog.presets.find(
-      (preset) => preset.kind === "staff" && preset.id === presetId,
-    )
-    return [...new Set([...base, ...(selected?.grants ?? [])])].sort()
+    return scopesForRoleWithPresets(role, runtimeOptions.accessCatalog.presets)
   }
 
   /**
@@ -421,8 +409,12 @@ export function createOperatorAuthNodeRuntime<Env extends OperatorAuthNodeEnv>(
    * (Phase 3).
    *  - voyant-cloud: assertion-mirrored `cloud_auth_user_links.scopes` if the
    *    platform sent them, else the role bundle for `roleSlug`, else full access.
-   *  - local: the member's `user_profiles.permissions` if assigned, else full
-   *    access (no local role concept yet).
+   *  - local: an explicitly assigned non-wildcard `user_profiles.permissions`
+   *    set verbatim; otherwise the member is a full-access owner/admin (the
+   *    local role model, see `resolveLocalRole` in the local team adapter), so
+   *    the role bundle is unioned with the project's staff access presets.
+   *    That union is what carries explicit-wildcard scopes (e.g.
+   *    `action-ledger:read`) that the `*` scope can never satisfy.
    */
   async function resolveMemberScopes(db: VoyantDb, env: Env, userId: string): Promise<string[]> {
     if (isVoyantCloudAuthMode(env)) {
@@ -435,11 +427,18 @@ export function createOperatorAuthNodeRuntime<Env extends OperatorAuthNodeEnv>(
     }
 
     const [profile] = await db
-      .select({ permissions: userProfilesTable.permissions })
+      .select({
+        permissions: userProfilesTable.permissions,
+        isSuperAdmin: userProfilesTable.isSuperAdmin,
+      })
       .from(userProfilesTable)
       .where(eq(userProfilesTable.id, userId))
       .limit(1)
-    return profile?.permissions ?? FULL_ACCESS_SCOPES
+    const stored = profile?.permissions
+    if (stored && !stored.includes("*")) return stored
+    const roleScopes =
+      scopesForOperatorRole(profile?.isSuperAdmin ? "owner" : "admin") ?? FULL_ACCESS_SCOPES
+    return stored ? [...new Set([...stored, ...roleScopes])].sort() : roleScopes
   }
 
   async function resolveAuthRequest(

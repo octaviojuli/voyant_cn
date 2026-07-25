@@ -1,5 +1,6 @@
 "use client"
 
+import { formatPersonName as formatLocalePersonName } from "@voyant-travel/i18n"
 import { Badge } from "@voyant-travel/ui/components/badge"
 import { Button } from "@voyant-travel/ui/components/button"
 import {
@@ -23,7 +24,7 @@ import {
 import { Switch } from "@voyant-travel/ui/components/switch"
 import { Loader2, Pencil, Plus, Trash2, Users, X } from "lucide-react"
 import * as React from "react"
-import { useCrmUiMessagesOrDefault } from "../i18n/index.js"
+import { useCrmUiI18nOrDefault, useCrmUiMessagesOrDefault } from "../i18n/index.js"
 import {
   type PersonRecord,
   type PersonRelationshipKind,
@@ -298,14 +299,15 @@ export function PersonRelationshipsSection({ personId }: PersonRelationshipsSect
 }
 
 function RelatedPersonLabel({ personId }: { personId: string }) {
+  const { locale } = useCrmUiI18nOrDefault()
   const query = usePerson(personId, { enabled: Boolean(personId) })
-  const name = formatPersonName(query.data)
+  const name = formatPersonName(query.data, locale)
   return <span className="truncate text-sm">{name || personId}</span>
 }
 
-function formatPersonName(person: PersonRecord | undefined): string {
+function formatPersonName(person: PersonRecord | undefined, locale?: string | null): string {
   if (!person) return ""
-  return [person.firstName, person.lastName].filter(Boolean).join(" ").trim()
+  return formatLocalePersonName(locale, person)
 }
 
 function RelationshipInlineForm({
@@ -323,7 +325,7 @@ function RelationshipInlineForm({
   onCancel: () => void
   onSubmit: (draft: DraftState) => Promise<void>
 }) {
-  const messages = useCrmUiMessagesOrDefault()
+  const { locale, messages } = useCrmUiI18nOrDefault()
   const labels = messages.personForm.relationships
   const kindLabels = messages.personDetail.relationshipKindLabels
   const [draft, setDraft] = React.useState<DraftState>(initial)
@@ -355,9 +357,9 @@ function RelationshipInlineForm({
   // search input was the partial query.
   React.useEffect(() => {
     if (selectedPersonQuery.data) {
-      setInputValue(formatPersonName(selectedPersonQuery.data))
+      setInputValue(formatPersonName(selectedPersonQuery.data, locale))
     }
-  }, [selectedPersonQuery.data])
+  }, [selectedPersonQuery.data, locale])
 
   const submit = async () => {
     try {
@@ -374,7 +376,10 @@ function RelationshipInlineForm({
         <div className="space-y-1.5">
           <Label className="text-xs">{labels.personLabel}</Label>
           {lockPerson ? (
-            <Input value={formatPersonName(selectedPersonQuery.data) || inputValue} disabled />
+            <Input
+              value={formatPersonName(selectedPersonQuery.data, locale) || inputValue}
+              disabled
+            />
           ) : (
             <Combobox
               items={people.map((p) => p.id)}
@@ -382,7 +387,7 @@ function RelationshipInlineForm({
               inputValue={inputValue}
               autoHighlight
               itemToStringLabel={(id) =>
-                formatPersonName(peopleMap.get(id as string)) || (id as string)
+                formatPersonName(peopleMap.get(id as string), locale) || (id as string)
               }
               itemToStringValue={(id) => id as string}
               onInputValueChange={(next) => {
@@ -393,7 +398,7 @@ function RelationshipInlineForm({
               onValueChange={(next) => {
                 const id = (next as string | null) ?? null
                 setDraft((prev) => ({ ...prev, toPersonId: id }))
-                setInputValue(id ? formatPersonName(peopleMap.get(id)) : "")
+                setInputValue(id ? formatPersonName(peopleMap.get(id), locale) : "")
               }}
             >
               <ComboboxInput
@@ -410,7 +415,9 @@ function RelationshipInlineForm({
                       return (
                         <ComboboxItem key={p.id} value={p.id}>
                           <div className="flex min-w-0 flex-col">
-                            <span className="truncate font-medium">{formatPersonName(p)}</span>
+                            <span className="truncate font-medium">
+                              {formatPersonName(p, locale)}
+                            </span>
                             {p.email ? (
                               <span className="truncate text-xs text-muted-foreground">
                                 {p.email}

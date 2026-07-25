@@ -283,6 +283,7 @@ export function AssignmentsTab(props: {
         data={props.filteredAssignments}
         emptyMessage={section.emptyMessage}
         enableRowSelection
+        paginationMessages={i18n.messages.common.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.assignmentSelection}
         onRowSelectionChange={props.setAssignmentSelection}
@@ -410,6 +411,7 @@ export function CloseoutsTab(props: {
         data={props.filteredCloseouts}
         emptyMessage={section.emptyMessage}
         enableRowSelection
+        paginationMessages={i18n.messages.common.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.closeoutSelection}
         onRowSelectionChange={props.setCloseoutSelection}

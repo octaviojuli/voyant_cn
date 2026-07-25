@@ -13,7 +13,7 @@ import {
 } from "@voyant-travel/ui/components"
 import { Loader2, Pencil, Plus, Search } from "lucide-react"
 import { lazy, Suspense, useState } from "react"
-import { useNotificationsUiMessagesOrDefault } from "../i18n/index.js"
+import { useNotificationsUiI18nOrDefault } from "../i18n/index.js"
 import {
   type NotificationTemplateRecord,
   type UseNotificationTemplatesOptions,
@@ -38,7 +38,7 @@ const NotificationTemplateDialog = lazy(() =>
  * dialog stays lazily loaded inside the package.
  */
 export function NotificationTemplatesHost() {
-  const messages = useNotificationsUiMessagesOrDefault()
+  const { formatDateTime, messages } = useNotificationsUiI18nOrDefault()
   const t = messages.admin.templatesPage
   const common = messages.admin.common
   const [search, setSearch] = useState("")
@@ -122,11 +122,11 @@ export function NotificationTemplatesHost() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
-                <th className="px-4 py-3">Template</th>
-                <th className="px-4 py-3">Channel</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Updated</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <th className="px-4 py-3">{t.columnTemplate}</th>
+                <th className="px-4 py-3">{t.columnChannel}</th>
+                <th className="px-4 py-3">{t.columnStatus}</th>
+                <th className="px-4 py-3">{t.columnUpdated}</th>
+                <th className="px-4 py-3 text-right">{t.columnActions}</th>
               </tr>
             </thead>
             <tbody>
@@ -147,14 +147,26 @@ export function NotificationTemplatesHost() {
                     </DestinationLink>
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant="outline">{template.channel}</Badge>
+                    <Badge variant="outline">
+                      {template.channel === "email"
+                        ? common.channelEmail
+                        : template.channel === "sms"
+                          ? common.channelSms
+                          : template.channel}
+                    </Badge>
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={template.status === "active" ? "default" : "secondary"}>
-                      {template.status}
+                      {template.status === "active"
+                        ? common.statusActive
+                        : template.status === "draft"
+                          ? common.statusDraft
+                          : template.status === "archived"
+                            ? common.statusArchived
+                            : template.status}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3">{new Date(template.updatedAt).toLocaleString()}</td>
+                  <td className="px-4 py-3">{formatDateTime(template.updatedAt)}</td>
                   <td className="px-4 py-3 text-right">
                     <Button
                       variant="ghost"

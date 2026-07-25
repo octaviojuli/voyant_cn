@@ -1,3 +1,4 @@
+import { actionLedgerVoyantModule } from "@voyant-travel/action-ledger/voyant"
 import { bookingsVoyantModule } from "@voyant-travel/bookings/voyant"
 import { financeVoyantModule } from "@voyant-travel/finance/voyant"
 import navigationPreferencesVoyantModule from "@voyant-travel/navigation-preferences/voyant"
@@ -92,6 +93,51 @@ describe("standard package manifests", () => {
         "suppliers:read",
       ]),
     })
+  })
+
+  it("grants the explicit-wildcard action-ledger scopes to the owner/admin staff roles", () => {
+    // The action-ledger resource opts out of `*` wildcard grants
+    // (`wildcard: "explicit-resource"` + explicit actions), so the admin Logs
+    // page (`/action-ledger`, requiredScopes `action-ledger:read`) is only
+    // reachable through a deliberate per-role staff preset grant. Without
+    // these presets even the owner's full-access session is denied (403).
+    const resource = actionLedgerVoyantModule.access?.resources?.find(
+      (candidate) => candidate.resource === "action-ledger",
+    )
+    expect(resource?.wildcard).toBe("explicit-resource")
+    const declaredScopes = (resource?.actions ?? []).map(
+      (action) => `action-ledger:${typeof action === "string" ? action : action.action}`,
+    )
+
+    const owner = STANDARD_OPERATOR_ACCESS.presets.find(({ id }) => id === "owner")
+    expect(owner).toMatchObject({ kind: "staff" })
+    expect(owner?.grants).toEqual([
+      "action-ledger:approve",
+      "action-ledger:read",
+      "action-ledger:write",
+    ])
+
+    const admin = STANDARD_OPERATOR_ACCESS.presets.find(({ id }) => id === "admin")
+    expect(admin).toMatchObject({ kind: "staff" })
+    expect(admin?.grants).toContain("action-ledger:read")
+
+    // Every granted scope must exist on the package-owned resource so the
+    // graph resolver accepts the preset (undeclared grants are graph errors).
+    for (const preset of [owner, admin]) {
+      for (const grant of preset?.grants ?? []) {
+        expect(declaredScopes).toContain(grant)
+      }
+    }
+
+    // The admin route's declared requirement stays covered by both roles.
+    const adminRoute = actionLedgerVoyantModule.admin?.routes?.find(
+      ({ path }) => path === "/action-ledger",
+    )
+    for (const scope of adminRoute?.requiredScopes ?? []) {
+      expect(owner?.grants).toContain(scope)
+      expect(admin?.grants).toContain(scope)
+    }
+    expect(adminRoute?.requiredScopes).toEqual(["action-ledger:read"])
   })
 
   it("requires navigation preferences in the standard operator graph", () => {

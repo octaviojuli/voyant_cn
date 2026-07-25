@@ -102,6 +102,7 @@ export {
   dashboardQueryKeys,
   type FinanceAggregates,
   formatCurrency,
+  formatCurrencyAxisTick,
   getDashboardBookingsAggregatesQueryOptions,
   getDashboardFinanceAggregatesQueryOptions,
   getDashboardProductsAggregatesQueryOptions,

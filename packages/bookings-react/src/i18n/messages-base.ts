@@ -96,6 +96,8 @@ export type BookingsUiBaseMessages = {
     recordPaymentAction: string
     noValue: string
     tbd: string
+    /** Header traveler-count chip. `{count}` interpolates the booking pax. */
+    headerPax: string
     summaryTotal: string
     summaryPaid: string
     summaryPriceOverride: string

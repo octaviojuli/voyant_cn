@@ -34,6 +34,12 @@ export interface AvailabilityTabMessages extends AvailabilityColumnsMessages {
   verbActivated: string
   verbDeactivated: string
   bulkStatusPlaceholder: string
+  pagination: {
+    showing: string
+    page: string
+    previous: string
+    next: string
+  }
 }
 
 export interface AvailabilityBaseTabMessages {

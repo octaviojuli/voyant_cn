@@ -110,6 +110,13 @@ export type CatalogUiMessages = {
       previous: string
       next: string
       page: string
+      /**
+       * Friendly degradation copy shown when the deployment has no search
+       * indexer configured (the search route answers 503). Replaces the raw
+       * server error so browse fails softly instead of showing a fault.
+       */
+      indexerUnavailableTitle: string
+      indexerUnavailableBody: string
     }
     filtersUi: {
       min: string
@@ -318,9 +325,30 @@ export type CatalogUiMessages = {
       notFound: string
       loadError: string
       about: string
+      aboutCruise: string
       cabins: string
       itinerary: string
       ship: string
+      /** Ship type labels keyed by normalized content value. */
+      shipTypeLabels: {
+        ocean: string
+        river: string
+        expedition: string
+        yacht: string
+        sailing: string
+        coastal: string
+      }
+      /** Cabin type/view labels keyed by normalized content value. */
+      cabinTypeLabels: {
+        inside: string
+        oceanview: string
+        balcony: string
+        suite: string
+        penthouse: string
+        single: string
+      }
+      /** `{value}` placeholder for cabin area in square feet. */
+      squareFeet: string
       day: string
       atSea: string
       capacity: string

@@ -190,6 +190,11 @@ export const notificationsUiZh: NotificationsUiMessages = {
       newTemplate: "新建模板",
       searchPlaceholder: "搜索模板…",
       empty: "暂无通知模板。创建一个以开始发送品牌化的邮件与短信。",
+      columnTemplate: "模板",
+      columnChannel: "发送方式",
+      columnStatus: "状态",
+      columnUpdated: "更新时间",
+      columnActions: "操作",
     },
     templateDialog: {
       editTitle: "编辑通知模板",

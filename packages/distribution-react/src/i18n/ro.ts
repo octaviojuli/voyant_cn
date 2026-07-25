@@ -36,6 +36,12 @@ export const distributionUiRo = {
     selectionSummary: "{count} selectate",
     resultSummary: "{verb} {countLabel}.",
     deleteSummary: "S-au sters {countLabel}.",
+    pagination: {
+      showing: "Afisare {start}-{end} din {total}",
+      page: "Pagina {page} / {pageCount}",
+      previous: "Anterior",
+      next: "Urmator",
+    },
     entities: {
       channel: { one: "canal", other: "canale" },
       contract: { one: "contract", other: "contracte" },

@@ -178,6 +178,7 @@ export const defaultAdminHostNavMessages = {
   contractNumberSeries: "Number Series",
   contractTemplates: "Contract Templates",
   contracts: "Contracts",
+  eventCatalog: "Event catalog",
   flights: "Flights",
   invoiceNumberSeries: "Number Series",
   invoices: "Invoices",

@@ -52,5 +52,7 @@ export const operatorAdminNavZh: { nav: OperatorAdminNavMessages } = {
     quotes: "报价",
     mice: "会奖项目",
     actionLedger: "日志",
+    eventCatalog: "事件目录",
+    setup: "初始设置",
   },
 }

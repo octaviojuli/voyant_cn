@@ -24,7 +24,7 @@ import {
 } from "@voyant-travel/ui/components/table"
 import { ArrowDown, ArrowUp, ArrowUpDown, ListFilter, Plus, Search, X } from "lucide-react"
 import * as React from "react"
-import { useCrmUiMessagesOrDefault } from "../i18n/index.js"
+import { useCrmUiI18nOrDefault } from "../i18n/index.js"
 import type { CrmRecordStatus, CrmRelationType } from "../i18n/messages.js"
 import { crmRecordStatuses, crmRelationTypes } from "../i18n/messages.js"
 import {
@@ -60,7 +60,7 @@ const SORTABLE_COLUMNS = {
  * Paginated list of people with search + filters + create/edit dialog.
  */
 export function PersonList({ pageSize = 25, onSelectPerson }: PersonListProps = {}) {
-  const messages = useCrmUiMessagesOrDefault()
+  const { formatPersonName, messages } = useCrmUiI18nOrDefault()
   const [search, setSearch] = React.useState("")
   const [relation, setRelation] = React.useState<string>(RELATION_ALL)
   const [status, setStatus] = React.useState<string>(STATUS_ALL)
@@ -335,9 +335,7 @@ export function PersonList({ pageSize = 25, onSelectPerson }: PersonListProps = 
               </TableRow>
             ) : (
               people.map((person) => {
-                const fullName =
-                  [person.firstName, person.lastName].filter(Boolean).join(" ") ||
-                  messages.common.none
+                const fullName = formatPersonName(person) || messages.common.none
                 return (
                   <TableRow
                     key={person.id}

@@ -4,11 +4,16 @@ import type {
   QuoteProposalRoutesOptions,
   QuoteVersionSnapshotRoutesOptions,
 } from "./proposal-routes.js"
-import type { ResolveQuoteParticipantPersonById } from "./route-runtime.js"
+import type {
+  ResolveDefaultQuoteCurrency,
+  ResolveQuoteParticipantPersonById,
+} from "./route-runtime.js"
 
 /** Node-host behavior required by the package-owned Quotes module factory. */
 export interface QuotesRuntime {
   resolveParticipantPersonById: ResolveQuoteParticipantPersonById
+  /** Optional: default currency for quotes created without a `valueCurrency`. */
+  resolveDefaultQuoteCurrency?: ResolveDefaultQuoteCurrency
 }
 
 /** Deployment behavior required by the proposal extension. */

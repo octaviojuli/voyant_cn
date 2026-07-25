@@ -15,16 +15,24 @@ export function formatCrmMoney(
   i18n: CrmUiI18n,
   cents: number | null | undefined,
   currency: string | null | undefined,
+  /**
+   * Used when the record carries no currency of its own — pass the
+   * deployment's default-market currency (see `useDefaultCrmCurrency` in
+   * `admin/`). Only when that is also unavailable does the formatter fall
+   * back to USD, since `Intl` cannot format a currency without a code.
+   */
+  fallbackCurrency?: string | null,
 ): string {
   if (cents == null) return i18n.messages.common.none
   const amount = cents / 100
+  const resolvedCurrency = currency ?? fallbackCurrency ?? null
   try {
     return i18n.formatNumber(amount, {
       style: "currency",
-      currency: currency ?? "USD",
+      currency: resolvedCurrency ?? "USD",
     })
   } catch {
-    return `${amount.toFixed(2)} ${currency ?? ""}`.trim()
+    return `${amount.toFixed(2)} ${resolvedCurrency ?? ""}`.trim()
   }
 }
 

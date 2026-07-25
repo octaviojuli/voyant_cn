@@ -5,6 +5,12 @@ export const identityUiRo = {
     cancel: "Anuleaza",
     saveChanges: "Salveaza Modificarile",
     primary: "Principal",
+    pagination: {
+      showing: "Afisare {start}-{end} din {total}",
+      page: "Pagina {page} / {pageCount}",
+      previous: "Anterior",
+      next: "Urmator",
+    },
     addressLabelLabels: {
       primary: "Principal",
       billing: "Facturare",

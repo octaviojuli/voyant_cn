@@ -259,6 +259,22 @@ function CruiseDetailBody({
   )
 }
 
+/**
+ * Resolve a localized label for a free-form content type value (e.g.
+ * `"river"` → `t.shipTypeRiver`, `"balcony"` → `t.cabinTypeBalcony`),
+ * falling back to the raw content value for unknown types.
+ */
+function localizedContentTypeLabel(
+  t: Record<string, string>,
+  prefix: "shipType" | "cabinType",
+  value: string,
+): string {
+  const normalized = value.trim().toLowerCase()
+  if (!normalized) return value
+  const key = `${prefix}${normalized[0]?.toUpperCase()}${normalized.slice(1)}`
+  return t[key] ?? value
+}
+
 function CruiseShipDetails({ ship }: { ship: NonNullable<CruiseContent["ship"]> }) {
   const t = useStorefrontUi().messages.shopDetailCruises
   const deckPlanImages = [
@@ -270,7 +286,7 @@ function CruiseShipDetails({ ship }: { ship: NonNullable<CruiseContent["ship"]> 
     new Set(deckPlanImages.filter((url) => !isRenderableImageUrl(url))),
   )
   const specs = [
-    ship.ship_type,
+    ship.ship_type ? localizedContentTypeLabel(t, "shipType", ship.ship_type) : null,
     ship.capacity ? t.guestsCount.replace("{count}", String(ship.capacity)) : null,
     ship.decks ? t.decksCount.replace("{count}", String(ship.decks)) : null,
     ship.year_built ? t.builtYear.replace("{year}", String(ship.year_built)) : null,
@@ -339,8 +355,8 @@ function CruiseCabinCategorySummary({
 }) {
   const t = useStorefrontUi().messages.shopDetailCruises
   const meta = [
-    category.type,
-    category.square_feet ? `${category.square_feet} sqft` : null,
+    category.type ? localizedContentTypeLabel(t, "cabinType", category.type) : null,
+    category.square_feet ? t.squareFeet.replace("{value}", String(category.square_feet)) : null,
     category.capacity_max ? t.sleeps.replace("{count}", String(category.capacity_max)) : null,
   ].filter((v): v is string => typeof v === "string" && v.length > 0)
   const cleanInclusions = category.inclusions.filter(

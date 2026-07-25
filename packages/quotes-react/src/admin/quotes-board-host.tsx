@@ -21,6 +21,7 @@ import {
   useStages,
 } from "../index.js"
 import { CreatePipelineDialog, ManageStagesDialog } from "./pipeline-dialogs.js"
+import { useDefaultCrmCurrency } from "./use-default-crm-currency.js"
 
 /**
  * Packaged admin host for the Quotes board (packaged-admin RFC Phase 3). The
@@ -34,6 +35,7 @@ export function QuotesBoardHost() {
   const messages = useCrmUiMessagesOrDefault()
   const t = messages.quotesBoardPage
   const navigate = useAdminNavigate()
+  const defaultCurrency = useDefaultCrmCurrency()
 
   const pipelinesQuery = usePipelines({ entityType: "quote", limit: 50 })
   const pipelines = pipelinesQuery.data?.data ?? []
@@ -160,6 +162,7 @@ export function QuotesBoardHost() {
           stages={stages}
           quotesByStage={quotesByStage}
           onQuoteOpen={(quote) => openQuote(quote.id)}
+          defaultCurrency={defaultCurrency}
         />
       )}
 

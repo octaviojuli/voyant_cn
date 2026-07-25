@@ -9,6 +9,12 @@ export type IdentityUiMessages = {
     cancel: string
     saveChanges: string
     primary: string
+    pagination: {
+      showing: string
+      page: string
+      previous: string
+      next: string
+    }
     addressLabelLabels: Record<AddressLabel, string>
     contactPointKindLabels: Record<ContactPointKind, string>
     namedContactRoleLabels: Record<NamedContactRole, string>

@@ -424,3 +424,26 @@ export const ZH_BOOKINGS = [
     ],
   },
 ] as const
+
+// ---------- 销售管道本地化 ----------
+// 基础种子建的是英文管道与英文演示报价;中文部署按名称就地改为中文,
+// 只动展示文案(name/title),不动 id、阶段概率与关联关系,可安全重复执行。
+
+export const ZH_PIPELINE_L10N = {
+  pipeline: { from: "Group & Leisure Sales", to: "团组与散客销售" },
+  stages: [
+    { from: "Lead", to: "线索" },
+    { from: "Qualified", to: "需求确认" },
+    { from: "Proposal", to: "已报价" },
+    { from: "Won", to: "赢单" },
+    { from: "Lost", to: "输单" },
+  ],
+  quoteTitles: [
+    { from: "Northwind Q2 board retreat, Paris", to: "诺思风集团二季度董事会巴黎休整之旅" },
+    { from: "Globex incentive — Rome long-weekend", to: "环球公司罗马长周末奖励旅游" },
+    { from: "Honeymoon — Thames + Montmartre", to: "蜜月之旅——泰晤士河与蒙马特" },
+    { from: "Family summer in Brittany", to: "布列塔尼家庭夏日之旅" },
+    { from: "Silver anniversary — Seine cruise package", to: "银婚纪念——塞纳河游轮套餐" },
+    { from: "Executive retreat — LHR VIP transfers", to: "高管休整——希思罗机场贵宾接送" },
+  ],
+} as const

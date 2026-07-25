@@ -284,7 +284,8 @@ export function BookingDetailPage({
         detailMessages.noValue,
       )}`
     : null
-  const headerPax = booking.pax != null ? `${booking.pax} PAX` : null
+  const headerPax =
+    booking.pax != null ? formatMessage(detailMessages.headerPax, { count: booking.pax }) : null
   const headerProductTitle = primaryItem?.productNameSnapshot ?? primaryItem?.title ?? null
   const headerProductId = primaryItem?.productId ?? null
   const headerSlotId = primaryItem?.availabilitySlotId ?? null

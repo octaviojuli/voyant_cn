@@ -510,8 +510,16 @@ export function CruiseDetailPage({
                 <div className="flex flex-1 flex-col gap-1.5 p-3">
                   <div className="font-medium text-sm leading-tight">{cabin.name}</div>
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-muted-foreground text-xs">
-                    {cabin.view && <span className="capitalize">{cabin.view}</span>}
-                    {cabin.squareFeet && <span>{cabin.squareFeet} ft²</span>}
+                    {cabin.view && (
+                      <span className="capitalize">
+                        {t.cabinTypeLabels[
+                          cabin.view.trim().toLowerCase() as keyof typeof t.cabinTypeLabels
+                        ] ?? cabin.view}
+                      </span>
+                    )}
+                    {cabin.squareFeet && (
+                      <span>{t.squareFeet.replace("{value}", cabin.squareFeet)}</span>
+                    )}
                     {cabin.capacityMax != null && (
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" /> {t.max} {cabin.capacityMax}
@@ -570,7 +578,13 @@ export function CruiseDetailPage({
           </h2>
           <div className="rounded-lg border p-4">
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground text-sm">
-              {detail.ship.shipType && <span className="capitalize">{detail.ship.shipType}</span>}
+              {detail.ship.shipType && (
+                <span className="capitalize">
+                  {t.shipTypeLabels[
+                    detail.ship.shipType.trim().toLowerCase() as keyof typeof t.shipTypeLabels
+                  ] ?? detail.ship.shipType}
+                </span>
+              )}
               {detail.ship.capacity != null && (
                 <span>
                   {t.capacity}: {detail.ship.capacity}
@@ -595,7 +609,7 @@ export function CruiseDetailPage({
       {/* About */}
       {detail.description && (
         <div className="mt-10">
-          <h2 className="mb-3 font-medium text-lg">{t.about}</h2>
+          <h2 className="mb-3 font-medium text-lg">{t.aboutCruise}</h2>
           <p className="whitespace-pre-line text-muted-foreground text-sm">{detail.description}</p>
         </div>
       )}

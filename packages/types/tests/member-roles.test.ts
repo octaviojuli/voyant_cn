@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import { hasApiKeyPermission } from "../src/api-keys.js"
+import { hasApiKeyPermission, permissionStringsToPermissions } from "../src/api-keys.js"
 import {
   isFullAccessRole,
   MEMBER_ROLE_PRESETS,
   permissionsForRole,
   scopesForRole,
+  scopesForRoleWithPresets,
 } from "../src/member-roles.js"
 
 describe("permissionsForRole", () => {
@@ -79,6 +80,104 @@ describe("role bundles enforce as expected via hasApiKeyPermission", () => {
     expect(hasApiKeyPermission(p, "bookings", "read")).toBe(true)
     expect(hasApiKeyPermission(p, "products", "read")).toBe(true)
     expect(hasApiKeyPermission(p, "bookings", "write")).toBe(false)
+  })
+})
+
+describe("scopesForRoleWithPresets", () => {
+  const presets = [
+    {
+      id: "owner",
+      kind: "staff",
+      label: "Owner",
+      description: "Owner staff preset.",
+      grants: ["action-ledger:approve", "action-ledger:read", "action-ledger:write"],
+    },
+    {
+      id: "admin",
+      kind: "staff",
+      label: "Admin",
+      description: "Admin staff preset.",
+      grants: ["action-ledger:read"],
+    },
+    {
+      id: "editor",
+      kind: "staff",
+      label: "Editor",
+      description: "Editor staff preset.",
+      grants: ["bookings:read", "bookings:write"],
+    },
+    {
+      id: "owner",
+      kind: "api-token",
+      label: "Owner token",
+      description: "Same id, non-staff kind — must be ignored.",
+      grants: ["catalog:read"],
+    },
+  ] as const
+
+  it("unions the matching staff preset's explicit grants onto the role bundle", () => {
+    expect(scopesForRoleWithPresets("owner", presets)).toEqual([
+      "*",
+      "action-ledger:approve",
+      "action-ledger:read",
+      "action-ledger:write",
+    ])
+    expect(scopesForRoleWithPresets("admin", presets)).toEqual(["*", "action-ledger:read"])
+  })
+
+  it("keeps explicit-wildcard scopes reachable via hasApiKeyPermission", () => {
+    const catalog = {
+      presets: [],
+      resources: [
+        {
+          id: "@voyant-travel/action-ledger#access.action-ledger",
+          unitId: "@voyant-travel/action-ledger",
+          resource: "action-ledger",
+          label: "Action ledger",
+          description: "Read action audit records.",
+          wildcard: "explicit-resource" as const,
+          actions: [
+            {
+              action: "read",
+              label: "Read action ledger",
+              description: "Read action records.",
+              sensitive: true,
+              wildcard: "explicit" as const,
+            },
+          ],
+        },
+      ],
+    }
+    const bare = scopesForRole("owner") ?? []
+    const withPresets = scopesForRoleWithPresets("owner", presets) ?? []
+    // The `*` bundle alone is denied on the explicit-wildcard resource…
+    expect(hasApiKeyPermission({ "*": ["*"] }, "action-ledger", "read", catalog)).toBe(false)
+    expect(bare).toEqual(["*"])
+    // …and the preset union is what makes the grant effective.
+    expect(withPresets).toContain("action-ledger:read")
+    expect(
+      hasApiKeyPermission(
+        permissionStringsToPermissions(withPresets),
+        "action-ledger",
+        "read",
+        catalog,
+      ),
+    ).toBe(true)
+  })
+
+  it("resolves member/guest against the editor/viewer staff presets", () => {
+    expect(scopesForRoleWithPresets("member", presets)).toContain("bookings:write")
+    expect(scopesForRoleWithPresets("guest", presets)).toEqual(["*:read", "*:search"])
+  })
+
+  it("returns the plain role bundle when no staff preset matches", () => {
+    expect(scopesForRoleWithPresets("viewer", presets)).toEqual(["*:read", "*:search"])
+    expect(scopesForRoleWithPresets("owner", [])).toEqual(["*"])
+  })
+
+  it("returns null for slugs without a preset bundle", () => {
+    expect(scopesForRoleWithPresets("custom", presets)).toBeNull()
+    expect(scopesForRoleWithPresets(null, presets)).toBeNull()
   })
 })
 

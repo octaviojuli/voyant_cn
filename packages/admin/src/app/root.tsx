@@ -1,4 +1,10 @@
 import { HeadContent, Scripts } from "@tanstack/react-router"
+import {
+  type AdminChromeMessages,
+  adminChromeMessages,
+  adminChromeZh,
+  resolveLocaleMessages,
+} from "@voyant-travel/i18n"
 import { Button, Toaster } from "@voyant-travel/ui/components"
 import { Alert, AlertDescription, AlertTitle } from "@voyant-travel/ui/components/alert"
 import {
@@ -11,6 +17,7 @@ import {
 import { RefreshCcw } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { DEFAULT_ADMIN_LOCALE, resolveAdminLocale } from "../providers/locale.js"
 import { useOptionalOperatorAdminMessages } from "../providers/operator-admin-messages.js"
 import { ThemeProvider } from "../providers/theme.js"
 
@@ -64,10 +71,15 @@ export function adminRootHead(options: AdminRootHeadOptions) {
  * The SSR'd document shell (`shellComponent` on the root route): bare
  * html/head/body with head content and router scripts. `suppressHydrationWarning`
  * because the bootstrap script mutates `documentElement` before hydration.
+ *
+ * `lang` sets the static document language served before the bootstrap
+ * script runs (SPA fallback HTML, crawlers, no-JS) — pass the deployment's
+ * default admin locale; the bootstrap script still switches to the user's
+ * persisted/browser locale before first paint.
  */
-export function AdminRootShell({ children }: { children: ReactNode }) {
+export function AdminRootShell({ children, lang = "en" }: { children: ReactNode; lang?: string }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
@@ -93,6 +105,25 @@ export interface AdminRootErrorBoundaryProps {
  * above us — mount a local ThemeProvider so <Toaster />'s useTheme() call
  * doesn't crash the boundary.
  */
+// Chrome message definitions with the zh dictionary merged in, so the
+// boundary can resolve localized copy without the app's provider tree.
+const errorBoundaryChromeDefinitions = { ...adminChromeMessages, zh: adminChromeZh }
+
+/**
+ * Detect the admin locale the same way the pre-hydration bootstrap script
+ * does (persisted `admin-locale`, then the browser language), so the error
+ * boundary stays localized even though it renders outside <LocaleProvider>.
+ */
+function detectAdminLocale(): string {
+  if (typeof window === "undefined") {
+    return DEFAULT_ADMIN_LOCALE
+  }
+
+  const stored = window.localStorage.getItem("admin-locale")
+  const browser = typeof navigator !== "undefined" ? navigator.language : null
+  return resolveAdminLocale(stored ?? browser)
+}
+
 export function AdminRootErrorBoundary({
   error,
   reset,
@@ -100,12 +131,17 @@ export function AdminRootErrorBoundary({
   homeHref = "/",
 }: AdminRootErrorBoundaryProps) {
   // Optional: the root error boundary replaces the root component, so the
-  // app's message provider is usually gone — fall back to English copy then.
-  const messages = useOptionalOperatorAdminMessages()
-  const resolvedFallbackMessage =
-    fallbackMessage ??
-    messages?.errorBoundaryFallbackMessage ??
-    "Something went wrong while loading this page."
+  // app's message provider is usually gone — resolve the chrome copy from
+  // the detected locale then.
+  const providedMessages = useOptionalOperatorAdminMessages()
+  const messages: AdminChromeMessages =
+    providedMessages ??
+    resolveLocaleMessages({
+      locale: detectAdminLocale(),
+      fallbackLocale: DEFAULT_ADMIN_LOCALE,
+      definitions: errorBoundaryChromeDefinitions,
+    })
+  const resolvedFallbackMessage = fallbackMessage ?? messages.errorBoundaryFallbackMessage
   const message = error instanceof Error && error.message ? error.message : resolvedFallbackMessage
 
   return (
@@ -116,17 +152,17 @@ export function AdminRootErrorBoundary({
             <EmptyMedia variant="icon">
               <RefreshCcw className="size-5" />
             </EmptyMedia>
-            <EmptyTitle>{messages?.errorBoundaryTitle ?? "Something went wrong"}</EmptyTitle>
+            <EmptyTitle>{messages.errorBoundaryTitle}</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
             <Alert variant="destructive" className="text-left">
-              <AlertTitle>{messages?.errorBoundaryRequestFailed ?? "Request failed"}</AlertTitle>
+              <AlertTitle>{messages.errorBoundaryRequestFailed}</AlertTitle>
               <AlertDescription>{message}</AlertDescription>
             </Alert>
             <div className="flex items-center gap-3">
-              <Button onClick={() => reset()}>{messages?.tryAgain ?? "Try again"}</Button>
+              <Button onClick={() => reset()}>{messages.tryAgain}</Button>
               <Button variant="outline" onClick={() => window.location.assign(homeHref)}>
-                {messages?.goToDashboard ?? "Go to dashboard"}
+                {messages.goToDashboard}
               </Button>
             </div>
           </EmptyContent>

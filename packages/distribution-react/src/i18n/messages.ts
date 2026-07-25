@@ -56,6 +56,12 @@ export type DistributionUiMessages = {
     selectionSummary: string
     resultSummary: string
     deleteSummary: string
+    pagination: {
+      showing: string
+      page: string
+      previous: string
+      next: string
+    }
     entities: Record<
       DistributionEntity,
       {

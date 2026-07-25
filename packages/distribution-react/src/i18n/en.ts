@@ -36,6 +36,12 @@ export const distributionUiEn = {
     selectionSummary: "{count} selected",
     resultSummary: "{verb} {countLabel}.",
     deleteSummary: "Deleted {countLabel}.",
+    pagination: {
+      showing: "Showing {start}-{end} of {total}",
+      page: "Page {page} of {pageCount}",
+      previous: "Previous",
+      next: "Next",
+    },
     entities: {
       channel: { one: "channel", other: "channels" },
       contract: { one: "contract", other: "contracts" },

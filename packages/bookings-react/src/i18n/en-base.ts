@@ -123,6 +123,7 @@ export const bookingsUiEnBase = {
     recordPaymentAction: "Record payment",
     noValue: "-",
     tbd: "TBD",
+    headerPax: "{count} PAX",
     summaryTotal: "Total",
     summaryPaid: "Paid",
     summaryPriceOverride: "Manual override",

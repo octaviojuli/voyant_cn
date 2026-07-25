@@ -562,6 +562,21 @@ JSON 字段名、数据库表名/列名、TypeScript 类型名、事件名,以�
 | Source module / Redacted fields | 来源模块 / 已脱敏字段 | 事件目录词族 |
 | Setup steps: Business profile / Workspace navigation / Invite your team | 企业资料 / 工作台导航 / 邀请团队成员 | 新手引导步骤标题 |
 
+## 功能修复与打磨批次补遗(2026-07-25,待人工复核)
+
+| 英文术语 | 中文译法 | 取舍理由 |
+| --- | --- | --- |
+| 管道阶段(演示数据):Lead / Qualified / Proposal / Won / Lost | 线索 / 需求确认 / 已报价 / 赢单 / 输单 | 种子数据阶段名;线索/赢单/输单沿用本表既有译法,需求确认/已报价为销售口语 |
+| Group & Leisure Sales(演示管道名) | 团组与散客销售 | 团组/散客为旅行社行业标准分类 |
+| About this cruise | 邮轮介绍 | 原 zh 误用"酒店介绍",按页面主体纠正 |
+| Ship types: expedition / yacht / sailing / coastal | 探险 / 游艇 / 帆船 / 近海 | 海洋(ocean)/内河(river)沿用既有;其余按邮轮行业通行说法 |
+| Cabin types: inside / oceanview / balcony / penthouse / single | 内舱 / 海景舱 / 阳台舱 / 顶层套房 / 单人舱 | 邮轮舱型标准词;套房(suite)沿用本表既有译法 |
+| PAX | 人 | 计数语境直译({count} 人);行业缩写不留英文 |
+| sqft / ft² | 平方英尺 | 面积单位全称,避免生僻符号 |
+| Channel(通知模板表头) | 发送方式 | 与通知包既有渠道词条一致;避免"频道"歧义 |
+| Slug(搜索占位符行文) | 标识 | 仅行文内意译;字段名/技术标签仍保留 Slug |
+| Catalog search is not set up yet | 目录搜索尚未配置 | 索引器未配置时的软降级提示 |
+
 ## 裁决记录(备查)
 
 1. **Invoice = 账单**:定稿采用"账单";另有"收据"建议,待凯撒财务同事过目后再定,阶段 1 按"账单"推进。

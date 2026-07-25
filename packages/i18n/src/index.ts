@@ -93,9 +93,12 @@ export {
 } from "./admin/suppliers-operator.js"
 export { type AdminTeamMessages, adminTeamMessages } from "./admin/team.js"
 export { adminAvailabilityZh } from "./admin/zh/availability.js"
+export { adminChromeZh } from "./admin/zh/chrome.js"
 export {
   createLocaleFormatters,
+  formatPersonName,
   type LocaleFormatters,
+  type PersonNameParts,
 } from "./package-formatters.js"
 export {
   createPackageMessagesContext,

@@ -23,6 +23,12 @@ export type ResourcesUiMessages = {
     open: string
     view: string
     cancel: string
+    pagination: {
+      showing: string
+      page: string
+      previous: string
+      next: string
+    }
     clearSelection: string
     clearFilters: string
     selectionSummary: string

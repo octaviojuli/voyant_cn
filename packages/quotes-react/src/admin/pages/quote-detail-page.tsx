@@ -69,6 +69,7 @@ import {
   shouldAcceptCurrentSentVersion,
 } from "../quote-detail-save-model.js"
 import { QuoteActivitiesCard, QuoteDetailsCard, QuoteTagsCard } from "../quote-detail-sections.js"
+import { useDefaultCrmCurrency } from "../use-default-crm-currency.js"
 
 interface DraftLineItem {
   id: string
@@ -187,6 +188,7 @@ export default function QuoteDetailPage({ params }: AdminRoutePageProps) {
   const { messages } = i18n
   const t = messages.quoteDetailPage
   const navigate = useAdminNavigate()
+  const defaultCrmCurrency = useDefaultCrmCurrency()
 
   const [showLostDialog, setShowLostDialog] = useState(false)
   const [lostReasonDraft, setLostReasonDraft] = useState("")
@@ -571,6 +573,7 @@ export default function QuoteDetailPage({ params }: AdminRoutePageProps) {
             }}
             stages={stages}
             onUpdateField={async (patch) => patchDraft(patch as Partial<QuoteDraft>)}
+            defaultCurrency={defaultCrmCurrency}
           />
           <QuoteClientCard
             person={personQuery.data}
@@ -653,7 +656,7 @@ export default function QuoteDetailPage({ params }: AdminRoutePageProps) {
           <QuoteLineItemsCard
             products={draftLineItems}
             isPending={productsQuery.isPending}
-            currency={currentDraft.valueCurrency ?? "USD"}
+            currency={currentDraft.valueCurrency ?? defaultCrmCurrency ?? "USD"}
             busy={isSaving}
             onAdd={async (input) =>
               patchDraft({

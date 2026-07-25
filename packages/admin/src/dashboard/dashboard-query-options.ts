@@ -179,12 +179,30 @@ export function getDashboardFinanceAggregatesQueryOptions(client: DashboardQuery
   })
 }
 
-export function formatCurrency(cents: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatCurrency(
+  cents: number,
+  currency = "USD",
+  locale: string | null | undefined = "en-US",
+): string {
+  return new Intl.NumberFormat(locale ?? "en-US", {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
   }).format(cents / 100)
+}
+
+/** Compact currency label for chart axis ticks (e.g. "$12K" / "¥1.2万"). */
+export function formatCurrencyAxisTick(
+  value: number,
+  currency = "USD",
+  locale: string | null | undefined = "en-US",
+): string {
+  return new Intl.NumberFormat(locale ?? "en-US", {
+    style: "currency",
+    currency,
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value)
 }
 
 export function getStatusColor(status: string): string {
@@ -225,14 +243,14 @@ export function buildMonthlyBookingsConfig(messages: OperatorAdminMessages) {
   } satisfies ChartConfig
 }
 
-export function buildMonthSeries() {
+export function buildMonthSeries(locale: string | null | undefined = "en-US") {
   const now = new Date()
   return Array.from({ length: 6 }, (_, idx) => {
     const offset = 5 - idx
     const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset, 1))
     return {
       yearMonth: `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`,
-      month: date.toLocaleString("en-US", { month: "short", timeZone: "UTC" }),
+      month: date.toLocaleString(locale ?? "en-US", { month: "short", timeZone: "UTC" }),
     }
   })
 }

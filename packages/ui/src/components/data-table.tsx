@@ -17,7 +17,7 @@ import * as React from "react"
 import { cn } from "../lib/utils.js"
 
 import { Checkbox } from "./checkbox.js"
-import { DataTablePagination } from "./data-table-pagination.js"
+import { DataTablePagination, type DataTablePaginationMessages } from "./data-table-pagination.js"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table.js"
 
 type DataTableProps<TData, TValue> = {
@@ -27,6 +27,7 @@ type DataTableProps<TData, TValue> = {
   emptyMessage?: string
   pageSize?: number
   showPagination?: boolean
+  paginationMessages?: DataTablePaginationMessages
   className?: string
   enableRowSelection?: boolean
   rowSelection?: RowSelectionState
@@ -45,6 +46,7 @@ export function DataTable<TData, TValue>({
   emptyMessage = "No results.",
   pageSize = 10,
   showPagination = true,
+  paginationMessages,
   className,
   enableRowSelection = false,
   rowSelection,
@@ -179,7 +181,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
         {showPagination && table.getPrePaginationRowModel().rows.length > pageSize ? (
-          <DataTablePagination table={table} />
+          <DataTablePagination table={table} messages={paginationMessages} />
         ) : null}
       </div>
     </div>

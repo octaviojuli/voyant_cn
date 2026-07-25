@@ -12,6 +12,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@voyant-travel/ui/components/toggle-group"
 import { ChevronLeft, ChevronRight, LayoutGrid, List } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import { VoyantApiError } from "../client.js"
 import type { useCatalogUiMessagesOrDefault } from "../i18n/index.js"
 import { type CatalogSearchHit, useCatalogSearch } from "../index.js"
 import { CatalogCard } from "./catalog-card.js"
@@ -199,6 +200,19 @@ export function CatalogTabPanel({
   const cardConfig = tab.card
 
   if (error) {
+    // The search route answers 503 when the deployment has no search indexer
+    // configured (`deployment.providers.search: "none"` is the self-hosted
+    // default). Degrade softly with localized copy instead of surfacing the
+    // raw English server error as a fault.
+    if (error instanceof VoyantApiError && error.status === 503) {
+      return (
+        <div className="rounded-md border bg-muted/40 p-4 text-sm">
+          <div className="font-medium">{messages.search.indexerUnavailableTitle}</div>
+          <div className="mt-1 text-muted-foreground">{messages.search.indexerUnavailableBody}</div>
+          <div className="mt-2 text-muted-foreground text-xs">{scopeHint}</div>
+        </div>
+      )
+    }
     const message = error instanceof Error ? error.message : String(error)
     return (
       <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
