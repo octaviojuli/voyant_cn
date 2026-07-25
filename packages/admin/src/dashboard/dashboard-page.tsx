@@ -50,6 +50,7 @@ import {
   buildMonthSeries,
   buildRevenueChartConfig,
   formatCurrency,
+  formatCurrencyAxisTick,
   getDashboardBookingsAggregatesQueryOptions,
   getDashboardFinanceAggregatesQueryOptions,
   getDashboardProductsAggregatesQueryOptions,
@@ -97,7 +98,7 @@ export function DashboardPage({ emptyStates = {} }: DashboardPageProps = {}) {
   const suppliers = suppliersAggregates?.data
   const finance = financeAggregates?.data
 
-  const monthSeries = buildMonthSeries()
+  const monthSeries = buildMonthSeries(resolvedLocale)
   const defaultCurrency = pickPrimaryCurrency(bookings?.monthlyRevenue ?? [])
 
   const monthlyRevenue = monthSeries.map((entry) => {
@@ -238,7 +239,7 @@ export function DashboardPage({ emptyStates = {} }: DashboardPageProps = {}) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               title={messages.dashboard.totalRevenueTitle}
-              value={formatCurrency(totalRevenueCents, defaultCurrency)}
+              value={formatCurrency(totalRevenueCents, defaultCurrency, resolvedLocale)}
               description={messages.dashboard.totalRevenueDescription}
               icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
               trend={revenueTrend}
@@ -312,14 +313,16 @@ export function DashboardPage({ emptyStates = {} }: DashboardPageProps = {}) {
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
-                      tickFormatter={(value: number) => `$${(value / 1000).toFixed(0)}k`}
+                      tickFormatter={(value: number) =>
+                        formatCurrencyAxisTick(value, defaultCurrency, resolvedLocale)
+                      }
                     />
                     <ChartTooltip
                       content={
                         <ChartTooltipContent
                           formatter={(value) =>
                             typeof value === "number"
-                              ? formatCurrency(value * 100, defaultCurrency)
+                              ? formatCurrency(value * 100, defaultCurrency, resolvedLocale)
                               : String(value)
                           }
                         />
@@ -460,11 +463,14 @@ export function DashboardPage({ emptyStates = {} }: DashboardPageProps = {}) {
                               {formatCurrency(
                                 booking.sellAmountCents,
                                 booking.sellCurrency ?? defaultCurrency,
+                                resolvedLocale,
                               )}
                             </span>
                           )}
                           <Badge variant="outline" className="capitalize">
-                            {booking.status.replace(/_/g, " ")}
+                            {messages.dashboard.bookingStatusChipLabels[
+                              booking.status as keyof typeof messages.dashboard.bookingStatusChipLabels
+                            ] ?? booking.status.replace(/_/g, " ")}
                           </Badge>
                         </div>
                       </a>
@@ -499,7 +505,11 @@ export function DashboardPage({ emptyStates = {} }: DashboardPageProps = {}) {
                         </p>
                       </div>
                       <p className="text-lg font-semibold">
-                        {formatCurrency(outstandingAmount, outstandingPrimaryCurrency)}
+                        {formatCurrency(
+                          outstandingAmount,
+                          outstandingPrimaryCurrency,
+                          resolvedLocale,
+                        )}
                       </p>
                     </div>
                     {outstandingTopN.map((invoice) => (
@@ -529,10 +539,16 @@ export function DashboardPage({ emptyStates = {} }: DashboardPageProps = {}) {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">
-                            {formatCurrency(invoice.balanceDueCents, invoice.currency)}
+                            {formatCurrency(
+                              invoice.balanceDueCents,
+                              invoice.currency,
+                              resolvedLocale,
+                            )}
                           </span>
                           <Badge variant="secondary" className="capitalize">
-                            {invoice.status}
+                            {messages.dashboard.invoiceStatusChipLabels[
+                              invoice.status as keyof typeof messages.dashboard.invoiceStatusChipLabels
+                            ] ?? invoice.status.replace(/_/g, " ")}
                           </Badge>
                         </div>
                       </div>

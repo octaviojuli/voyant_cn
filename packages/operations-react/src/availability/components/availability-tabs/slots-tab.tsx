@@ -110,6 +110,7 @@ export function AvailabilitySlotsTab(props: {
         data={props.filteredSlots}
         emptyMessage={props.messages.tabs.slots.emptyMessage}
         enableRowSelection
+        paginationMessages={props.messages.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.slotSelection}
         onRowSelectionChange={props.setSlotSelection}

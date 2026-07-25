@@ -6,6 +6,12 @@ export const resourcesUiEn: ResourcesUiMessages = {
     open: "Open",
     view: "View",
     cancel: "Cancel",
+    pagination: {
+      showing: "Showing {start}-{end} of {total}",
+      page: "Page {page} of {pageCount}",
+      previous: "Previous",
+      next: "Next",
+    },
     clearSelection: "Clear Selection",
     clearFilters: "Clear Filters",
     selectionSummary: "{count} selected",

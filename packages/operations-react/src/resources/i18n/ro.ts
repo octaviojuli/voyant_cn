@@ -6,6 +6,12 @@ export const resourcesUiRo: ResourcesUiMessages = {
     open: "Deschide",
     view: "Vizualizare",
     cancel: "Anuleaza",
+    pagination: {
+      showing: "Afisare {start}-{end} din {total}",
+      page: "Pagina {page} / {pageCount}",
+      previous: "Anterior",
+      next: "Urmator",
+    },
     clearSelection: "Goleste selectia",
     clearFilters: "Sterge filtrele",
     selectionSummary: "{count} selectate",

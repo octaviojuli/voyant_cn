@@ -47,7 +47,7 @@ export const promotionsUiZh: PromotionsUiMessages = {
     description: "自动生效的目录折扣与凭码激活的优惠。",
     newPromotion: "新建促销",
     searchLabel: "搜索促销",
-    searchPlaceholder: "按名称、Slug、描述或优惠码搜索",
+    searchPlaceholder: "按名称、标识、描述或优惠码搜索",
     modePlaceholder: "方式",
     allModes: "全部方式",
     statusPlaceholder: "状态",

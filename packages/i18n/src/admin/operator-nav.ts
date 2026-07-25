@@ -51,6 +51,8 @@ export type OperatorAdminNavMessages = {
   quotes: string
   mice: string
   actionLedger: string
+  eventCatalog: string
+  setup: string
 }
 
 export const operatorAdminNavMessages = {
@@ -106,6 +108,8 @@ export const operatorAdminNavMessages = {
       quotes: "Quotes",
       mice: "Programs",
       actionLedger: "Logs",
+      eventCatalog: "Event catalog",
+      setup: "Setup",
     },
   },
   ro: {
@@ -160,6 +164,8 @@ export const operatorAdminNavMessages = {
       quotes: "Oferte",
       mice: "Programe",
       actionLedger: "Jurnal actiuni",
+      eventCatalog: "Catalog evenimente",
+      setup: "Configurare",
     },
   },
 } satisfies LocaleMessageDefinitions<{ nav: OperatorAdminNavMessages }>

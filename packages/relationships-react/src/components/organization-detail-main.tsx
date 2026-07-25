@@ -320,7 +320,7 @@ function PeopleList({
   onOpenPerson: (id: string) => void
   onAddPerson: () => void
 }) {
-  const messages = useCrmUiMessagesOrDefault()
+  const { formatPersonName, messages } = useCrmUiI18nOrDefault()
 
   return (
     <div className="flex flex-col gap-3">
@@ -332,9 +332,7 @@ function PeopleList({
       </div>
       <ul className="divide-y">
         {people.map((person) => {
-          const name =
-            [person.firstName, person.lastName].filter(Boolean).join(" ") ||
-            messages.organizationDetail.empty.unnamed
+          const name = formatPersonName(person) || messages.organizationDetail.empty.unnamed
           return (
             <li key={person.id}>
               <button

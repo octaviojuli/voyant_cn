@@ -10,6 +10,12 @@ export const adminAvailabilityMessagesEnPart1 = {
   verbDeactivated: "Deactivated",
   tabSlots: "List",
   bulkStatusPlaceholder: "Change status",
+  pagination: {
+    showing: "Showing {start}-{end} of {total}",
+    page: "Page {page} of {pageCount}",
+    previous: "Previous",
+    next: "Next",
+  },
   tabRules: "Rules",
   tabStartTimes: "Start Times",
   tabCloseouts: "Closeouts",

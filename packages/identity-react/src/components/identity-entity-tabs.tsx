@@ -127,6 +127,7 @@ export function ContactPointsTab({ entityType, entityId }: IdentityEntityTabProp
         data={data?.data ?? []}
         emptyMessage={isPending ? tabMessages.empty.loading : tabMessages.empty.none}
         pageSize={PAGE_SIZE}
+        paginationMessages={messages.common.pagination}
       />
 
       <ContactPointDialog
@@ -253,6 +254,7 @@ export function AddressesTab({ entityType, entityId }: IdentityEntityTabProps) {
         data={data?.data ?? []}
         emptyMessage={isPending ? tabMessages.empty.loading : tabMessages.empty.none}
         pageSize={PAGE_SIZE}
+        paginationMessages={messages.common.pagination}
       />
 
       <AddressDialog
@@ -384,6 +386,7 @@ export function NamedContactsTab({ entityType, entityId }: IdentityEntityTabProp
         data={data?.data ?? []}
         emptyMessage={isPending ? tabMessages.empty.loading : tabMessages.empty.none}
         pageSize={PAGE_SIZE}
+        paginationMessages={messages.common.pagination}
       />
 
       <NamedContactDialog

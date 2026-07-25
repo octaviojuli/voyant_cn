@@ -6,6 +6,12 @@ export const resourcesUiZh: ResourcesUiMessages = {
     open: "打开",
     view: "查看",
     cancel: "取消",
+    pagination: {
+      showing: "显示 {start}-{end} 条，共 {total} 条",
+      page: "第 {page} / {pageCount} 页",
+      previous: "上一页",
+      next: "下一页",
+    },
     clearSelection: "清除选择",
     clearFilters: "清除筛选",
     selectionSummary: "已选择 {count} 项",

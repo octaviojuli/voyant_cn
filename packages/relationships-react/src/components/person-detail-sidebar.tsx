@@ -25,7 +25,7 @@ import {
 } from "lucide-react"
 import type { ReactNode } from "react"
 
-import { useCrmUiMessagesOrDefault } from "../i18n/index.js"
+import { useCrmUiI18nOrDefault } from "../i18n/index.js"
 import type { UpdatePersonInput } from "../index.js"
 import { InlineCurrencyField } from "./inline-currency-field.js"
 import { InlineField } from "./inline-field.js"
@@ -50,8 +50,8 @@ export function PersonSidebar({
   onUpdateField,
   children,
 }: PersonSidebarProps) {
-  const messages = useCrmUiMessagesOrDefault()
-  const displayName = personDisplayName(person, messages.personCard.unnamed)
+  const { locale, messages } = useCrmUiI18nOrDefault()
+  const displayName = personDisplayName(person, messages.personCard.unnamed, locale)
   const websiteHref = person.website
     ? person.website.startsWith("http")
       ? person.website

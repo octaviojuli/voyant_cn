@@ -10,6 +10,12 @@ export const adminAvailabilityZhPart1 = {
   verbDeactivated: "已停用",
   tabSlots: "列表",
   bulkStatusPlaceholder: "变更状态",
+  pagination: {
+    showing: "显示 {start}-{end} 条，共 {total} 条",
+    page: "第 {page} / {pageCount} 页",
+    previous: "上一页",
+    next: "下一页",
+  },
   tabRules: "规则",
   tabStartTimes: "出发时间",
   tabCloseouts: "停售日",

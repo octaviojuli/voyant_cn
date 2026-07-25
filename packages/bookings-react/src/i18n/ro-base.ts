@@ -122,6 +122,7 @@ export const bookingsUiRoBase = {
     recordPaymentAction: "Inregistreaza plata",
     noValue: "-",
     tbd: "De stabilit",
+    headerPax: "{count} PAX",
     summaryTotal: "Total",
     summaryPaid: "Platit",
     summaryPriceOverride: "Suprascriere manuala",

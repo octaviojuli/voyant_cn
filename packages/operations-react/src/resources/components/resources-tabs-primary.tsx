@@ -334,6 +334,7 @@ export function ResourcesTab(props: {
         data={props.filteredResources}
         emptyMessage={section.emptyMessage}
         enableRowSelection
+        paginationMessages={i18n.messages.common.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.resourceSelection}
         onRowSelectionChange={props.setResourceSelection}
@@ -463,6 +464,7 @@ export function PoolsTab(props: {
         data={props.filteredPools}
         emptyMessage={section.emptyMessage}
         enableRowSelection
+        paginationMessages={i18n.messages.common.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.poolSelection}
         onRowSelectionChange={props.setPoolSelection}
@@ -598,6 +600,7 @@ export function AllocationsTab(props: {
         data={props.filteredAllocations}
         emptyMessage={section.emptyMessage}
         enableRowSelection
+        paginationMessages={i18n.messages.common.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.allocationSelection}
         onRowSelectionChange={props.setAllocationSelection}

@@ -33,6 +33,12 @@ export const distributionUiZhBaseMessages = {
     selectionSummary: "已选择 {count} 项",
     resultSummary: "{verb} {countLabel}。",
     deleteSummary: "已删除 {countLabel}。",
+    pagination: {
+      showing: "显示 {start}-{end} 条，共 {total} 条",
+      page: "第 {page} / {pageCount} 页",
+      previous: "上一页",
+      next: "下一页",
+    },
     entities: {
       channel: { one: "个渠道", other: "个渠道" },
       contract: { one: "份合同", other: "份合同" },

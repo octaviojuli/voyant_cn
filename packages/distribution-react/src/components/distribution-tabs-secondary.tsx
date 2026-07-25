@@ -68,6 +68,7 @@ export function DistributionMappingsTab(props: {
         columns={mappingColumns(props.channels, props.products, props.onOpenRoute, i18n)}
         data={props.filteredMappings}
         emptyMessage={tab.empty}
+        paginationMessages={i18n.messages.common.pagination}
         enableRowSelection
         getRowId={(row) => row.id}
         rowSelection={props.mappingSelection}
@@ -179,6 +180,7 @@ export function DistributionBookingLinksTab(props: {
         columns={bookingLinkColumns(props.channels, props.bookings, props.onOpenRoute, i18n)}
         data={props.filteredBookingLinks}
         emptyMessage={tab.empty}
+        paginationMessages={i18n.messages.common.pagination}
         enableRowSelection
         getRowId={(row) => row.id}
         rowSelection={props.bookingLinkSelection}
@@ -252,6 +254,7 @@ export function DistributionWebhooksTab(props: {
         columns={webhookColumns(props.channels, props.onOpenRoute, i18n)}
         data={props.filteredWebhookEvents}
         emptyMessage={tab.empty}
+        paginationMessages={i18n.messages.common.pagination}
         enableRowSelection
         getRowId={(row) => row.id}
         rowSelection={props.webhookSelection}

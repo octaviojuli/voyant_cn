@@ -1,6 +1,7 @@
 "use client"
 
 // agent-quality: file-size exception -- owner: relationships-react; existing detail panels stay co-located pending a dedicated split because this release fix only replaces a native datetime input.
+import { formatPersonName } from "@voyant-travel/i18n"
 import { Badge, Button, Card, CardContent, ConfirmActionButton } from "@voyant-travel/ui/components"
 import { DateTimePicker } from "@voyant-travel/ui/components/date-time-picker"
 import { Input } from "@voyant-travel/ui/components/input"
@@ -309,11 +310,11 @@ function RelatedPersonName({
   personId: string
   onPersonOpen?: (personId: string) => void
 }) {
-  const messages = useCrmUiMessagesOrDefault()
+  const { locale, messages } = useCrmUiI18nOrDefault()
   const personQuery = usePerson(personId)
   const person = personQuery.data
   const label = person
-    ? personDisplayName(person, messages.personCard.unnamed)
+    ? personDisplayName(person, messages.personCard.unnamed, locale)
     : personQuery.isPending
       ? "…"
       : personId
@@ -895,8 +896,9 @@ export function LoadingRow() {
 export function personDisplayName(
   person: Pick<PersonRecord, "firstName" | "lastName">,
   fallback: string,
+  locale?: string | null,
 ) {
-  return [person.firstName, person.lastName].filter(Boolean).join(" ") || fallback
+  return formatPersonName(locale, person) || fallback
 }
 
 export function initialsFrom(name: string): string {

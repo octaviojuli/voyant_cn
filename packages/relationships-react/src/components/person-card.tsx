@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@voyant-travel/ui/components/card
 import { cn } from "@voyant-travel/ui/lib/utils"
 import { Mail, Phone } from "lucide-react"
 import type * as React from "react"
-import { useCrmUiMessagesOrDefault } from "../i18n/index.js"
+import { useCrmUiI18nOrDefault } from "../i18n/index.js"
 import type { CrmRelationType } from "../i18n/messages.js"
 import type { PersonRecord } from "../index.js"
 
@@ -16,8 +16,8 @@ export interface PersonCardProps extends React.ComponentPropsWithoutRef<typeof C
 }
 
 export function PersonCard({ person, onEdit, className, ...props }: PersonCardProps) {
-  const messages = useCrmUiMessagesOrDefault()
-  const fullName = [person.firstName, person.lastName].filter(Boolean).join(" ")
+  const { formatPersonName, messages } = useCrmUiI18nOrDefault()
+  const fullName = formatPersonName(person)
   const initials = [person.firstName?.[0], person.lastName?.[0]]
     .filter(Boolean)
     .join("")

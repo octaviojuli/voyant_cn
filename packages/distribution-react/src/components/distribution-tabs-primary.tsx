@@ -65,6 +65,7 @@ export function DistributionChannelsTab(props: {
         columns={channelColumns(props.onOpenRoute, i18n)}
         data={props.filteredChannels}
         emptyMessage={tab.empty}
+        paginationMessages={i18n.messages.common.pagination}
         enableRowSelection
         getRowId={(row) => row.id}
         rowSelection={props.channelSelection}
@@ -177,6 +178,7 @@ export function DistributionContractsTab(props: {
         columns={contractColumns(props.channels, props.suppliers, props.onOpenRoute, i18n)}
         data={props.filteredContracts}
         emptyMessage={tab.empty}
+        paginationMessages={i18n.messages.common.pagination}
         enableRowSelection
         getRowId={(row) => row.id}
         rowSelection={props.contractSelection}
@@ -288,6 +290,7 @@ export function DistributionCommissionsTab(props: {
         columns={commissionColumns(props.contracts, props.products, props.onOpenRoute, i18n)}
         data={props.filteredCommissionRules}
         emptyMessage={tab.empty}
+        paginationMessages={i18n.messages.common.pagination}
         enableRowSelection
         getRowId={(row) => row.id}
         rowSelection={props.commissionSelection}

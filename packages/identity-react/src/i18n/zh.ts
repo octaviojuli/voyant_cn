@@ -5,6 +5,12 @@ export const identityUiZh = {
     cancel: "取消",
     saveChanges: "保存更改",
     primary: "主要",
+    pagination: {
+      showing: "显示 {start}-{end} 条，共 {total} 条",
+      page: "第 {page} / {pageCount} 页",
+      previous: "上一页",
+      next: "下一页",
+    },
     addressLabelLabels: {
       primary: "主要",
       billing: "账单",

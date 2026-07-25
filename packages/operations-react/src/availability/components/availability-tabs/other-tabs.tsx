@@ -62,6 +62,7 @@ export function AvailabilityRulesTab(props: {
         data={props.filteredRules}
         emptyMessage={props.messages.tabs.rules.emptyMessage}
         enableRowSelection
+        paginationMessages={props.messages.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.ruleSelection}
         onRowSelectionChange={props.setRuleSelection}
@@ -173,6 +174,7 @@ export function AvailabilityStartTimesTab(props: {
         data={props.filteredStartTimes}
         emptyMessage={props.messages.tabs.startTimes.emptyMessage}
         enableRowSelection
+        paginationMessages={props.messages.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.startTimeSelection}
         onRowSelectionChange={props.setStartTimeSelection}
@@ -282,6 +284,7 @@ export function AvailabilityCloseoutsTab(props: {
         data={props.filteredCloseouts}
         emptyMessage={props.messages.tabs.closeouts.emptyMessage}
         enableRowSelection
+        paginationMessages={props.messages.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.closeoutSelection}
         onRowSelectionChange={props.setCloseoutSelection}
@@ -350,6 +353,7 @@ export function AvailabilityPickupPointsTab(props: {
         data={props.filteredPickupPoints}
         emptyMessage={props.messages.tabs.pickupPoints.emptyMessage}
         enableRowSelection
+        paginationMessages={props.messages.pagination}
         getRowId={(row) => row.id}
         rowSelection={props.pickupPointSelection}
         onRowSelectionChange={props.setPickupPointSelection}

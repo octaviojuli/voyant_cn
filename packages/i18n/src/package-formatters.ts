@@ -1,3 +1,8 @@
+export interface PersonNameParts {
+  firstName?: string | null
+  lastName?: string | null
+}
+
 export interface LocaleFormatters {
   locale: string
   formatCurrency: (
@@ -8,6 +13,7 @@ export interface LocaleFormatters {
   formatDate: (value: Date | string | number, options?: Intl.DateTimeFormatOptions) => string
   formatDateTime: (value: Date | string | number, options?: Intl.DateTimeFormatOptions) => string
   formatNumber: (value: number | string | bigint, options?: Intl.NumberFormatOptions) => string
+  formatPersonName: (person: PersonNameParts) => string
 }
 
 function normalizeLocale(locale: string | null | undefined): string {
@@ -26,6 +32,32 @@ function coerceNumber(value: number | string | bigint): number | bigint | null {
 function coerceDate(value: Date | string | number): Date | null {
   const date = value instanceof Date ? value : new Date(value)
   return Number.isNaN(date.getTime()) ? null : date
+}
+
+// Languages that customarily render the family name before the given name.
+const FAMILY_NAME_FIRST_LANGUAGES = new Set(["zh", "ja", "ko"])
+
+const CJK_PATTERN = /[぀-ヿ㐀-䶿一-鿿豈-﫿가-힯]/
+
+/**
+ * Locale-aware person display name. In family-name-first languages
+ * (zh/ja/ko) a CJK name renders as family name + given name with no
+ * separator (e.g. 张 + 伟 → 张伟); everything else renders as
+ * "given family". Only the display order changes — stored fields are
+ * never reordered.
+ */
+export function formatPersonName(
+  locale: string | null | undefined,
+  { firstName, lastName }: PersonNameParts,
+): string {
+  const given = (firstName ?? "").trim()
+  const family = (lastName ?? "").trim()
+  const language = normalizeLocale(locale).toLowerCase().split("-")[0] ?? ""
+  if (FAMILY_NAME_FIRST_LANGUAGES.has(language) && CJK_PATTERN.test(`${family}${given}`)) {
+    return `${family}${given}`
+  }
+
+  return [given, family].filter(Boolean).join(" ")
 }
 
 export function createLocaleFormatters(locale: string | null | undefined): LocaleFormatters {
@@ -72,6 +104,9 @@ export function createLocaleFormatters(locale: string | null | undefined): Local
       }
 
       return new Intl.NumberFormat(resolvedLocale, options).format(normalizedValue)
+    },
+    formatPersonName(person) {
+      return formatPersonName(resolvedLocale, person)
     },
   }
 }

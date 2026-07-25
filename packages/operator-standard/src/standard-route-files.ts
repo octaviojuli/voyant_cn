@@ -79,15 +79,20 @@ import {
 } from ${JSON.stringify(standardFrontendImport)}
 import type { QueryClient } from "@tanstack/react-query"
 import { createRootRouteWithContext, Outlet, useRouteContext } from "@tanstack/react-router"
+import type { ReactNode } from "react"
 import { operatorFrontend } from "./_lib/operator-frontend.js"
 import "@/styles.css"
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => adminRootHead({ title: "Voyant", description: "Voyant operator workspace", faviconHref: "/favicon.png" }),
-  shellComponent: AdminRootShell,
+  shellComponent: RootShell,
   component: RootComponent,
   errorComponent: AdminRootErrorBoundary,
 })
+
+function RootShell({ children }: { children: ReactNode }) {
+  return <AdminRootShell lang="zh">{children}</AdminRootShell>
+}
 
 function RootComponent() {
   const queryClient = useRouteContext({ from: "__root__", select: (context) => context.queryClient })

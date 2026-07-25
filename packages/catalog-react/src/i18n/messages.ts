@@ -325,9 +325,30 @@ export type CatalogUiMessages = {
       notFound: string
       loadError: string
       about: string
+      aboutCruise: string
       cabins: string
       itinerary: string
       ship: string
+      /** Ship type labels keyed by normalized content value. */
+      shipTypeLabels: {
+        ocean: string
+        river: string
+        expedition: string
+        yacht: string
+        sailing: string
+        coastal: string
+      }
+      /** Cabin type/view labels keyed by normalized content value. */
+      cabinTypeLabels: {
+        inside: string
+        oceanview: string
+        balcony: string
+        suite: string
+        penthouse: string
+        single: string
+      }
+      /** `{value}` placeholder for cabin area in square feet. */
+      squareFeet: string
       day: string
       atSea: string
       capacity: string

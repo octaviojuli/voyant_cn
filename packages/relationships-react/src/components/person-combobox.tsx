@@ -2,7 +2,7 @@
 
 import { AsyncCombobox } from "@voyant-travel/ui/components/async-combobox"
 import * as React from "react"
-import { useCrmUiMessagesOrDefault } from "../i18n/index.js"
+import { useCrmUiI18nOrDefault } from "../i18n/index.js"
 import { type PersonRecord, usePeople, usePerson } from "../index.js"
 
 export interface PersonComboboxProps {
@@ -23,8 +23,11 @@ function compact(parts: Array<string | null | undefined>) {
   return parts.map((part) => part?.trim()).filter(Boolean) as string[]
 }
 
-function formatPersonLabel(person: PersonRecord) {
-  const name = compact([person.firstName, person.lastName]).join(" ")
+function formatPersonLabel(
+  person: PersonRecord,
+  formatPersonName: (person: PersonRecord) => string,
+) {
+  const name = formatPersonName(person)
   return name || person.email || person.id
 }
 
@@ -43,7 +46,8 @@ export function PersonCombobox({
   clearable = true,
   limit = DEFAULT_LIMIT,
 }: PersonComboboxProps) {
-  const messages = useCrmUiMessagesOrDefault().entityComboboxes.person
+  const { formatPersonName, messages: crmMessages } = useCrmUiI18nOrDefault()
+  const messages = crmMessages.entityComboboxes.person
   const [search, setSearch] = React.useState("")
   const listQuery = usePeople({ search: search || undefined, limit })
   const selectedQuery = usePerson(value ?? undefined, { enabled: Boolean(value) })
@@ -55,7 +59,7 @@ export function PersonCombobox({
       items={listQuery.data?.data ?? []}
       selectedItem={selectedQuery.data ?? null}
       getKey={(person) => person.id}
-      getLabel={formatPersonLabel}
+      getLabel={(person) => formatPersonLabel(person, formatPersonName)}
       getSecondary={formatPersonSecondary}
       onSearchChange={setSearch}
       placeholder={placeholder ?? messages.placeholder}

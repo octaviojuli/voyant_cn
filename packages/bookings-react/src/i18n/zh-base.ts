@@ -122,6 +122,7 @@ export const bookingsUiZhBase = {
     recordPaymentAction: "记录收款",
     noValue: "-",
     tbd: "待定",
+    headerPax: "{count} 人",
     summaryTotal: "总额",
     summaryPaid: "已付",
     summaryPriceOverride: "手动覆盖",

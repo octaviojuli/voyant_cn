@@ -5,6 +5,12 @@ export const identityUiEn = {
     cancel: "Cancel",
     saveChanges: "Save Changes",
     primary: "Primary",
+    pagination: {
+      showing: "Showing {start}-{end} of {total}",
+      page: "Page {page} of {pageCount}",
+      previous: "Previous",
+      next: "Next",
+    },
     addressLabelLabels: {
       primary: "Primary",
       billing: "Billing",
