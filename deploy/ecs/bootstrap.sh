@@ -69,6 +69,38 @@ EOF
     echo "!! 跳过 Nginx,继续部署;可稍后处理端口冲突。"
   fi
 
+  FIRST_RUN=true
+else
+  FIRST_RUN=false
+fi
+
+# 自动 HTTPS:裸 IP 场景用 <IP>.sslip.io 免费域名申请 Let's Encrypt 证书。
+# 纯 HTTP 下浏览器会丢弃 Secure 会话 Cookie,登录无法保持,HTTPS 是必需项。
+# 已有证书时跳过;签发失败(如 sslip.io 触发 LE 频率限制)只告警不阻断。
+if [[ "$APP_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && command -v nginx &>/dev/null; then
+  HTTPS_DOMAIN="${APP_HOST}.sslip.io"
+  if [ ! -f "/etc/letsencrypt/live/${HTTPS_DOMAIN}/fullchain.pem" ]; then
+    echo "==> 启用 HTTPS(${HTTPS_DOMAIN})"
+    export DEBIAN_FRONTEND=noninteractive
+    command -v certbot &>/dev/null || apt-get install -y certbot python3-certbot-nginx
+    sed -i "s/server_name .*/server_name ${HTTPS_DOMAIN};/" /etc/nginx/conf.d/voyant.conf
+    nginx -t && systemctl reload nginx
+    if certbot --nginx -d "$HTTPS_DOMAIN" --non-interactive --agree-tos \
+         --register-unsafely-without-email --redirect; then
+      sed -i \
+        -e "s|^APP_URL=.*|APP_URL=\"https://${HTTPS_DOMAIN}/api\"|" \
+        -e "s|^API_BASE_URL=.*|API_BASE_URL=\"https://${HTTPS_DOMAIN}/api\"|" \
+        -e "s|^DASH_BASE_URL=.*|DASH_BASE_URL=\"https://${HTTPS_DOMAIN}\"|" \
+        -e "s|^CORS_ALLOWLIST=.*|CORS_ALLOWLIST=\"https://${HTTPS_DOMAIN}\"|" \
+        "$APP_DIR/starters/operator/.env"
+      echo "==> HTTPS 已启用:https://${HTTPS_DOMAIN}"
+    else
+      echo "!! 证书签发失败,暂以 HTTP 运行;可稍后重试或绑定自有域名"
+    fi
+  fi
+fi
+
+if [ "$FIRST_RUN" = true ]; then
   echo "==> 首次部署(--skip-pull --seed-zh $*)"
   sudo -iu voyant bash "$APP_DIR/deploy/ecs/deploy.sh" --skip-pull --seed-zh "$@"
   touch "$MARKER"
