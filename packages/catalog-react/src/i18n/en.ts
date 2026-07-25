@@ -109,6 +109,9 @@ export const catalogUiEn = {
       previous: "Previous",
       next: "Next",
       page: "Page {page} of {totalPages}",
+      indexerUnavailableTitle: "Catalog search is not set up yet",
+      indexerUnavailableBody:
+        "This deployment has no search index configured, so catalog browsing is unavailable. Product detail pages still open from direct links. Ask an administrator to enable a search provider for this deployment.",
     },
     filtersUi: {
       min: "Min",

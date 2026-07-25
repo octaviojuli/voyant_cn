@@ -110,6 +110,13 @@ export type CatalogUiMessages = {
       previous: string
       next: string
       page: string
+      /**
+       * Friendly degradation copy shown when the deployment has no search
+       * indexer configured (the search route answers 503). Replaces the raw
+       * server error so browse fails softly instead of showing a fault.
+       */
+      indexerUnavailableTitle: string
+      indexerUnavailableBody: string
     }
     filtersUi: {
       min: string

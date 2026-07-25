@@ -109,6 +109,9 @@ export const catalogUiZh = {
       previous: "上一页",
       next: "下一页",
       page: "第 {page} 页，共 {totalPages} 页",
+      indexerUnavailableTitle: "目录搜索尚未配置",
+      indexerUnavailableBody:
+        "当前部署未配置搜索索引，目录浏览暂不可用。产品详情页仍可通过直接链接打开。请联系管理员为当前部署启用搜索服务。",
     },
     filtersUi: {
       min: "最小",

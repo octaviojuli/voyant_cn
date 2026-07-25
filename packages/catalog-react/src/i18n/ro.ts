@@ -109,6 +109,9 @@ export const catalogUiRo = {
       previous: "Inapoi",
       next: "Inainte",
       page: "Pagina {page} din {totalPages}",
+      indexerUnavailableTitle: "Cautarea in catalog nu este inca configurata",
+      indexerUnavailableBody:
+        "Aceasta instalare nu are un index de cautare configurat, deci navigarea in catalog nu este disponibila. Paginile de detaliu ale produselor se deschid in continuare din linkuri directe. Cereti unui administrator sa activeze un furnizor de cautare pentru aceasta instalare.",
     },
     filtersUi: {
       min: "Min",
