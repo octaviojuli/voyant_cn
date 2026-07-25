@@ -3993,6 +3993,9 @@ importers:
       '@voyant-travel/auth-react':
         specifier: workspace:^
         version: link:../auth-react
+      '@voyant-travel/commerce-react':
+        specifier: workspace:^
+        version: link:../commerce-react
       '@voyant-travel/quotes':
         specifier: workspace:^
         version: link:../quotes
@@ -8196,6 +8199,7 @@ packages:
   '@voyant-travel/plugin-netopia@0.105.21':
     resolution: {integrity: sha512-HuG/0kO73DaefLkCxDW530saGx9b6P1BECf9DN0hl3uouAsjtvBwhxMfjwxu4Jrf59GZykLZwUJ9LVjnoL5a0Q==}
     engines: {node: '>=20'}
+    deprecated: Renamed to @voyant-travel/netopia-adapter
 
   '@voyant-travel/plugin-voyant-connect@0.3.2':
     resolution: {integrity: sha512-JXOTrVtX5AUilezFyn/k8HdoUuuG5xIumHXrcwkzWIWsSDgfkFTzQW4fGFIieWzqWoZHJ5M9IZ+as2FA3oAqdg==}

@@ -8,6 +8,7 @@ import type {
   TripsRoutesOptionsProvider,
 } from "@voyant-travel/trips"
 import type { Context } from "hono"
+import { resolveDefaultMarketCurrency } from "./markets-ref.js"
 import type {
   QuotesRuntimeContribution,
   QuotesRuntimeContributorHost,
@@ -26,6 +27,15 @@ export async function createQuotesRuntime(
     quotes: {
       resolveParticipantPersonById: async (db, personId) =>
         (await relationshipsService.getPersonById(db, personId)) != null,
+      // Default new-quote currency from the deployment's default market. A
+      // deployment without the commerce markets table simply has no default.
+      resolveDefaultQuoteCurrency: async (db) => {
+        try {
+          return await resolveDefaultMarketCurrency(db)
+        } catch {
+          return null
+        }
+      },
     },
     snapshot: { resolveDb },
     proposal: {

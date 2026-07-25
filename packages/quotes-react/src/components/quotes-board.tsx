@@ -9,9 +9,20 @@ export interface QuotesBoardProps {
   stages: StageData[]
   quotesByStage: Map<string, QuoteData[]>
   onQuoteOpen?: (quote: QuoteData) => void
+  /**
+   * Display fallback for quotes without a `valueCurrency` of their own —
+   * typically the deployment default market's currency (see
+   * `useDefaultCrmCurrency` in `admin/`).
+   */
+  defaultCurrency?: string | null
 }
 
-export function QuotesBoard({ stages, quotesByStage, onQuoteOpen }: QuotesBoardProps) {
+export function QuotesBoard({
+  stages,
+  quotesByStage,
+  onQuoteOpen,
+  defaultCurrency,
+}: QuotesBoardProps) {
   const i18n = useCrmUiI18nOrDefault()
   const { messages } = i18n
 
@@ -21,7 +32,7 @@ export function QuotesBoard({ stages, quotesByStage, onQuoteOpen }: QuotesBoardP
         {stages.map((stage) => {
           const quotes = quotesByStage.get(stage.id) ?? []
           const total = quotes.reduce((sum, quote) => sum + (quote.valueAmountCents ?? 0), 0)
-          const primaryCurrency = quotes[0]?.valueCurrency ?? null
+          const primaryCurrency = quotes.find((quote) => quote.valueCurrency)?.valueCurrency ?? null
 
           return (
             <div
@@ -35,7 +46,7 @@ export function QuotesBoard({ stages, quotesByStage, onQuoteOpen }: QuotesBoardP
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {i18n.formatNumber(quotes.length)} -{" "}
-                    {formatCrmMoney(i18n, total, primaryCurrency)}
+                    {formatCrmMoney(i18n, total, primaryCurrency, defaultCurrency)}
                   </p>
                 </div>
                 {stage.probability != null ? (
@@ -46,7 +57,12 @@ export function QuotesBoard({ stages, quotesByStage, onQuoteOpen }: QuotesBoardP
               </div>
               <div className="flex flex-col gap-2">
                 {quotes.map((quote) => (
-                  <QuoteBoardCard key={quote.id} quote={quote} onOpen={onQuoteOpen} />
+                  <QuoteBoardCard
+                    key={quote.id}
+                    quote={quote}
+                    onOpen={onQuoteOpen}
+                    defaultCurrency={defaultCurrency}
+                  />
                 ))}
               </div>
             </div>
@@ -61,9 +77,11 @@ export function QuotesBoard({ stages, quotesByStage, onQuoteOpen }: QuotesBoardP
 function QuoteBoardCard({
   quote,
   onOpen,
+  defaultCurrency,
 }: {
   quote: QuoteData
   onOpen?: (quote: QuoteData) => void
+  defaultCurrency?: string | null
 }) {
   const i18n = useCrmUiI18nOrDefault()
   const content = (
@@ -72,7 +90,7 @@ function QuoteBoardCard({
       <div className="mt-2 flex items-center justify-between gap-2">
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <TrendingUp className="size-3" aria-hidden="true" />
-          {formatCrmMoney(i18n, quote.valueAmountCents, quote.valueCurrency)}
+          {formatCrmMoney(i18n, quote.valueAmountCents, quote.valueCurrency, defaultCurrency)}
         </span>
         {quote.expectedCloseDate ? (
           <span className="text-xs text-muted-foreground">

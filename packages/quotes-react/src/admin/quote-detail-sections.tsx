@@ -34,10 +34,20 @@ export interface QuoteDetailsCardProps {
   quote: QuoteDetailsFields
   stages: ReadonlyArray<{ id: string; name: string }>
   onUpdateField: (patch: Record<string, unknown>) => Promise<void>
+  /**
+   * Display fallback for the value when the quote carries no `valueCurrency`
+   * of its own — typically the deployment default market's currency.
+   */
+  defaultCurrency?: string | null
 }
 
 /** Editable deal fields — every value flows back through the quote update mutation. */
-export function QuoteDetailsCard({ quote, stages, onUpdateField }: QuoteDetailsCardProps) {
+export function QuoteDetailsCard({
+  quote,
+  stages,
+  onUpdateField,
+  defaultCurrency,
+}: QuoteDetailsCardProps) {
   const i18n = useCrmUiI18nOrDefault()
   const { messages } = i18n
   const t = messages.quoteDetailPage
@@ -79,7 +89,7 @@ export function QuoteDetailsCard({ quote, stages, onUpdateField }: QuoteDetailsC
           <div className="min-w-0 flex-1">
             <div className="font-medium text-muted-foreground text-xs">{t.fields.value}</div>
             <div className="text-sm">
-              {formatCrmMoney(i18n, quote.valueAmountCents, quote.valueCurrency)}
+              {formatCrmMoney(i18n, quote.valueAmountCents, quote.valueCurrency, defaultCurrency)}
             </div>
             <div className="text-[10px] text-muted-foreground">{t.fields.valueHint}</div>
           </div>

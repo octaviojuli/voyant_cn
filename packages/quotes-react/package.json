@@ -39,6 +39,7 @@
     "@tanstack/react-router": "^1.0.0",
     "@voyant-travel/admin": "workspace:^",
     "@voyant-travel/auth-react": "workspace:^",
+    "@voyant-travel/commerce-react": "workspace:^",
     "@voyant-travel/quotes": "workspace:^",
     "@voyant-travel/relationships-react": "workspace:^",
     "@voyant-travel/ui": "workspace:^",
@@ -52,6 +53,9 @@
       "optional": true
     },
     "@voyant-travel/auth-react": {
+      "optional": true
+    },
+    "@voyant-travel/commerce-react": {
       "optional": true
     },
     "@voyant-travel/relationships-react": {
@@ -74,6 +78,7 @@
     "@types/react-dom": "^19.2.3",
     "@voyant-travel/admin": "workspace:^",
     "@voyant-travel/auth-react": "workspace:^",
+    "@voyant-travel/commerce-react": "workspace:^",
     "@voyant-travel/i18n": "workspace:^",
     "@voyant-travel/quotes": "workspace:^",
     "@voyant-travel/react": "workspace:^",

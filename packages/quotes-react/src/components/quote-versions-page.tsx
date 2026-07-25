@@ -28,12 +28,18 @@ export interface QuoteVersionsPageProps {
   onQuoteVersionOpen?: (quoteVersion: QuoteVersionRecord) => void
   onQuoteVersionCreated?: (quoteVersion: QuoteVersionRecord) => void
   className?: string
+  /**
+   * Currency preselected in the create dialog when the chosen quote carries
+   * none of its own — pass the deployment default market's currency.
+   */
+  defaultCurrency?: string
 }
 
 export function QuoteVersionsPage({
   onQuoteVersionOpen,
   onQuoteVersionCreated,
   className,
+  defaultCurrency,
 }: QuoteVersionsPageProps = {}) {
   const i18n = useCrmUiI18nOrDefault()
   const { messages } = i18n
@@ -151,6 +157,7 @@ export function QuoteVersionsPage({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onCreated={handleCreated}
+        defaultCurrency={defaultCurrency}
       />
     </div>
   )

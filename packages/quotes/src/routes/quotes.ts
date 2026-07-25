@@ -96,40 +96,43 @@ const deleteQuoteRoute = createRoute({
   },
 })
 
-const quotesChild = new OpenAPIHono<Env>({ defaultHook: openApiValidationHook })
-  .openapi(listQuotesRoute, async (c) =>
-    c.json(await quotesService.listQuotes(c.get("db"), c.req.valid("query")), 200),
-  )
-  .openapi(createQuoteRoute, async (c) => {
-    const row = await quotesService.createQuote(
-      c.get("db"),
-      c.req.valid("json"),
-      c.get("userId") ?? null,
+function createQuotesChild(runtime: QuotesRouteRuntime = {}) {
+  return new OpenAPIHono<Env>({ defaultHook: openApiValidationHook })
+    .openapi(listQuotesRoute, async (c) =>
+      c.json(await quotesService.listQuotes(c.get("db"), c.req.valid("query")), 200),
     )
-    if (row) await c.get("eventBus")?.emit("quote.created", { id: row.id })
-    return c.json({ data: row! }, 201)
-  })
-  .openapi(getQuoteRoute, async (c) => {
-    const row = await quotesService.getQuoteById(c.get("db"), c.req.valid("param").id)
-    return row ? c.json({ data: row }, 200) : c.json({ error: "Quote not found" }, 404)
-  })
-  .openapi(updateQuoteRoute, async (c) => {
-    const row = await quotesService.updateQuote(
-      c.get("db"),
-      c.req.valid("param").id,
-      c.req.valid("json"),
-      c.get("userId") ?? null,
-    )
-    if (!row) return c.json({ error: "Quote not found" }, 404)
-    await c.get("eventBus")?.emit("quote.updated", { id: row.id })
-    return c.json({ data: row }, 200)
-  })
-  .openapi(deleteQuoteRoute, async (c) => {
-    const row = await quotesService.deleteQuote(c.get("db"), c.req.valid("param").id)
-    if (!row) return c.json({ error: "Quote not found" }, 404)
-    await c.get("eventBus")?.emit("quote.deleted", { id: row.id })
-    return c.json({ success: true } as const, 200)
-  })
+    .openapi(createQuoteRoute, async (c) => {
+      const row = await quotesService.createQuote(
+        c.get("db"),
+        c.req.valid("json"),
+        c.get("userId") ?? null,
+        runtime,
+      )
+      if (row) await c.get("eventBus")?.emit("quote.created", { id: row.id })
+      return c.json({ data: row! }, 201)
+    })
+    .openapi(getQuoteRoute, async (c) => {
+      const row = await quotesService.getQuoteById(c.get("db"), c.req.valid("param").id)
+      return row ? c.json({ data: row }, 200) : c.json({ error: "Quote not found" }, 404)
+    })
+    .openapi(updateQuoteRoute, async (c) => {
+      const row = await quotesService.updateQuote(
+        c.get("db"),
+        c.req.valid("param").id,
+        c.req.valid("json"),
+        c.get("userId") ?? null,
+      )
+      if (!row) return c.json({ error: "Quote not found" }, 404)
+      await c.get("eventBus")?.emit("quote.updated", { id: row.id })
+      return c.json({ data: row }, 200)
+    })
+    .openapi(deleteQuoteRoute, async (c) => {
+      const row = await quotesService.deleteQuote(c.get("db"), c.req.valid("param").id)
+      if (!row) return c.json({ error: "Quote not found" }, 404)
+      await c.get("eventBus")?.emit("quote.deleted", { id: row.id })
+      return c.json({ success: true } as const, 200)
+    })
+}
 
 // --- quote participants -----------------------------------------------------
 
@@ -338,7 +341,7 @@ const mediaChild = new OpenAPIHono<Env>({ defaultHook: openApiValidationHook })
 
 export function createQuoteRoutes(runtime: QuotesRouteRuntime = {}) {
   return new OpenAPIHono<Env>({ defaultHook: openApiValidationHook })
-    .route("/", quotesChild)
+    .route("/", createQuotesChild(runtime))
     .route("/", createParticipantsChild(runtime))
     .route("/", productsChild)
     .route("/", mediaChild)

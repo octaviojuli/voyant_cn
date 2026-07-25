@@ -81,6 +81,7 @@ export {
 export type {
   QuotesRouteRuntime,
   QuotesRouteRuntimeOptions,
+  ResolveDefaultQuoteCurrency,
   ResolveQuoteParticipantPersonById,
 } from "./route-runtime.js"
 export type {
