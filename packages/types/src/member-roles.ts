@@ -11,6 +11,7 @@
  * docs/architecture/member-rbac-rfc.md (voyant#2085).
  */
 import {
+  type AccessCatalogPreset,
   type ApiKeyPermissionString,
   type ApiKeyPermissions,
   hasApiKeyPermission,
@@ -134,4 +135,30 @@ export function scopesForRole(role: string | null | undefined): ApiKeyPermission
 /** True when a role slug grants full (manage-everything) access. */
 export function isFullAccessRole(role: string | null | undefined): boolean {
   return hasApiKeyPermission(permissionsForRole(role), "*", "*")
+}
+
+/**
+ * Resolve a role slug to its scope strings, unioned with the grants of the
+ * deployment's `kind: "staff"` access-catalog preset whose id matches the role
+ * (`member` resolves against the `editor` preset, `guest` against `viewer`,
+ * mirroring {@link permissionsForRole}).
+ *
+ * Staff presets are how a project deliberately grants explicit-wildcard
+ * (sensitive) scopes — e.g. `action-ledger:read` — to named roles: a resource
+ * declared `wildcard: "explicit-resource"` is never satisfied by the `*`
+ * full-access scope (see ./api-keys), so without the preset union even
+ * owner/admin sessions would be denied. Returns `null` for a slug with no
+ * preset bundle (e.g. "custom" or unknown).
+ */
+export function scopesForRoleWithPresets(
+  role: string | null | undefined,
+  presets: readonly AccessCatalogPreset[],
+): string[] | null {
+  const base = scopesForRole(role)
+  if (!base) return null
+  const normalizedRole = (role ?? "").trim().toLowerCase()
+  const presetId =
+    normalizedRole === "member" ? "editor" : normalizedRole === "guest" ? "viewer" : normalizedRole
+  const selected = presets.find((preset) => preset.kind === "staff" && preset.id === presetId)
+  return [...new Set<string>([...base, ...(selected?.grants ?? [])])].sort()
 }

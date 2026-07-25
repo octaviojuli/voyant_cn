@@ -89,6 +89,25 @@ export const STANDARD_OPERATOR_ACCESS: VoyantGraphProjectAccessDeclaration = {
       label: "Editor",
       grants: ["bookings:read", "bookings:write"],
     },
+    // The action-ledger resource is `wildcard: "explicit-resource"` with
+    // `wildcard: "explicit"` actions, so the full-access `*` scope held by
+    // owner/admin staff sessions never satisfies it — the audit surfaces must
+    // be granted deliberately per role (see
+    // docs/architecture/access-catalog-authority.md: projects own what named
+    // roles and presets grant). Without these presets no role holds
+    // `action-ledger:read` and the admin Logs page 403s for everyone.
+    {
+      id: "owner",
+      kind: "staff",
+      label: "Owner",
+      grants: ["action-ledger:approve", "action-ledger:read", "action-ledger:write"],
+    },
+    {
+      id: "admin",
+      kind: "staff",
+      label: "Admin",
+      grants: ["action-ledger:read"],
+    },
   ],
 }
 
