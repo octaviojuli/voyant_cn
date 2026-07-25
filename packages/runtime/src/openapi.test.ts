@@ -80,6 +80,7 @@ function selectedRuntime(): Pick<VoyantGraphRuntime, "modules" | "extensions" | 
       tools: [],
       workflows: [],
       actions: [],
+      setupSteps: [],
       selectedIds: {
         routes: [route.id],
         tools: [],

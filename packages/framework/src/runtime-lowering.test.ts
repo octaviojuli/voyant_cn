@@ -240,6 +240,21 @@ describe("graph runtime lowering", () => {
     expect(runtime.webhooks.isOutboundEventEligible("hooks.deleted")).toBe(false)
   })
 
+  it("exposes selected setup steps on unit loaders and the runtime aggregate", () => {
+    const input = runtimeInput(async () => ({ createLoyaltyModule: () => ({}) }))
+    const setupSteps = [
+      { id: "@acme/voyant-loyalty#setup.first-reward", skippable: true },
+      { id: "@acme/voyant-loyalty#setup.tiers", skippable: false },
+    ]
+    const runtime = createVoyantGraphRuntime({
+      ...input,
+      modules: input.modules.map((module) => ({ ...module, setupSteps })),
+    })
+
+    expect(runtime.modules[0]?.setupSteps).toEqual(setupSteps)
+    expect(runtime.setupSteps).toEqual(setupSteps)
+  })
+
   it("keeps package imports lazy and memoized across route and unit loaders", async () => {
     const factory = () => ({ module: { name: "loyalty" } })
     const importRuntime = vi.fn(async () => ({ createLoyaltyModule: factory }))
