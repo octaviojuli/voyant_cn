@@ -75,6 +75,14 @@ The current authority chain is:
 This keeps package behavior package-owned while allowing the application to
 supply deployment-specific field declarations.
 
+When a deployment supplies no `customFields` config, the Relationships
+contributor defaults to the runtime half of the unified system: it resolves the
+registry from the admin-managed `custom_field_definitions` table alone (an
+empty registry until definitions exist). Supplying a resolver through
+`host.config.customFields` overrides this default and is how code-declared
+fields are merged in; a non-function config value is still rejected as a
+configuration error.
+
 ## Project Declarations
 
 `src/custom-fields/` is the recommended source layout, but it is not a runtime
