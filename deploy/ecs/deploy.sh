@@ -118,6 +118,23 @@ sudo systemctl restart voyant-operator
 for i in $(seq 1 30); do
   if curl -sf -o /dev/null http://127.0.0.1:8080/healthz; then
     echo "==> 部署成功:healthz OK"
+    # 首页初始化探针:在服务器本机以演示账号走一遍 setup/initialize,
+    # 失败时当场输出服务日志,便于远程定位(演示口令为公开种子数据)。
+    D=$(sed -n 's|^DASH_BASE_URL="https\?://\([^"]*\)"|\1|p' "$APP_DIR/starters/operator/.env" | head -1)
+    if [ -n "$D" ]; then
+      JAR=$(mktemp)
+      curl -s -c "$JAR" -o /dev/null -w "[probe] signin:%{http_code}\n" \
+        -X POST http://127.0.0.1:8080/api/auth/sign-in/email \
+        -H "Host: $D" -H "Origin: https://$D" -H "Content-Type: application/json" \
+        -d '{"email":"owner@voyant.dev","password":"password123"}' || true
+      curl -s -b "$JAR" -w "\n[probe] initialize:%{http_code}\n" \
+        -X POST http://127.0.0.1:8080/api/v1/admin/setup/initialize \
+        -H "Host: $D" -H "Origin: https://$D" -H "Content-Type: application/json" \
+        -d '{"stepIds":[],"fresh":true}' | head -c 400 || true
+      echo "[probe] 最近服务日志:"
+      sudo journalctl -u voyant-operator -n 40 --no-pager | tail -40 || true
+      rm -f "$JAR"
+    fi
     exit 0
   fi
   sleep 2
