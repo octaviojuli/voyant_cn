@@ -81,6 +81,7 @@ function unit(
     tools: [],
     workflows: [],
     actions: [],
+    setupSteps: [],
     selectedIds: {
       routes: routes.map(({ id }) => id),
       tools: [],

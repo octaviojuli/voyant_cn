@@ -233,6 +233,7 @@ export interface VoyantGraphRuntimeUnitLoader
   tools: readonly VoyantGraphRuntimeToolLoader[]
   workflows: readonly VoyantGraphRuntimeWorkflowLoader[]
   actions: readonly VoyantGraphRuntimeActionDefinition[]
+  setupSteps: readonly { id: string; skippable: boolean }[]
   selectedIds: VoyantGraphRuntimeSelectedIds
   routes: readonly VoyantGraphRuntimeRouteLoader[]
   /** Load the unit runtime, or each distinct route runtime for legacy units. */
@@ -317,7 +318,7 @@ export function createVoyantGraphRuntime(input: CreateVoyantGraphRuntimeInput): 
   const tools = units.flatMap((unit) => unit.tools)
   const workflows = units.flatMap((unit) => unit.workflows)
   const actions = units.flatMap((unit) => unit.actions)
-  const setupSteps = units.flatMap((unit) => unit.setupSteps ?? [])
+  const setupSteps = units.flatMap((unit) => unit.setupSteps)
   const selectedIds = mergeSelectedIds(units.map((unit) => unit.selectedIds))
   const referenceById = new Map(references.map((reference) => [reference.id, reference]))
   const webhooks = createRuntimeWebhookPlan(definitions.webhookPlan)
@@ -389,6 +390,7 @@ interface NormalizedVoyantGraphRuntimeUnitDefinition
   tools: readonly VoyantGraphRuntimeToolDefinition[]
   workflows: readonly VoyantGraphRuntimeWorkflowDefinition[]
   actions: readonly VoyantGraphRuntimeActionDefinition[]
+  setupSteps: readonly { id: string; skippable: boolean }[]
   selectedIds: VoyantGraphRuntimeSelectedIds
   routes: readonly VoyantGraphRuntimeRouteDefinition[]
 }
@@ -611,6 +613,7 @@ function createRuntimeUnitLoader(
     tools,
     workflows,
     actions: unit.actions,
+    setupSteps: unit.setupSteps,
     selectedIds: unit.selectedIds,
     routes,
     load: memoizePromise(() =>

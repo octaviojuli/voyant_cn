@@ -56,9 +56,17 @@ export async function loadSelectedSetupState(
 ) {
   const snapshot = await getSetupStateClient(runtime)
   if (!snapshot.canManage) return snapshot
-  return {
-    state: await initializeSetupClient(runtime, { stepIds: [...stepIds], fresh: false }),
-    canManage: true,
+  try {
+    return {
+      state: await initializeSetupClient(runtime, { stepIds: [...stepIds], fresh: false }),
+      canManage: true,
+    }
+  } catch (error) {
+    console.warn(
+      "loadSelectedSetupState: setup initialization failed; showing the persisted setup state instead.",
+      error,
+    )
+    return { state: snapshot.state, canManage: snapshot.canManage }
   }
 }
 

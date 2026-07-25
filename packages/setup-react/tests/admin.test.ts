@@ -89,6 +89,25 @@ describe("selected setup admin extension", () => {
     })
   })
 
+  it("falls back to the persisted snapshot when manager initialization fails", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ data: { state: setupState(), canManage: true } }))
+      .mockResolvedValueOnce(
+        Response.json(
+          { error: "Setup initialization step ids do not match the selected project graph" },
+          { status: 500 },
+        ),
+      )
+
+    await expect(
+      loadSelectedSetupState({ baseUrl: "/api", fetcher }, ["acme.step"]),
+    ).resolves.toEqual({ state: setupState(), canManage: true })
+    expect(warn).toHaveBeenCalledTimes(1)
+    warn.mockRestore()
+  })
+
   it("hands opaque prefill to an href-backed package form without putting it in the URL", () => {
     const values = new Map<string, string>()
     const storage = {
