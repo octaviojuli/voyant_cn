@@ -98,6 +98,58 @@ if [[ "$APP_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && command -v nginx &>/
       echo "!! 证书签发失败,暂以 HTTP 运行;可稍后重试或绑定自有域名"
     fi
   fi
+
+  # 证书就绪后,用确定性模板重写 Nginx 配置(幂等,替代 certbot 的就地改写):
+  # - 80 端口的 /api/ 直接反代:应用的服务端函数会用 http 自我回调,若被 301
+  #   跳转到 https,Node fetch 会按规范丢弃 Cookie 头,导致会话判定失败;
+  # - 其余 http 流量(含裸 IP 访问)一律 301 到正式 https 域名。
+  if [ -f "/etc/letsencrypt/live/${HTTPS_DOMAIN}/fullchain.pem" ]; then
+    cat > /etc/nginx/conf.d/voyant.conf <<NGINXEOF
+server {
+    listen 80 default_server;
+    server_name ${HTTPS_DOMAIN} ${APP_HOST};
+    client_max_body_size 20m;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_read_timeout 120s;
+    }
+
+    location / {
+        return 301 https://${HTTPS_DOMAIN}\$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name ${HTTPS_DOMAIN};
+    ssl_certificate /etc/letsencrypt/live/${HTTPS_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${HTTPS_DOMAIN}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    client_max_body_size 20m;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 120s;
+    }
+}
+NGINXEOF
+    nginx -t && systemctl reload nginx && echo "==> Nginx 配置已更新(API 自我回调直通)"
+  fi
 fi
 
 if [ "$FIRST_RUN" = true ]; then
