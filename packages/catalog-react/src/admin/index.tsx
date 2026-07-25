@@ -3,6 +3,7 @@ import {
   type AdminRoutePageModule,
   type AdminRoutePageProps,
   defineAdminExtension,
+  resolveAdminLocale,
   type SelectedAdminExtensionFactoryContext,
   withAdminRouteMessagesProvider,
 } from "@voyant-travel/admin"
@@ -345,6 +346,33 @@ export const standardCatalogAdminScope = {
   hideScopeControls: true,
 } as const
 
+/**
+ * zh 管理端的目录默认作用域:优先匹配商务市场里的中国市场(code=CN,
+ * 由 zh-CN 种子建立);不存在时按 deployment-default 合成同名作用域。
+ * 目录内容解析自带回退(returned_locale 可与请求不同),缺 zh 内容时
+ * 仍回落到 default 作用域的数据,不会出现空详情。
+ */
+export const zhCatalogAdminScope = {
+  defaultLocale: "zh-CN",
+  defaultMarket: "CN",
+  scopeStrategy: "deployment-default",
+  hideScopeControls: true,
+} as const
+
+/**
+ * Detect the persisted admin locale outside the provider tree (factory runs
+ * at module composition), mirroring `AdminRootErrorBoundary`'s detection:
+ * persisted `admin-locale`, then the browser language, SSR-safe fallback.
+ */
+function resolveSelectedCatalogAdminScope(): typeof standardCatalogAdminScope | typeof zhCatalogAdminScope {
+  if (typeof window === "undefined") return standardCatalogAdminScope
+  const stored = window.localStorage.getItem("admin-locale")
+  const browser = typeof navigator !== "undefined" ? navigator.language : null
+  return resolveAdminLocale(stored ?? browser) === "zh"
+    ? zhCatalogAdminScope
+    : standardCatalogAdminScope
+}
+
 export function createSelectedCatalogAdminExtension({
   navMessages,
 }: SelectedAdminExtensionFactoryContext): AdminExtension {
@@ -358,7 +386,7 @@ export function createSelectedCatalogAdminExtension({
   }
   const extension = withAdminRouteMessagesProvider(
     createCatalogAdminExtension({
-      ...standardCatalogAdminScope,
+      ...resolveSelectedCatalogAdminScope(),
       labels,
     }),
     () =>

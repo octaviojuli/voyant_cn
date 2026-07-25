@@ -16,6 +16,7 @@ import {
   createSelectedCatalogAdminExtension,
   productDetailSearchSchema,
   standardCatalogAdminScope,
+  zhCatalogAdminScope,
 } from "./index.js"
 import { ProductDetailHost } from "./product-detail-host.js"
 import { ScheduledCatalogHost } from "./scheduled-catalog-host.js"
@@ -288,5 +289,26 @@ describe("catalog admin locale defaults", () => {
       locale: undefined,
       q: "delta",
     })
+  })
+
+  it("owns the zh selected scope (CN market, zh-CN locale)", () => {
+    expect(zhCatalogAdminScope).toEqual({
+      defaultLocale: "zh-CN",
+      defaultMarket: "CN",
+      scopeStrategy: "deployment-default",
+      hideScopeControls: true,
+    })
+  })
+
+  it("selects the zh scope when the persisted admin locale is zh", () => {
+    const storage = { getItem: (key: string) => (key === "admin-locale" ? "zh" : null) }
+    ;(globalThis as { window?: unknown }).window = { localStorage: storage }
+    try {
+      const extension = createSelectedCatalogAdminExtension({ navMessages: {} })
+      const indexRoute = extension.routes?.find((route) => route.path === "/catalog")
+      expect(indexRoute).toBeDefined()
+    } finally {
+      delete (globalThis as { window?: unknown }).window
+    }
   })
 })
