@@ -30,8 +30,12 @@ export const operatorAdminProductsMessagesEnOperations = {
     startTimeLabel: "Start time",
     endDateLabel: "End date",
     endDateOptional: "(optional)",
+    endDateAuto: "(from itinerary — editable)",
     endTimeLabel: "End time",
     endTimeOptional: "(optional)",
+    endTimeAuto: "(auto-filled — editable)",
+    itineraryLengthHint:
+      "Length comes from the itinerary: {days} days / {nights} nights. The end date and duration are filled in from the start date — edit them to override.",
     datePlaceholder: "Pick a date",
     timezoneLabel: "Timezone",
     timezoneSearchPlaceholder: "Search timezones…",

@@ -39,8 +39,12 @@ export type GenerateSlotsForRuleResult = {
  *    reported under `skipped` rather than duplicated.
  *
  * Created slots inherit the rule's `maxCapacity` (as both `initialPax` and
- * `remainingPax`) and its `timezone`, and seed allocation resources from the
- * option's resource templates.
+ * `remainingPax`), its `maxPickupCapacity` (as `initialPickups` /
+ * `remainingPickups`) and its `timezone`; the product's active start time
+ * (`startTimeId` plus its local time of day); the product's itinerary
+ * (`itineraryId`, `nights`, `days`, `endsAt`); and seed allocation resources
+ * from the option's resource templates. See `generateAvailabilitySlots` and
+ * `slot-derivation.ts` for the exact derivation rules.
  */
 export async function generateSlotsForRule(
   db: PostgresJsDatabase,

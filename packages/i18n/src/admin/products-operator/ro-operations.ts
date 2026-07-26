@@ -31,8 +31,12 @@ export const operatorAdminProductsMessagesRoOperations = {
     startTimeLabel: "Ora inceput",
     endDateLabel: "Data sfarsit",
     endDateOptional: "(optional)",
+    endDateAuto: "(din itinerar — editabil)",
     endTimeLabel: "Ora sfarsit",
     endTimeOptional: "(optional)",
+    endTimeAuto: "(completat automat — editabil)",
+    itineraryLengthHint:
+      "Durata vine din itinerar: {days} zile / {nights} nopti. Data de sfarsit si durata se completeaza din data de inceput — modifica-le pentru a suprascrie.",
     datePlaceholder: "Alege o data",
     timezoneLabel: "Fus orar",
     timezoneSearchPlaceholder: "Cauta fusuri orare…",

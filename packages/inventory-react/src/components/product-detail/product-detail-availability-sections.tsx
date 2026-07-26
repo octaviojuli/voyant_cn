@@ -23,7 +23,10 @@ import {
   formatDuration,
   formatSlotDate,
   formatSlotTime,
+  formatSlotTimezoneOffset,
+  getBrowserTimezone,
   getDepartureStatusLabel,
+  isForeignSlotTimezone,
   RULE_SLOT_GENERATION_HORIZON_DAYS,
   slotStatusVariant,
 } from "./product-detail-shared.js"
@@ -50,6 +53,10 @@ export function ProductDeparturesSection({
 }) {
   const messages = useProductDetailMessages()
   const productMessages = messages.products.core
+  // Departure instants are stored in UTC but belong to the slot's own calendar.
+  // The offset marker is only rendered when the operator sits on a different
+  // clock, so a domestic operator sees clean times and nothing else.
+  const browserTimezone = getBrowserTimezone()
   return (
     <Section
       title={productMessages.departuresTitle}
@@ -91,75 +98,87 @@ export function ProductDeparturesSection({
             </tr>
           </thead>
           <tbody>
-            {slots.map((slot) => (
-              <tr key={slot.id} className="border-b last:border-b-0">
-                <td className="py-2.5 pl-6 pr-3">
-                  <div className="font-mono text-xs">{slot.dateLocal}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {formatSlotTime(slot.startsAt)}
-                  </div>
-                </td>
-                <td className="px-3 py-2.5">
-                  {slot.endsAt ? (
-                    <>
-                      <div className="font-mono text-xs">{formatSlotDate(slot.endsAt)}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatSlotTime(slot.endsAt)}
-                      </div>
-                    </>
-                  ) : (
-                    <span className="text-muted-foreground">{productMessages.noValue}</span>
-                  )}
-                </td>
-                <td className="px-3 py-2.5 text-xs">
-                  {slot.itineraryId
-                    ? (itineraryNameById.get(slot.itineraryId) ??
-                      messages.products.operations.itineraries.customOverride)
-                    : messages.products.operations.itineraries.defaultBadge}
-                </td>
-                <td className="px-3 py-2.5 text-xs">{formatDuration(slot, messages)}</td>
-                <td className="px-3 py-2.5">
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant={slotStatusVariant[slot.status]} className="text-xs">
-                      {getDepartureStatusLabel(slot.status, messages)}
-                    </Badge>
-                    {slotIdsWithOverrides?.has(slot.id) ? (
-                      <Badge variant="outline" className="text-xs">
-                        {productMessages.departureOverrideBadge}
+            {slots.map((slot) => {
+              const offsetLabel = isForeignSlotTimezone(slot.timezone, browserTimezone)
+                ? formatSlotTimezoneOffset(slot.startsAt, slot.timezone)
+                : null
+              return (
+                <tr key={slot.id} className="border-b last:border-b-0">
+                  <td className="py-2.5 pl-6 pr-3">
+                    <div className="font-mono text-xs">{slot.dateLocal}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {formatSlotTime(slot.startsAt, slot.timezone)}
+                      {offsetLabel ? (
+                        <span className="ml-1.5 font-mono" title={slot.timezone}>
+                          {offsetLabel}
+                        </span>
+                      ) : null}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    {slot.endsAt ? (
+                      <>
+                        <div className="font-mono text-xs">
+                          {formatSlotDate(slot.endsAt, slot.timezone)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatSlotTime(slot.endsAt, slot.timezone)}
+                        </div>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">{productMessages.noValue}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs">
+                    {slot.itineraryId
+                      ? (itineraryNameById.get(slot.itineraryId) ??
+                        messages.products.operations.itineraries.customOverride)
+                      : messages.products.operations.itineraries.defaultBadge}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs">{formatDuration(slot, messages)}</td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant={slotStatusVariant[slot.status]} className="text-xs">
+                        {getDepartureStatusLabel(slot.status, messages)}
                       </Badge>
-                    ) : null}
-                  </div>
-                </td>
-                <td className="px-3 py-2.5 font-mono text-xs">
-                  {formatCapacityLabel(slot, messages)}
-                </td>
-                <td className="px-3 py-2.5">
-                  <ActionMenu label={`${productMessages.departuresTitle}: ${slot.dateLocal}`}>
-                    <DropdownMenuItem onClick={() => onEdit(slot)}>
-                      <Pencil className="h-4 w-4" />
-                      {productMessages.edit}
-                    </DropdownMenuItem>
-                    {onManageAvailability ? (
-                      <DropdownMenuItem onClick={() => onManageAvailability(slot)}>
-                        <CalendarRange className="h-4 w-4" />
-                        {productMessages.departureManageAvailability}
+                      {slotIdsWithOverrides?.has(slot.id) ? (
+                        <Badge variant="outline" className="text-xs">
+                          {productMessages.departureOverrideBadge}
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5 font-mono text-xs">
+                    {formatCapacityLabel(slot, messages)}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <ActionMenu label={`${productMessages.departuresTitle}: ${slot.dateLocal}`}>
+                      <DropdownMenuItem onClick={() => onEdit(slot)}>
+                        <Pencil className="h-4 w-4" />
+                        {productMessages.edit}
                       </DropdownMenuItem>
-                    ) : null}
-                    {onOverridePrice ? (
-                      <DropdownMenuItem onClick={() => onOverridePrice(slot)}>
-                        <DollarSign className="h-4 w-4" />
-                        {productMessages.departureOverridePricing}
+                      {onManageAvailability ? (
+                        <DropdownMenuItem onClick={() => onManageAvailability(slot)}>
+                          <CalendarRange className="h-4 w-4" />
+                          {productMessages.departureManageAvailability}
+                        </DropdownMenuItem>
+                      ) : null}
+                      {onOverridePrice ? (
+                        <DropdownMenuItem onClick={() => onOverridePrice(slot)}>
+                          <DollarSign className="h-4 w-4" />
+                          {productMessages.departureOverridePricing}
+                        </DropdownMenuItem>
+                      ) : null}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem variant="destructive" onClick={() => onDelete(slot.id)}>
+                        <Trash2 className="h-4 w-4" />
+                        {productMessages.delete}
                       </DropdownMenuItem>
-                    ) : null}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onClick={() => onDelete(slot.id)}>
-                      <Trash2 className="h-4 w-4" />
-                      {productMessages.delete}
-                    </DropdownMenuItem>
-                  </ActionMenu>
-                </td>
-              </tr>
-            ))}
+                    </ActionMenu>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       )}
