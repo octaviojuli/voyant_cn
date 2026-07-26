@@ -84,6 +84,17 @@ for (const m of migrations) {
 }
 LINKEOF
 
+# 上传的图片/PDF 存在磁盘上,目录必须落在 APP_DIR 之外——部署会对仓库做
+# git reset --hard,放在仓库内的文件每次发布都会被清掉。缺少该配置时应用会
+# 直接拒绝启动(宁可启动失败,也不要静默写到会被清空的位置)。
+STORAGE_ROOT="${STORAGE_ROOT:-/opt/voyant/storage}"
+ENV_FILE="$APP_DIR/starters/operator/.env"
+mkdir -p "$STORAGE_ROOT/media" "$STORAGE_ROOT/documents"
+if ! grep -q '^STORAGE_FILESYSTEM_ROOT=' "$ENV_FILE" 2>/dev/null; then
+  echo "[$(date +%H:%M:%S)] ==> 写入 STORAGE_FILESYSTEM_ROOT=$STORAGE_ROOT"
+  printf '\nSTORAGE_FILESYSTEM_ROOT="%s"\n' "$STORAGE_ROOT" >> "$ENV_FILE"
+fi
+
 echo "[$(date +%H:%M:%S)] ==> 执行数据库迁移"
 migrated=false
 for i in 1 2 3; do
