@@ -1967,6 +1967,9 @@ importers:
       '@voyant-travel/hono':
         specifier: workspace:^
         version: link:../hono
+      '@voyant-travel/i18n':
+        specifier: workspace:^
+        version: link:../i18n
       '@voyant-travel/public-document-delivery':
         specifier: workspace:^
         version: link:../public-document-delivery
@@ -2754,6 +2757,9 @@ importers:
       '@voyant-travel/hono':
         specifier: workspace:^
         version: link:../hono
+      '@voyant-travel/i18n':
+        specifier: workspace:^
+        version: link:../i18n
       '@voyant-travel/inventory':
         specifier: workspace:^
         version: link:../inventory
@@ -4479,6 +4485,9 @@ importers:
         specifier: workspace:^
         version: link:../core
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.5.2
       '@voyant-travel/voyant-typescript-config':
         specifier: workspace:^
         version: link:../typescript-config

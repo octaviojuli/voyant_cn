@@ -25,6 +25,10 @@ describe("storage deployment manifest", () => {
         }),
         expect.objectContaining({
           port: "storage.object",
+          selection: { role: "storage", value: "filesystem" },
+        }),
+        expect.objectContaining({
+          port: "storage.object",
           selection: { role: "storage", value: "s3-compatible" },
         }),
       ],
