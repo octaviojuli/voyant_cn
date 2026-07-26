@@ -153,6 +153,32 @@ export const availabilityRuleListQuerySchema = paginationSchema.extend({
   active: booleanQueryParam.optional(),
 })
 
+/**
+ * Horizon defaults/bounds for `POST /rules/{id}/generate-slots`. Declared with
+ * the request contract (leaf module) and consumed by the service so the wire
+ * bounds and the service default can never drift apart.
+ */
+export const DEFAULT_RULE_SLOT_GENERATION_HORIZON_DAYS = 90
+export const MIN_RULE_SLOT_GENERATION_HORIZON_DAYS = 1
+export const MAX_RULE_SLOT_GENERATION_HORIZON_DAYS = 365
+
+/**
+ * Body for `POST /rules/{id}/generate-slots`.
+ *
+ * `horizonDays` is optional — an absent body means "use the service default"
+ * (90 days). Out-of-range values are rejected rather than silently clamped so
+ * a caller never gets a quietly different horizon back than it asked for; the
+ * response echoes the horizon that was actually applied.
+ */
+export const generateRuleSlotsSchema = z.object({
+  horizonDays: z
+    .number()
+    .int()
+    .min(MIN_RULE_SLOT_GENERATION_HORIZON_DAYS)
+    .max(MAX_RULE_SLOT_GENERATION_HORIZON_DAYS)
+    .optional(),
+})
+
 export const availabilityStartTimeCoreSchema = z.object({
   productId: z.string(),
   optionId: z.string().nullable().optional(),

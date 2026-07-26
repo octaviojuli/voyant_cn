@@ -22,10 +22,12 @@ import {
 } from "@voyant-travel/ui/components/combobox"
 import { ToggleGroup, ToggleGroupItem } from "@voyant-travel/ui/components/toggle-group"
 import { Loader2 } from "lucide-react"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod/v4"
+import { useProduct } from "../../index.js"
 import { useProductDetailApi, useProductDetailMessages } from "./host.js"
+import { resolveProductTimezoneDefault } from "./product-detail-shared.js"
 import { getTimezoneLabel, TIMEZONE_IDS, TIMEZONE_OPTIONS } from "./timezone-options.js"
 import { zodResolver } from "./zod-resolver.js"
 
@@ -80,10 +82,20 @@ export type AvailabilityRule = {
   active: boolean
 }
 
+/**
+ * What the panel needs after a save to keep the "define a rule and departures
+ * appear" promise: which rule was written, and whether it was brand new (only
+ * then do we kick off the first slot generation automatically).
+ */
+export interface ScheduleFormSaveResult {
+  ruleId: string | null
+  isNew: boolean
+}
+
 export interface ScheduleFormProps {
   productId: string
   rule?: AvailabilityRule
-  onSuccess: () => void
+  onSuccess: (result: ScheduleFormSaveResult) => void
   onCancel?: () => void
 }
 
@@ -235,10 +247,12 @@ export function ScheduleForm({ productId, rule, onSuccess, onCancel }: ScheduleF
     { value: "MONTHLY", label: scheduleMessages.frequencyMonthly },
   ] as const
 
-  const defaultTz =
-    typeof Intl !== "undefined"
-      ? (Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC")
-      : "UTC"
+  // Slots materialized from this rule inherit its timezone, and the slot
+  // service validates `dateLocal` against `startsAt` in that timezone — so the
+  // browser's timezone is the wrong default. Prefer the product's own.
+  const { data: product } = useProduct(productId)
+  const productTimezone = product?.timezone ?? null
+  const defaultTz = resolveProductTimezoneDefault(productTimezone)
 
   const form = useForm<ScheduleFormValues, unknown, ScheduleFormOutput>({
     resolver: zodResolver(scheduleFormSchema),
@@ -267,9 +281,28 @@ export function ScheduleForm({ productId, rule, onSuccess, onCancel }: ScheduleF
     [byMonthDays, byWeekdays, frequency, interval, scheduleMessages, weekdayOptions],
   )
 
+  // The product query resolves after first render; keep it out of the reset
+  // effect's deps so a late timezone never wipes in-progress edits.
+  const defaultTzRef = useRef(defaultTz)
+  defaultTzRef.current = defaultTz
+
   useEffect(() => {
-    form.reset(initialValues(rule, defaultTz))
-  }, [rule, form, defaultTz])
+    form.reset(initialValues(rule, defaultTzRef.current))
+  }, [rule, form])
+
+  // Adopt the product's timezone once it loads, but only for a new rule whose
+  // timezone field the operator has not touched yet.
+  const adoptedProductTzRef = useRef(false)
+  useEffect(() => {
+    if (isEditing || adoptedProductTzRef.current || !productTimezone) return
+    if (form.getFieldState("timezone").isDirty) return
+    adoptedProductTzRef.current = true
+    if (form.getValues("timezone") === productTimezone) return
+    form.setValue("timezone", productTimezone, {
+      shouldDirty: false,
+      shouldValidate: true,
+    })
+  }, [isEditing, productTimezone, form])
 
   const onSubmit = async (values: ScheduleFormOutput) => {
     const cutoffMinutes = typeof values.cutoffMinutes === "number" ? values.cutoffMinutes : null
@@ -291,10 +324,15 @@ export function ScheduleForm({ productId, rule, onSuccess, onCancel }: ScheduleF
 
     if (isEditing) {
       await api.patch(`/v1/admin/operations/availability/rules/${rule.id}`, payload)
-    } else {
-      await api.post("/v1/admin/operations/availability/rules", payload)
+      onSuccess({ ruleId: rule.id, isNew: false })
+      return
     }
-    onSuccess()
+
+    const created = await api.post<{ data?: { id?: string } }>(
+      "/v1/admin/operations/availability/rules",
+      payload,
+    )
+    onSuccess({ ruleId: created?.data?.id ?? null, isNew: true })
   }
 
   const unitLabel =

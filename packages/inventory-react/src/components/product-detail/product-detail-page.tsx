@@ -146,8 +146,14 @@ export function ProductDetailPage({ id }: { id: string }) {
 
           <ProductSchedulesSection
             rules={rules}
+            generatingRuleId={
+              mutations.generateRuleSlots.isPending
+                ? (mutations.generateRuleSlots.variables ?? null)
+                : null
+            }
             onCreate={dialogs.schedule.openNew}
             onEdit={dialogs.schedule.openEdit}
+            onGenerateSlots={(rule) => mutations.generateRuleSlots.mutate(rule.id)}
             onDelete={(ruleId) => {
               if (confirm(productMessages.deleteScheduleConfirm)) {
                 mutations.deleteRule.mutate(ruleId)
@@ -230,9 +236,15 @@ export function ProductDetailPage({ id }: { id: string }) {
         onOpenChange={dialogs.schedule.setOpen}
         productId={id}
         rule={dialogs.schedule.editing}
-        onSuccess={() => {
+        onSuccess={(result) => {
           dialogs.schedule.close()
           refetch.rules()
+          // Keep the panel's promise honest: a freshly created rule immediately
+          // materializes its departures (and refreshes the list) instead of
+          // leaving the operator with a rule that generates nothing.
+          if (result.isNew && result.ruleId) {
+            mutations.generateRuleSlots.mutate(result.ruleId)
+          }
         }}
       />
 

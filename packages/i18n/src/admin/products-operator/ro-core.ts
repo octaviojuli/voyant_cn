@@ -122,7 +122,16 @@ export const operatorAdminProductsMessagesRoCore = {
   departuresEmpty: "Nu exista plecari momentan. Adauga o plecare sau creeaza un program recurent.",
   departureStartColumn: "Start",
   departureEndColumn: "Sfarsit",
+  departureItineraryColumn: "Itinerariu",
   departureDurationColumn: "Durata",
+  departureDuration: {
+    daySingular: "1 zi",
+    daysPlural: "{count} zile",
+    nightSingular: "1 noapte",
+    nightsPlural: "{count} nopti",
+    hours: "{count}h",
+    separator: " / ",
+  },
   departureStatusColumn: "Status",
   departureCapacityColumn: "Capacitate",
   departureStatusOpen: "Deschis",
@@ -150,7 +159,18 @@ export const operatorAdminProductsMessagesRoCore = {
   schedulesTitle: "Programe recurente",
   newSchedule: "Program nou",
   schedulesEmpty:
-    "Nu exista programe recurente. Defineste o regula pentru a genera automat plecari.",
+    "Nu exista programe recurente. Defineste o regula, apoi genereaza plecari din ea pentru urmatoarele {horizonDays} zile.",
+  schedulesHint:
+    "Generarea dintr-o regula creeaza plecari doar pentru urmatoarele {horizonDays} zile. Ruleaz-o din nou mai tarziu pentru a extinde orizontul; datele care au deja o plecare pentru regula sunt sarite.",
+  scheduleGenerate: "Genereaza plecari din regula",
+  scheduleGenerateInactiveHint: "Regulile inactive nu genereaza plecari.",
+  scheduleGenerateSuccess:
+    "S-au generat {created} plecari pentru urmatoarele {horizonDays} zile ({skipped} existau deja).",
+  scheduleGenerateNone:
+    "Nicio plecare noua — fiecare data din urmatoarele {horizonDays} zile are deja una.",
+  scheduleGenerateUnavailable:
+    "Plecarile nu pot fi generate din regula momentan: aceasta instalare nu are functia activata sau regula nu mai exista. Adauga plecari manual.",
+  scheduleGenerateFailed: "Nu s-au putut genera plecari din aceasta regula.",
   inactiveBadge: "Inactiv",
   scheduleSummary: "Max {maxCapacity} pax · {timezone}{cutoff}",
   scheduleCutoffSuffix: " · cutoff {minutes}m",

@@ -1,6 +1,19 @@
 import { formatMessage } from "@voyant-travel/i18n"
-import { Badge, DropdownMenuItem, DropdownMenuSeparator } from "@voyant-travel/ui/components"
-import { CalendarRange, DollarSign, Pencil, Plus, Trash2 } from "lucide-react"
+import {
+  Badge,
+  Button,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@voyant-travel/ui/components"
+import {
+  CalendarPlus,
+  CalendarRange,
+  DollarSign,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react"
 import { useProductDetailMessages } from "./host.js"
 import type { DepartureSlot } from "./product-departure-dialog.js"
 import { ActionMenu, EmptyState, Section } from "./product-detail-section-shell.js"
@@ -11,6 +24,7 @@ import {
   formatSlotDate,
   formatSlotTime,
   getDepartureStatusLabel,
+  RULE_SLOT_GENERATION_HORIZON_DAYS,
   slotStatusVariant,
 } from "./product-detail-shared.js"
 import { describeRRule } from "./rrule-labels.js"
@@ -61,7 +75,9 @@ export function ProductDeparturesSection({
               <th className="px-3 py-2.5 text-left font-medium">
                 {productMessages.departureEndColumn}
               </th>
-              <th className="px-3 py-2.5 text-left font-medium">Itinerary</th>
+              <th className="px-3 py-2.5 text-left font-medium">
+                {productMessages.departureItineraryColumn}
+              </th>
               <th className="px-3 py-2.5 text-left font-medium">
                 {productMessages.departureDurationColumn}
               </th>
@@ -101,7 +117,7 @@ export function ProductDeparturesSection({
                       messages.products.operations.itineraries.customOverride)
                     : messages.products.operations.itineraries.defaultBadge}
                 </td>
-                <td className="px-3 py-2.5 text-xs">{formatDuration(slot)}</td>
+                <td className="px-3 py-2.5 text-xs">{formatDuration(slot, messages)}</td>
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-1.5">
                     <Badge variant={slotStatusVariant[slot.status]} className="text-xs">
@@ -153,13 +169,21 @@ export function ProductDeparturesSection({
 
 export function ProductSchedulesSection({
   rules,
+  horizonDays = RULE_SLOT_GENERATION_HORIZON_DAYS,
+  generatingRuleId,
   onCreate,
   onEdit,
+  onGenerateSlots,
   onDelete,
 }: {
   rules: AvailabilityRule[]
+  /** Rolling horizon the generator covers, surfaced in the panel copy. */
+  horizonDays?: number
+  /** Id of the rule currently generating, so its row action can show progress. */
+  generatingRuleId?: string | null
   onCreate: () => void
   onEdit: (rule: AvailabilityRule) => void
+  onGenerateSlots?: (rule: AvailabilityRule) => void
   onDelete: (ruleId: string) => void
 }) {
   const messages = useProductDetailMessages()
@@ -177,54 +201,79 @@ export function ProductSchedulesSection({
       }
     >
       {rules.length === 0 ? (
-        <EmptyState message={productMessages.schedulesEmpty} />
+        <EmptyState message={formatMessage(productMessages.schedulesEmpty, { horizonDays })} />
       ) : (
-        <div className="flex flex-col divide-y">
-          {rules.map((rule) => (
-            <div
-              key={rule.id}
-              className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">
-                    {describeRRule(rule.recurrenceRule, productMessages.rrule)}
-                  </span>
+        <>
+          <p className="pb-3 text-xs text-muted-foreground">
+            {formatMessage(productMessages.schedulesHint, { horizonDays })}
+          </p>
+          <div className="flex flex-col divide-y border-t">
+            {rules.map((rule) => (
+              <div key={rule.id} className="flex items-center justify-between py-3 last:pb-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                      {describeRRule(rule.recurrenceRule, productMessages.rrule)}
+                    </span>
+                    {!rule.active ? (
+                      <Badge variant="outline" className="text-xs">
+                        {productMessages.inactiveBadge}
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {formatMessage(productMessages.scheduleSummary, {
+                      maxCapacity: rule.maxCapacity,
+                      timezone: rule.timezone,
+                      cutoff:
+                        rule.cutoffMinutes != null
+                          ? formatMessage(productMessages.scheduleCutoffSuffix, {
+                              minutes: rule.cutoffMinutes,
+                            })
+                          : "",
+                    })}
+                  </p>
                   {!rule.active ? (
-                    <Badge variant="outline" className="text-xs">
-                      {productMessages.inactiveBadge}
-                    </Badge>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {productMessages.scheduleGenerateInactiveHint}
+                    </p>
                   ) : null}
                 </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {formatMessage(productMessages.scheduleSummary, {
-                    maxCapacity: rule.maxCapacity,
-                    timezone: rule.timezone,
-                    cutoff:
-                      rule.cutoffMinutes != null
-                        ? formatMessage(productMessages.scheduleCutoffSuffix, {
-                            minutes: rule.cutoffMinutes,
-                          })
-                        : "",
-                  })}
-                </p>
+                <div className="flex items-center gap-1">
+                  {onGenerateSlots ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!rule.active || generatingRuleId === rule.id}
+                      onClick={() => onGenerateSlots(rule)}
+                    >
+                      {generatingRuleId === rule.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <CalendarPlus className="h-4 w-4" aria-hidden="true" />
+                      )}
+                      {productMessages.scheduleGenerate}
+                    </Button>
+                  ) : null}
+                  <ActionMenu
+                    label={`${productMessages.schedulesTitle}: ${describeRRule(rule.recurrenceRule, productMessages.rrule)}`}
+                  >
+                    <DropdownMenuItem onClick={() => onEdit(rule)}>
+                      <Pencil className="h-4 w-4" />
+                      {productMessages.edit}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem variant="destructive" onClick={() => onDelete(rule.id)}>
+                      <Trash2 className="h-4 w-4" />
+                      {productMessages.delete}
+                    </DropdownMenuItem>
+                  </ActionMenu>
+                </div>
               </div>
-              <ActionMenu
-                label={`${productMessages.schedulesTitle}: ${describeRRule(rule.recurrenceRule, productMessages.rrule)}`}
-              >
-                <DropdownMenuItem onClick={() => onEdit(rule)}>
-                  <Pencil className="h-4 w-4" />
-                  {productMessages.edit}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={() => onDelete(rule.id)}>
-                  <Trash2 className="h-4 w-4" />
-                  {productMessages.delete}
-                </DropdownMenuItem>
-              </ActionMenu>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </Section>
   )

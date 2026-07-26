@@ -1,6 +1,6 @@
 export const adminAvailabilityZhPart2 = {
   details: {
-    backToAvailability: "返回排期与库存",
+    backToAvailability: "返回可售排期",
     openProduct: "打开产品",
     createBooking: "创建订单",
     editSlot: "编辑班期",
@@ -186,10 +186,12 @@ export const adminAvailabilityZhPart2 = {
       optionalStartTimePlaceholder: "出发时间(可选)",
       noStartTime: "无出发时间",
       dateLabel: "日期",
+      datePlaceholder: "选择日期",
       timezoneLabel: "时区",
       timezonePlaceholder: "Europe/Bucharest",
       startsAtLabel: "开始时间",
       endsAtLabel: "结束时间",
+      dateTimePlaceholder: "选择日期和时间",
       statusLabel: "状态",
       unlimitedLabel: "不限",
       yes: "是",

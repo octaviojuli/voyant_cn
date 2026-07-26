@@ -9,6 +9,53 @@ export function formatTemplate(template: string, values: MessageValues) {
   })
 }
 
+/**
+ * Server-driven pagination state for a list tab. `total` is the API envelope's
+ * `total` (every matching row), not the number of rows currently in memory, so
+ * the footer reports the real size of the result set.
+ */
+export interface AvailabilityServerPagination {
+  pageIndex: number
+  pageSize: number
+  total: number
+  onPageChange: (pageIndex: number) => void
+}
+
+export interface AvailabilityPageSummary {
+  /** 1-based index of the first row on the current page (0 when empty). */
+  start: number
+  /** 1-based index of the last row on the current page (0 when empty). */
+  end: number
+  /** 1-based current page number (0 when empty). */
+  page: number
+  pageCount: number
+  canPreviousPage: boolean
+  canNextPage: boolean
+}
+
+/**
+ * Footer arithmetic for a server-paginated list. Derived entirely from the
+ * API's `total` so "showing X-Y of Z" and the page count stay honest even
+ * though only one page of rows is loaded.
+ */
+export function resolveAvailabilityPageSummary(
+  pagination: Pick<AvailabilityServerPagination, "pageIndex" | "pageSize" | "total">,
+): AvailabilityPageSummary {
+  const pageSize = Math.max(1, pagination.pageSize)
+  const total = Math.max(0, pagination.total)
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const pageIndex = Math.min(Math.max(0, pagination.pageIndex), pageCount - 1)
+
+  return {
+    start: total === 0 ? 0 : pageIndex * pageSize + 1,
+    end: total === 0 ? 0 : Math.min((pageIndex + 1) * pageSize, total),
+    page: total === 0 ? 0 : pageIndex + 1,
+    pageCount,
+    canPreviousPage: pageIndex > 0,
+    canNextPage: pageIndex + 1 < pageCount,
+  }
+}
+
 export interface AvailabilityTabMessages extends AvailabilityColumnsMessages {
   nouns: {
     slotSingular: string

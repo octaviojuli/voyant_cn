@@ -364,7 +364,9 @@ export const zhCatalogAdminScope = {
  * at module composition), mirroring `AdminRootErrorBoundary`'s detection:
  * persisted `admin-locale`, then the browser language, SSR-safe fallback.
  */
-function resolveSelectedCatalogAdminScope(): typeof standardCatalogAdminScope | typeof zhCatalogAdminScope {
+function resolveSelectedCatalogAdminScope():
+  | typeof standardCatalogAdminScope
+  | typeof zhCatalogAdminScope {
   if (typeof window === "undefined") return standardCatalogAdminScope
   const stored = window.localStorage.getItem("admin-locale")
   const browser = typeof navigator !== "undefined" ? navigator.language : null

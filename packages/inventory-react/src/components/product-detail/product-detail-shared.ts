@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query"
+import { formatMessage } from "@voyant-travel/i18n"
 import type { ProductRecord } from "../../index.js"
 import type { ProductDetailApi, ProductMessagesRoot } from "./host.js"
 
@@ -148,6 +149,93 @@ export function getProductDayMediaQueryOptions(
   })
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Slot / rule timezone defaulting
+//
+// The availability service validates that a slot's `dateLocal` matches
+// `startsAt` rendered in the slot's own timezone. Defaulting the field to the
+// *browser* timezone therefore silently shifts a departure by a day whenever
+// the operator is not sitting in the product's timezone (a Chinese departure
+// edited from a UTC container or a US laptop). Both product-scoped forms
+// resolve the product's own `timezone` first.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The host browser's IANA timezone, or `null` when `Intl` is unavailable. */
+export function getBrowserTimezone(): string | null {
+  try {
+    if (typeof Intl === "undefined") return null
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Default timezone for a product-scoped slot / rule form:
+ * the product's own timezone, then the browser's, then UTC.
+ */
+export function resolveProductTimezoneDefault(
+  productTimezone: string | null | undefined,
+  browserTimezone: string | null | undefined = getBrowserTimezone(),
+): string {
+  const fromProduct = productTimezone?.trim()
+  if (fromProduct) return fromProduct
+  const fromBrowser = browserTimezone?.trim()
+  if (fromBrowser) return fromBrowser
+  return "UTC"
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rule → slot generation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Server-side default horizon for `POST .../rules/{id}/generate-slots`. */
+export const RULE_SLOT_GENERATION_HORIZON_DAYS = 90
+
+export type GenerateSlotsFromRuleResult = {
+  created: number
+  skipped: number
+  horizonDays: number
+}
+
+function errorStatus(error: unknown): number | null {
+  if (typeof error !== "object" || error === null) return null
+  const status = (error as { status?: unknown }).status
+  return typeof status === "number" ? status : null
+}
+
+/**
+ * `true` when the failure means "this deployment does not expose the
+ * generator" (or the rule vanished) rather than a genuine server fault. The
+ * panel degrades to a soft warning in that case — the rule itself was still
+ * saved.
+ */
+export function isRuleGenerationUnavailable(error: unknown): boolean {
+  const status = errorStatus(error)
+  return status === 404 || status === 405 || status === 501
+}
+
+/**
+ * Materialize departures from a recurring rule. Additive and idempotent —
+ * dates that already have a slot for the rule come back in `skipped`.
+ */
+export async function generateSlotsFromRule(
+  api: ProductDetailApi,
+  ruleId: string,
+  horizonDays: number = RULE_SLOT_GENERATION_HORIZON_DAYS,
+): Promise<GenerateSlotsFromRuleResult> {
+  const response = await api.post<{ data?: Partial<GenerateSlotsFromRuleResult> }>(
+    `/v1/admin/operations/availability/rules/${ruleId}/generate-slots`,
+    { horizonDays },
+  )
+  const data = response?.data ?? {}
+  return {
+    created: data.created ?? 0,
+    skipped: data.skipped ?? 0,
+    horizonDays: data.horizonDays ?? horizonDays,
+  }
+}
+
 export const statusVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   draft: "outline",
   active: "default",
@@ -184,12 +272,32 @@ export function formatSlotDate(iso: string): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`
 }
 
-export function formatDuration(slot: DepartureSlot): string {
+export type DepartureDurationMessages = ProductMessagesRoot["products"]["core"]["departureDuration"]
+
+function formatDays(count: number, messages: DepartureDurationMessages): string {
+  return count === 1
+    ? messages.daySingular
+    : formatMessage(messages.daysPlural, { count: String(count) })
+}
+
+function formatNights(count: number, messages: DepartureDurationMessages): string {
+  return count === 1
+    ? messages.nightSingular
+    : formatMessage(messages.nightsPlural, { count: String(count) })
+}
+
+/**
+ * Localized departure duration. Pluralisation lives in the message bundle
+ * (`products.core.departureDuration.*`) rather than a manual `s` suffix, so
+ * locales without English plural morphology (zh-CN: "11 晚") read correctly.
+ */
+export function formatDuration(slot: DepartureSlot, messages: ProductMessagesRoot): string {
+  const duration = messages.products.core.departureDuration
   if (slot.nights != null || slot.days != null) {
     const parts: string[] = []
-    if (slot.days != null) parts.push(`${slot.days} day${slot.days === 1 ? "" : "s"}`)
-    if (slot.nights != null) parts.push(`${slot.nights} night${slot.nights === 1 ? "" : "s"}`)
-    return parts.join(" / ")
+    if (slot.days != null) parts.push(formatDays(slot.days, duration))
+    if (slot.nights != null) parts.push(formatNights(slot.nights, duration))
+    return parts.join(duration.separator)
   }
   if (!slot.endsAt) return "-"
   const startMs = new Date(slot.startsAt).getTime()
@@ -197,14 +305,16 @@ export function formatDuration(slot: DepartureSlot): string {
   const diffMs = endMs - startMs
   if (diffMs <= 0) return "-"
   const hours = diffMs / 3_600_000
-  if (hours < 24) return `${hours.toFixed(hours % 1 === 0 ? 0 : 1)}h`
+  if (hours < 24) {
+    return formatMessage(duration.hours, { count: hours.toFixed(hours % 1 === 0 ? 0 : 1) })
+  }
   const startDate = formatSlotDate(slot.startsAt)
   const endDate = formatSlotDate(slot.endsAt)
   const nights = Math.round(
     (new Date(`${endDate}T00:00:00Z`).getTime() - new Date(`${startDate}T00:00:00Z`).getTime()) /
       86_400_000,
   )
-  return `${nights} night${nights === 1 ? "" : "s"}`
+  return formatNights(nights, duration)
 }
 
 export function getProductStatusLabel(

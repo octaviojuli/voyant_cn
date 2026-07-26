@@ -98,6 +98,11 @@ export {
   buildAllocationRoomingCsv,
 } from "./service-allocation-exports.js"
 export {
+  type GenerateSlotsForRuleOptions,
+  type GenerateSlotsForRuleResult,
+  generateSlotsForRule,
+} from "./service-slot-generation.js"
+export {
   instantToSlotLocal,
   type LocalToInstantInput,
   localToInstant,
@@ -119,6 +124,8 @@ export {
   availabilitySlotPickupListQuerySchema,
   availabilityStartTimeListQuerySchema,
   customPickupAreaListQuerySchema,
+  DEFAULT_RULE_SLOT_GENERATION_HORIZON_DAYS,
+  generateRuleSlotsSchema,
   insertAllocationResourceSchema,
   insertAvailabilityCloseoutSchema,
   insertAvailabilityPickupPointSchema,
@@ -132,6 +139,8 @@ export {
   insertPickupLocationSchema,
   insertProductMeetingConfigSchema,
   locationPickupTimeListQuerySchema,
+  MAX_RULE_SLOT_GENERATION_HORIZON_DAYS,
+  MIN_RULE_SLOT_GENERATION_HORIZON_DAYS,
   pairSharingGroupSchema,
   pickupGroupListQuerySchema,
   pickupLocationListQuerySchema,

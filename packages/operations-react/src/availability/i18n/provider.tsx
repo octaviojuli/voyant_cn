@@ -97,8 +97,8 @@ const availabilityUiExtraRo = {
 
 const availabilityUiExtraZh = {
   page: {
-    loading: "正在加载排期与库存…",
-    loadFailed: "无法加载排期与库存数据。",
+    loading: "正在加载可售排期…",
+    loadFailed: "无法加载可售排期数据。",
     calendarTab: "日历",
     filters: {
       statusLabel: "状态",

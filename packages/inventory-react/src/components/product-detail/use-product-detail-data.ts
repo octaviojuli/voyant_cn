@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { formatMessage } from "@voyant-travel/i18n"
 import { useMemo } from "react"
+import { toast } from "sonner"
 import { productsQueryKeys, useProduct, useProductItineraries } from "../../index.js"
 
 import { useProductDetailHost, useProductDetailMessages } from "./host.js"
@@ -9,12 +11,16 @@ import {
   type ChannelInfo,
   type ChannelProductMapping,
   type DepartureSlot,
+  type GenerateSlotsFromRuleResult,
+  generateSlotsFromRule,
   getChannelsQueryOptions,
   getProductChannelMappingsQueryOptions,
   getProductDetailMediaQueryOptions,
   getProductRulesQueryOptions,
   getProductSlotsQueryOptions,
+  isRuleGenerationUnavailable,
   type ProductMediaItem,
+  RULE_SLOT_GENERATION_HORIZON_DAYS,
 } from "./product-detail-shared.js"
 
 export interface UseProductDetailDataResult {
@@ -39,6 +45,9 @@ export interface UseProductDetailDataResult {
     deleteProduct: ReturnType<typeof useMutation<unknown, Error, void>>
     deleteSlot: ReturnType<typeof useMutation<unknown, Error, string>>
     deleteRule: ReturnType<typeof useMutation<unknown, Error, string>>
+    generateRuleSlots: ReturnType<
+      typeof useMutation<GenerateSlotsFromRuleResult, Error, string, unknown>
+    >
     uploadMedia: ReturnType<typeof useMutation<unknown, Error, { file: File; dayId?: string }>>
     deleteMedia: ReturnType<typeof useMutation<unknown, Error, string>>
     setCover: ReturnType<typeof useMutation<unknown, Error, string>>
@@ -115,6 +124,39 @@ export function useProductDetailData(productId: string): UseProductDetailDataRes
     onSuccess: () => {
       void rulesQuery.refetch()
       void queryClient.invalidateQueries({ queryKey: productActionLedgerQueryKey })
+    },
+  })
+
+  // Materialize departures from a recurring rule. The generator is additive
+  // and idempotent (dates that already have a slot for the rule are skipped),
+  // so this is safe to re-run to extend the horizon. Until the endpoint ships
+  // everywhere, a 404/405/501 degrades to a soft warning instead of an error —
+  // the rule itself was still saved.
+  const generateRuleSlots = useMutation<GenerateSlotsFromRuleResult, Error, string>({
+    mutationFn: (ruleId: string) =>
+      generateSlotsFromRule(api, ruleId, RULE_SLOT_GENERATION_HORIZON_DAYS),
+    onSuccess: (result) => {
+      void slotsQuery.refetch()
+      void rulesQuery.refetch()
+      void queryClient.invalidateQueries({ queryKey: productActionLedgerQueryKey })
+      toast.success(
+        result.created > 0
+          ? formatMessage(productMessages.scheduleGenerateSuccess, {
+              created: result.created,
+              skipped: result.skipped,
+              horizonDays: result.horizonDays,
+            })
+          : formatMessage(productMessages.scheduleGenerateNone, {
+              horizonDays: result.horizonDays,
+            }),
+      )
+    },
+    onError: (error) => {
+      if (isRuleGenerationUnavailable(error)) {
+        toast.warning(productMessages.scheduleGenerateUnavailable)
+        return
+      }
+      toast.error(error.message || productMessages.scheduleGenerateFailed)
     },
   })
 
@@ -202,6 +244,7 @@ export function useProductDetailData(productId: string): UseProductDetailDataRes
       deleteProduct,
       deleteSlot,
       deleteRule,
+      generateRuleSlots,
       uploadMedia,
       deleteMedia,
       setCover,

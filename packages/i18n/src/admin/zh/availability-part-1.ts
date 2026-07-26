@@ -1,7 +1,8 @@
 export const adminAvailabilityZhPart1 = {
-  title: "排期与库存",
-  description: "管理循环排期规则、出发班期、停售日与接驳容量。",
-  searchPlaceholder: "搜索排期与库存…",
+  // 术语统一：模块/导航一律称「可售排期」，单条具体日期的出发记录一律称「班期」。
+  title: "可售排期",
+  description: "管理可售排期：循环排期规则、出发班期、停售日与接驳容量。",
+  searchPlaceholder: "搜索可售排期…",
   allProducts: "全部产品",
   clearFilters: "清除筛选",
   verbOpened: "已开放",
@@ -71,7 +72,7 @@ export const adminAvailabilityZhPart1 = {
     coverageGapDescription: "没有可预订的开放班期。",
     actionRequiredTitle: "需要处理",
     actionRequiredBody: "{count} 个产品没有未来开放班期。补充班期之前，客户无法预订。",
-    actionRequiredCta: "打开排期与库存",
+    actionRequiredCta: "打开可售排期",
     attentionTitle: "需要关注",
     attentionEmpty: "一切正常，覆盖与容量状况良好。",
     severityCoverageGap: "无班期",
