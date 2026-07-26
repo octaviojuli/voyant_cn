@@ -3,6 +3,13 @@ import { and, eq, inArray } from "drizzle-orm"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { expandRRule } from "./rrule.js"
 import { materializeSlotResourcesFromTemplateDefaults } from "./service-allocation-automation.js"
+import {
+  deriveSlotDuration,
+  FALLBACK_SLOT_START_TIME,
+  normalizeLocalTime,
+  resolveItineraryLength,
+  resolveSlotStartTime,
+} from "./slot-derivation.js"
 import { localToInstant } from "./slot-timezone.js"
 
 export type GenerateAvailabilitySlotsOptions = {
@@ -10,7 +17,10 @@ export type GenerateAvailabilitySlotsOptions = {
   ruleId?: string
   /** How many days ahead from "now" to generate slots for. Defaults to 90. */
   horizonDays?: number
-  /** Default start time (HH:MM, 24h) used when a rule does not define one. Defaults to "09:00". */
+  /**
+   * Last-resort start time (HH:MM, 24h), used only when the product has no
+   * applicable `availability_start_times` entry. Defaults to "09:00".
+   */
   defaultStartTime?: string
   /** Cap on slots expanded per rule. Defaults to 1000. */
   perRuleLimit?: number
@@ -37,13 +47,24 @@ export type GenerateAvailabilitySlotsResult = {
  *
  * `startsAt` is stored as a true UTC instant for the wall-clock time on
  * `dateLocal` in the rule's `timezone`.
+ *
+ * A generated departure is meant to be complete enough to publish without
+ * hand-editing, so besides the rule's own capacity/timezone it also inherits:
+ *
+ *  - the product's active `availability_start_times` entry — its
+ *    `startTimeLocal` sets the time of day and the slot links back via
+ *    `startTimeId` (see `pickStartTime` for the deterministic choice);
+ *  - the product's itinerary length — `nights` / `days` / `endsAt`, so a
+ *    12-day tour departs and returns without an operator retyping either
+ *    (see `deriveSlotDuration`);
+ *  - the rule's `maxPickupCapacity` as `initialPickups` / `remainingPickups`.
  */
 export async function generateAvailabilitySlots(
   db: PostgresJsDatabase,
   options: GenerateAvailabilitySlotsOptions = {},
 ): Promise<GenerateAvailabilitySlotsResult> {
   const horizonDays = options.horizonDays ?? 90
-  const defaultStartTime = options.defaultStartTime ?? "09:00"
+  const defaultStartTime = normalizeLocalTime(options.defaultStartTime, FALLBACK_SLOT_START_TIME)
   const perRuleLimit = options.perRuleLimit ?? 1000
   const now = options.now ?? new Date()
   const shouldMaterializeResources = options.materializeResources !== false
@@ -87,26 +108,49 @@ export async function generateAvailabilitySlots(
 
     if (toInsert.length === 0) continue
 
-    const [hh, mm] = defaultStartTime.split(":")
-    const hour = Number.parseInt(hh ?? "9", 10) || 0
-    const minute = Number.parseInt(mm ?? "0", 10) || 0
+    // Resolved once per rule — every date the rule expands to shares the same
+    // product, so the catalogue lookups don't belong inside the row loop.
+    const scope = { optionId: rule.optionId, facilityId: rule.facilityId }
+    const [startTimeEntry, itinerary] = await Promise.all([
+      resolveSlotStartTime(db, rule.productId, scope),
+      resolveItineraryLength(db, rule.productId),
+    ])
 
-    const startTime = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
+    const startTime = normalizeLocalTime(startTimeEntry?.startTimeLocal, defaultStartTime)
+    const itineraryDayCount = itinerary?.dayCount ?? 0
+
     const rows = toInsert.map((dateLocal) => {
+      const startsAt = new Date(
+        localToInstant({ date: dateLocal, time: startTime, timezone: rule.timezone }),
+      )
+      const duration = deriveSlotDuration({
+        dateLocal,
+        startTime,
+        timezone: rule.timezone,
+        startsAt,
+        itineraryDayCount,
+        durationMinutes: startTimeEntry?.durationMinutes ?? null,
+      })
+
       return {
         productId: rule.productId,
+        itineraryId: itinerary?.itineraryId ?? null,
         optionId: rule.optionId,
         facilityId: rule.facilityId,
         availabilityRuleId: rule.id,
+        startTimeId: startTimeEntry?.id ?? null,
         dateLocal,
-        startsAt: new Date(
-          localToInstant({ date: dateLocal, time: startTime, timezone: rule.timezone }),
-        ),
+        startsAt,
+        endsAt: duration.endsAt,
         timezone: rule.timezone,
         status: "open" as const,
         unlimited: false,
         initialPax: rule.maxCapacity,
         remainingPax: rule.maxCapacity,
+        initialPickups: rule.maxPickupCapacity,
+        remainingPickups: rule.maxPickupCapacity,
+        nights: duration.nights,
+        days: duration.days,
       }
     })
 
