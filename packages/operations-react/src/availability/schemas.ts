@@ -55,6 +55,13 @@ export type BatchDeleteResponse = z.infer<typeof batchDeleteEnvelope>
 export const productOptionSchema = z.object({
   id: z.string(),
   name: z.string(),
+  /**
+   * The product's own IANA timezone (`GET /v1/admin/products` returns it as a
+   * nullable column). Departures are authored in the product's calendar, so
+   * slot authoring defaults the timezone from here rather than the browser.
+   * Endpoints that project a leaner product row may omit it, hence the default.
+   */
+  timezone: z.string().nullable().default(null),
   sellCurrency: z.string().nullable().default(null),
   productType: z
     .object({

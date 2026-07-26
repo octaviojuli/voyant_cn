@@ -1,5 +1,6 @@
 "use client"
 
+import { useQuery } from "@tanstack/react-query"
 import { useProductOptions } from "@voyant-travel/inventory-react"
 import {
   Dialog,
@@ -18,7 +19,7 @@ import {
 } from "@voyant-travel/ui/components"
 import { DatePicker } from "@voyant-travel/ui/components/date-picker"
 import { DateTimePicker } from "@voyant-travel/ui/components/date-time-picker"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod/v4"
 import { zodResolver } from "../../form-resolver.js"
@@ -30,12 +31,14 @@ import type {
 } from "../../index.js"
 import {
   booleanOptions,
+  getSlotQueryOptions,
   instantToSlotLocal,
   localToInstant,
   NONE_VALUE,
   nullableNumber,
   nullableString,
   slotStatusOptions,
+  useVoyantAvailabilityContext,
 } from "../../index.js"
 import {
   type AvailabilityDialogMessages,
@@ -45,6 +48,18 @@ import {
   type SubmitContext,
   SwitchField,
 } from "./shared.js"
+
+/**
+ * Placeholder copy for the date / date-time pickers. The message bundles ship
+ * these under `dialogs.slot`, but the shared `AvailabilityDialogMessages`
+ * contract predates them, so they are read as optional and fall back to the
+ * field label — never to the pickers' built-in English defaults
+ * ("Pick a date" / "Pick date & time").
+ */
+type SlotPickerPlaceholders = {
+  datePlaceholder?: string
+  dateTimePlaceholder?: string
+}
 
 function getSlotFormSchema(messages: AvailabilityDialogMessages) {
   return z.object({
@@ -78,12 +93,24 @@ function toLocalDateTimeInput(instant: string, timezone: string) {
   return `${local.date}T${local.time}`
 }
 
-function getDefaultTimezone() {
+function getBrowserTimezone() {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" // i18n-literal-ok IANA timezone fallback
   } catch {
     return "UTC" // i18n-literal-ok IANA timezone fallback
   }
+}
+
+/**
+ * A departure belongs to the product's calendar, not to the operator's laptop.
+ * The server validates that `dateLocal` equals `startsAt` rendered in this
+ * timezone, so defaulting to the browser (e.g. an America/Los_Angeles desk
+ * scheduling an Asia/Shanghai departure) silently moves the departure to the
+ * wrong day. Resolution order: the product's own timezone, then the browser's,
+ * then UTC.
+ */
+export function resolveSlotTimezone(product?: Pick<ProductOption, "timezone"> | null) {
+  return product?.timezone || getBrowserTimezone()
 }
 
 function localDateTimeInputToInstant(value: string, timezone: string) {
@@ -105,7 +132,11 @@ export function AvailabilitySlotDialog(props: {
   onSubmit: (payload: AvailabilitySlotSubmitPayload, context: SubmitContext) => Promise<void> // i18n-literal-ok type annotation
   onSuccess: () => void
 }) {
-  const slotMessages = props.messages.dialogs.slot
+  const slotMessages: AvailabilityDialogMessages["dialogs"]["slot"] & SlotPickerPlaceholders =
+    props.messages.dialogs.slot
+  const datePlaceholder = slotMessages.datePlaceholder ?? slotMessages.dateLabel
+  const startsAtPlaceholder = slotMessages.dateTimePlaceholder ?? slotMessages.startsAtLabel
+  const endsAtPlaceholder = slotMessages.dateTimePlaceholder ?? slotMessages.endsAtLabel
   const slotFormSchema = getSlotFormSchema(props.messages)
   const form = useForm<SlotFormValues, unknown, SlotFormOutput>({
     resolver: zodResolver(slotFormSchema),
@@ -117,7 +148,7 @@ export function AvailabilitySlotDialog(props: {
       dateLocal: "",
       startsAt: "",
       endsAt: "",
-      timezone: getDefaultTimezone(),
+      timezone: getBrowserTimezone(),
       status: "open",
       unlimited: false,
       initialPax: "",
@@ -131,41 +162,73 @@ export function AvailabilitySlotDialog(props: {
     },
   })
 
-  useEffect(() => {
-    if (props.open && props.slot) {
-      form.reset({
-        productId: props.slot.productId,
-        optionId: props.slot.optionId ?? NONE_VALUE,
-        availabilityRuleId: props.slot.availabilityRuleId ?? NONE_VALUE,
-        startTimeId: props.slot.startTimeId ?? NONE_VALUE,
-        dateLocal: props.slot.dateLocal,
-        startsAt: toLocalDateTimeInput(props.slot.startsAt, props.slot.timezone),
-        endsAt: props.slot.endsAt
-          ? toLocalDateTimeInput(props.slot.endsAt, props.slot.timezone)
-          : "",
-        timezone: props.slot.timezone,
-        status: props.slot.status,
-        unlimited: props.slot.unlimited,
-        initialPax: props.slot.initialPax?.toString() ?? "",
-        remainingPax: props.slot.remainingPax?.toString() ?? "",
-        initialPickups: "",
-        remainingPickups: "",
-        remainingResources: "",
-        pastCutoff: false,
-        tooEarly: false,
-        notes: props.slot.notes ?? "",
-      })
-    } else if (props.open) {
-      form.reset()
-    }
-  }, [form, props.open, props.slot])
+  const isEditing = Boolean(props.slot)
+  const slotId = props.slot?.id
+  const availabilityClient = useVoyantAvailabilityContext()
 
+  // `AvailabilitySlotRow` (the list projection) omits initialPickups,
+  // remainingPickups, remainingResources, pastCutoff and tooEarly — they live
+  // only on the slot *detail*. Editing from a list row used to seed those five
+  // fields with ""/false and PATCH them back as null/false, destroying stored
+  // values the operator never saw. Load the detail and seed from it instead.
+  const slotDetailQuery = useQuery({
+    ...getSlotQueryOptions(availabilityClient, slotId),
+    enabled: props.open && Boolean(slotId),
+  })
+  const slotDetail = slotDetailQuery.data?.data
+  const slotDetailLoaded = Boolean(slotDetail) && slotDetail?.id === slotId
+
+  // Re-arm on every fresh open, and whenever the dialog is retargeted at a
+  // different slot: the timezone field starts out untouched again.
+  const timezoneEditedRef = useRef(false)
+  const openKey = props.open ? `open:${slotId ?? ""}` : null
+  useEffect(() => {
+    if (openKey) {
+      timezoneEditedRef.current = false
+    }
+  }, [openKey])
+
+  useEffect(() => {
+    if (!props.open) return
+    if (!props.slot) {
+      form.reset()
+      return
+    }
+    // Seed from the row straight away so the dialog is never blank, then re-seed
+    // once the detail lands. `keepDirtyValues` protects anything the operator
+    // typed in the meantime.
+    const source = slotDetail ?? props.slot
+    form.reset(
+      {
+        productId: source.productId,
+        optionId: source.optionId ?? NONE_VALUE,
+        availabilityRuleId: source.availabilityRuleId ?? NONE_VALUE,
+        startTimeId: source.startTimeId ?? NONE_VALUE,
+        dateLocal: source.dateLocal,
+        startsAt: toLocalDateTimeInput(source.startsAt, source.timezone),
+        endsAt: source.endsAt ? toLocalDateTimeInput(source.endsAt, source.timezone) : "",
+        timezone: source.timezone,
+        status: source.status,
+        unlimited: source.unlimited,
+        initialPax: source.initialPax?.toString() ?? "",
+        remainingPax: source.remainingPax?.toString() ?? "",
+        initialPickups: slotDetail?.initialPickups?.toString() ?? "",
+        remainingPickups: slotDetail?.remainingPickups?.toString() ?? "",
+        remainingResources: slotDetail?.remainingResources?.toString() ?? "",
+        pastCutoff: slotDetail?.pastCutoff ?? false,
+        tooEarly: slotDetail?.tooEarly ?? false,
+        notes: source.notes ?? "",
+      },
+      { keepDirtyValues: true },
+    )
+  }, [form, props.open, props.slot, slotDetail])
+
+  const timezoneField = form.register("timezone")
   const selectedProductId = form.watch("productId")
   const filteredRules = props.rules.filter((rule) => rule.productId === selectedProductId)
   const filteredStartTimes = props.startTimes.filter(
     (startTime) => startTime.productId === selectedProductId,
   )
-  const isEditing = Boolean(props.slot)
 
   // A departure's price is derived from its option's rate plans, so the slot
   // needs to point at one of the product's options. Load the selected product's
@@ -188,6 +251,10 @@ export function AvailabilitySlotDialog(props: {
   const optionsResolved = !selectedProductId || optionsQuery.isSuccess
 
   const onSubmit = async (values: SlotFormOutput) => {
+    // Never PATCH an edit from a form that was only seeded with the list row:
+    // the detail-only fields would go out as null/false. The save button is
+    // already disabled in this state; this is the belt to that pair of braces.
+    if (isEditing && !slotDetailLoaded) return
     const resolvedOptionId = values.optionId === NONE_VALUE ? null : (values.optionId ?? null)
     // Guard against an unpriceable slot. When no explicit option is chosen we
     // must be sure the product genuinely has none — block while the options
@@ -253,10 +320,17 @@ export function AvailabilitySlotDialog(props: {
               products={props.products}
               value={form.watch("productId")}
               onValueChange={(value) => {
-                form.setValue("productId", value ?? "")
+                const nextProductId = value ?? ""
+                form.setValue("productId", nextProductId)
                 // The previously selected option belongs to the old product.
                 form.setValue("optionId", NONE_VALUE)
                 form.clearErrors("optionId")
+                // The departure follows the new product's calendar — unless the
+                // operator already typed a timezone by hand.
+                if (!timezoneEditedRef.current) {
+                  const nextProduct = props.products.find((product) => product.id === nextProductId)
+                  form.setValue("timezone", resolveSlotTimezone(nextProduct))
+                }
               }}
             />
 
@@ -342,12 +416,18 @@ export function AvailabilitySlotDialog(props: {
                       shouldValidate: true,
                     })
                   }
+                  placeholder={datePlaceholder}
                 />
               </div>
               <div className="grid gap-2">
                 <Label>{slotMessages.timezoneLabel}</Label>
                 <Input
-                  {...form.register("timezone")}
+                  {...timezoneField}
+                  onChange={(event) => {
+                    // Remember the hand-edit so switching product can't stomp it.
+                    timezoneEditedRef.current = true
+                    return timezoneField.onChange(event)
+                  }}
                   placeholder={slotMessages.timezonePlaceholder}
                 />
               </div>
@@ -361,6 +441,7 @@ export function AvailabilitySlotDialog(props: {
                       shouldValidate: true,
                     })
                   }
+                  placeholder={startsAtPlaceholder}
                 />
               </div>
               <div className="grid gap-2">
@@ -373,6 +454,7 @@ export function AvailabilitySlotDialog(props: {
                       shouldValidate: true,
                     })
                   }
+                  placeholder={endsAtPlaceholder}
                 />
               </div>
             </div>
@@ -380,8 +462,10 @@ export function AvailabilitySlotDialog(props: {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>{slotMessages.statusLabel}</Label>
+                {/* No `items` prop: the component harvests the localized
+                    `SelectItem` children so the collapsed trigger shows the
+                    translated status instead of an English fallback. */}
                 <Select
-                  items={slotStatusOptions}
                   value={form.watch("status")}
                   onValueChange={(value) =>
                     form.setValue("status", value as SlotFormOutput["status"])
@@ -409,7 +493,6 @@ export function AvailabilitySlotDialog(props: {
               <div className="grid gap-2">
                 <Label>{slotMessages.unlimitedLabel}</Label>
                 <Select
-                  items={booleanOptions}
                   value={String(form.watch("unlimited"))}
                   onValueChange={(value) => form.setValue("unlimited", value === "true")}
                 >
@@ -476,7 +559,12 @@ export function AvailabilitySlotDialog(props: {
             create={slotMessages.create}
             isEditing={isEditing}
             isSubmitting={form.formState.isSubmitting}
-            disabled={Boolean(selectedProductId) && optionsQuery.isLoading}
+            disabled={
+              (Boolean(selectedProductId) && optionsQuery.isLoading) ||
+              // Block save until the detail (and its capacity/gating fields)
+              // is in hand, so an edit can never blank what it never loaded.
+              (isEditing && !slotDetailLoaded)
+            }
             onCancel={() => props.onOpenChange(false)}
           />
         </form>
