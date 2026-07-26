@@ -102,7 +102,9 @@ export function getSlotsQueryOptions(
   client: FetchWithValidationOptions,
   options: UseSlotsOptions = {},
 ) {
-  const { enabled: _enabled = true, ...filters } = options
+  // `keepPreviousData` is a react-query behaviour flag, not a request filter —
+  // strip it so it never reaches the query key or the query string.
+  const { enabled: _enabled = true, keepPreviousData: _keepPreviousData, ...filters } = options
   return queryOptions({
     queryKey: availabilityQueryKeys.slotsList(filters),
     queryFn: () => {
@@ -115,6 +117,7 @@ export function getSlotsQueryOptions(
       if (filters.startTimeId) params.set("startTimeId", filters.startTimeId)
       if (filters.dateLocal) params.set("dateLocal", filters.dateLocal)
       if (filters.startsAtFrom) params.set("startsAtFrom", filters.startsAtFrom)
+      if (filters.startsAtUntil) params.set("startsAtUntil", filters.startsAtUntil)
       if (filters.status) params.set("status", filters.status)
       appendPagination(params, filters)
       const qs = params.toString()

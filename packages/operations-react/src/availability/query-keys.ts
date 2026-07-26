@@ -23,7 +23,10 @@ export interface AvailabilitySlotsListFilters extends PaginationFilters {
   availabilityRuleId?: string | undefined
   startTimeId?: string | undefined
   dateLocal?: string | undefined
+  /** Inclusive lower bound on `startsAt`, as an ISO datetime. */
   startsAtFrom?: string | undefined
+  /** Exclusive upper bound on `startsAt`, as an ISO datetime. */
+  startsAtUntil?: string | undefined
   status?: string | undefined
 }
 

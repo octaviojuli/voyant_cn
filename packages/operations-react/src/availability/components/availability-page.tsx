@@ -46,6 +46,34 @@ import {
   AvailabilitySlotsTab,
 } from "./availability-tabs.js"
 
+/**
+ * Rows requested per slots page. The list is server-paginated: one API page is
+ * exactly one rendered page, so the footer's totals come from the response
+ * envelope's `total` and paging issues a fresh request with a new `offset`.
+ * `ensureAvailabilityPageData` seeds the same first page.
+ */
+export const AVAILABILITY_SLOTS_PAGE_SIZE = 25
+
+/**
+ * The calendar has no pager, so it pulls a wider window than the list does.
+ * 200 is the slots endpoint's `limit` ceiling (`paginationSchema`).
+ */
+const AVAILABILITY_CALENDAR_SLOT_LIMIT = 200
+
+const MS_PER_DAY = 86_400_000
+
+/** `yyyy-MM-dd` (from the date picker) to the ISO datetime the API expects. */
+function dayStartIso(dateLocal: string): string | undefined {
+  const parsed = Date.parse(`${dateLocal}T00:00:00.000Z`) // i18n-literal-ok ISO datetime suffix
+  return Number.isNaN(parsed) ? undefined : new Date(parsed).toISOString()
+}
+
+/** Exclusive upper bound: the start of the day after `dateLocal`. */
+function dayAfterStartIso(dateLocal: string): string | undefined {
+  const parsed = Date.parse(`${dateLocal}T00:00:00.000Z`) // i18n-literal-ok ISO datetime suffix
+  return Number.isNaN(parsed) ? undefined : new Date(parsed + MS_PER_DAY).toISOString()
+}
+
 export type AvailabilityPageView = "list" | "calendar"
 export type AvailabilityPageSlotStatusFilter = "all" | AvailabilitySlotRow["status"]
 export type AvailabilityPageBulkUpdateHandler = AvailabilityBulkUpdateFn
@@ -100,46 +128,59 @@ export function AvailabilityPage({
   const [view, setView] = useState<AvailabilityPageView>(defaultView)
   const [calendarView, setCalendarView] = useState<TCalendarView>("month")
   const [slotSelection, setSlotSelection] = useState<RowSelectionState>({})
+  const [slotPageIndex, setSlotPageIndex] = useState(0)
   const [slotDialogOpen, setSlotDialogOpen] = useState(false)
   const [editingSlot, setEditingSlot] = useState<AvailabilitySlotRow | undefined>()
 
   const productIdFilter = productFilter === "all" ? undefined : productFilter
   const slotStatusFilterParam = slotStatusFilter === "all" ? undefined : slotStatusFilter
+  // The picker yields `yyyy-MM-dd`; the API's startsAt bounds want ISO
+  // datetimes, so widen each edge to a whole UTC day (upper bound exclusive).
+  const slotStartsAtFrom = slotDateRange?.from ? dayStartIso(slotDateRange.from) : undefined
+  const slotStartsAtUntil = slotDateRange?.to ? dayAfterStartIso(slotDateRange.to) : undefined
+
+  const isCalendarView = view === "calendar"
 
   const productsQuery = useProducts({ search: productSearch || undefined, limit: 25, offset: 0 })
   // Rules + start times back the slot create/edit dialog. Eager-load so the
   // dialog opens with full options the first time, but keep the queries cheap
-  // (no filters). Slots query honors the page filters so server returns the
-  // matching first page rather than a stale 25-row prefix.
+  // (no filters).
   const rulesQuery = useRules({ limit: 25, offset: 0 })
   const startTimesQuery = useStartTimes({ limit: 25, offset: 0 })
-  // Date range is filtered client-side via matchesDateRange. The server's
-  // startsAtFrom expects an ISO datetime, but the date picker yields a
-  // yyyy-MM-dd string — passing it through gets rejected by the validator.
+  // Every filter and the page offset are server-side: the endpoint owns
+  // product/status/date-window matching plus the row count, so the table shows
+  // (and the footer counts) every matching departure rather than whichever
+  // rows happened to land in the first response.
   const slotsQuery = useSlots({
-    limit: 25,
-    offset: 0,
+    limit: isCalendarView ? AVAILABILITY_CALENDAR_SLOT_LIMIT : AVAILABILITY_SLOTS_PAGE_SIZE,
+    offset: isCalendarView ? 0 : slotPageIndex * AVAILABILITY_SLOTS_PAGE_SIZE,
     productId: productIdFilter,
     status: slotStatusFilterParam,
+    startsAtFrom: slotStartsAtFrom,
+    startsAtUntil: slotStartsAtUntil,
+    keepPreviousData: true,
   })
 
   const products = productsQuery.data?.data ?? []
   const rules = rulesQuery.data?.data ?? []
   const startTimes = startTimesQuery.data?.data ?? []
   const slots = slotsQuery.data?.data ?? []
+  const slotTotal = slotsQuery.data?.total ?? 0
 
-  const matchesProduct = (productId: string) =>
-    productFilter === "all" || productId === productFilter
-  const matchesDateRange = (date: string, range: DateRangeValue | null) =>
-    (!range?.from || date >= range.from) && (!range?.to || date <= range.to) // i18n-literal-ok comparison expression
-
-  const productFilteredSlots = slots.filter((slot) => matchesProduct(slot.productId))
-  const filteredSlots = productFilteredSlots.filter(
-    (slot) =>
-      (slotStatusFilter === "all" || slot.status === slotStatusFilter) &&
-      matchesDateRange(slot.dateLocal, slotDateRange),
-  )
   const selectedProduct = products.find((product) => product.id === productFilter) ?? null
+
+  // Row selection is keyed by slot id against the rows currently loaded, so a
+  // new page or filter must drop it — otherwise a bulk action could run
+  // against ids the operator can no longer see.
+  const resetSlotPaging = () => {
+    setSlotPageIndex(0)
+    setSlotSelection({})
+  }
+
+  const goToSlotPage = (nextPageIndex: number) => {
+    setSlotPageIndex(Math.max(0, nextPageIndex))
+    setSlotSelection({})
+  }
 
   const slotStatusToColor: Record<AvailabilitySlotRow["status"], IEvent["color"]> = {
     open: "green",
@@ -147,7 +188,7 @@ export function AvailabilityPage({
     sold_out: "red",
     cancelled: "yellow",
   }
-  const calendarEvents: IEvent[] = filteredSlots.map((slot) => {
+  const calendarEvents: IEvent[] = slots.map((slot) => {
     const productName = products.find((product) => product.id === slot.productId)?.name
     return {
       id: slot.id,
@@ -225,7 +266,10 @@ export function AvailabilityPage({
             </Label>
             <AsyncCombobox<ProductOption>
               value={productFilter === "all" ? null : productFilter}
-              onChange={(value) => setProductFilter(value ?? "all")}
+              onChange={(value) => {
+                setProductFilter(value ?? "all")
+                resetSlotPaging()
+              }}
               items={products}
               selectedItem={selectedProduct}
               getKey={(product) => product.id}
@@ -246,9 +290,10 @@ export function AvailabilityPage({
             </Label>
             <Select
               value={slotStatusFilter}
-              onValueChange={(value) =>
+              onValueChange={(value) => {
                 setSlotStatusFilter((value as AvailabilityPageSlotStatusFilter) ?? "all")
-              }
+                resetSlotPaging()
+              }}
             >
               <SelectTrigger id="availability-slot-status" className="w-full sm:w-44">
                 <SelectValue />
@@ -266,7 +311,10 @@ export function AvailabilityPage({
             <Label className="text-xs">{toolbar.dateRangeLabel}</Label>
             <DateRangePicker
               value={slotDateRange}
-              onChange={setSlotDateRange}
+              onChange={(value) => {
+                setSlotDateRange(value)
+                resetSlotPaging()
+              }}
               className="w-full sm:w-72"
               placeholder={toolbar.dateRangePlaceholder}
             />
@@ -279,6 +327,7 @@ export function AvailabilityPage({
                 setProductFilter("all")
                 setSlotStatusFilter("all")
                 setSlotDateRange(null)
+                resetSlotPaging()
               }}
             >
               {toolbar.reset}
@@ -313,7 +362,13 @@ export function AvailabilityPage({
         <AvailabilitySlotsTab
           messages={messages}
           products={products}
-          filteredSlots={filteredSlots}
+          filteredSlots={slots}
+          serverPagination={{
+            pageIndex: slotPageIndex,
+            pageSize: AVAILABILITY_SLOTS_PAGE_SIZE,
+            total: slotTotal,
+            onPageChange: goToSlotPage,
+          }}
           slotSelection={slotSelection}
           setSlotSelection={setSlotSelection}
           bulkActionTarget={bulkActionTarget}

@@ -6,7 +6,7 @@ import {
   getProductOptionsQueryOptions,
   useVoyantProductsContext,
 } from "@voyant-travel/inventory-react"
-import { ConfirmActionButton, SelectionActionBar } from "@voyant-travel/ui/components"
+import { Button, ConfirmActionButton, SelectionActionBar } from "@voyant-travel/ui/components"
 import { DataTable } from "@voyant-travel/ui/components/data-table"
 import {
   Select,
@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@voyant-travel/ui/components/select"
 import { TabsContent } from "@voyant-travel/ui/components/tabs"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { type ReactNode, useMemo } from "react"
 import { useAvailabilityUiMessagesOrDefault } from "../../i18n/index.js"
 import type { AvailabilitySlotRow, ProductOption } from "../../index.js"
@@ -25,8 +26,10 @@ import { AvailabilitySectionHeader } from "../availability-section-header.js"
 import {
   type AvailabilityBulkDeleteFn,
   type AvailabilityBulkUpdateFn,
+  type AvailabilityServerPagination,
   type AvailabilityTabMessages,
   formatTemplate,
+  resolveAvailabilityPageSummary,
 } from "./shared.js"
 
 export function AvailabilitySlotsTab(props: {
@@ -46,8 +49,17 @@ export function AvailabilitySlotsTab(props: {
   asPanel?: boolean
   hideBulkDelete?: boolean
   bulkStatusSelect?: boolean
+  /**
+   * When provided, `filteredSlots` is one server page rather than the whole
+   * result set: the table renders every row it was handed and the footer below
+   * pages by re-querying the API. Omit it to keep the legacy client-side
+   * pagination (all rows in memory, DataTable slices them).
+   */
+  serverPagination?: AvailabilityServerPagination
 }) {
   useAvailabilityUiMessagesOrDefault()
+  const serverPagination = props.serverPagination
+  const isServerPaginated = Boolean(serverPagination)
 
   // Resolve each slot's option name, and learn which products have options at
   // all, so the option column can flag a missing option only when it actually
@@ -80,6 +92,31 @@ export function AvailabilitySlotsTab(props: {
     return { optionNameById, productsWithOptions }
   }, [optionQueries])
 
+  const columns = useMemo(() => {
+    const baseColumns = availabilitySlotColumns(
+      props.products,
+      props.onOpenRoute,
+      props.messages,
+      props.onEdit,
+      optionInfo,
+    )
+    if (!isServerPaginated) return baseColumns
+    // The slots endpoint has no sort parameter — rows always come back ordered
+    // by `startsAt`. In server-paginated mode a header sort arrow could only
+    // reorder the page already in memory while reading as a sort of all
+    // `total` rows, so drop the affordance rather than imply a sort we cannot
+    // perform. `DataTableColumnHeader` renders a plain title once sorting is
+    // disabled.
+    return baseColumns.map((column) => ({ ...column, enableSorting: false }))
+  }, [
+    isServerPaginated,
+    optionInfo,
+    props.messages,
+    props.onEdit,
+    props.onOpenRoute,
+    props.products,
+  ])
+
   const selection = (count: number) =>
     formatLocalizedSelectionLabel(
       count,
@@ -100,17 +137,14 @@ export function AvailabilitySlotsTab(props: {
       )}
       {props.toolbar}
       <DataTable
-        columns={availabilitySlotColumns(
-          props.products,
-          props.onOpenRoute,
-          props.messages,
-          props.onEdit,
-          optionInfo,
-        )}
+        columns={columns}
         data={props.filteredSlots}
         emptyMessage={props.messages.tabs.slots.emptyMessage}
         enableRowSelection
         paginationMessages={props.messages.pagination}
+        {...(serverPagination
+          ? { pageSize: serverPagination.pageSize, showPagination: false }
+          : {})}
         getRowId={(row) => row.id}
         rowSelection={props.slotSelection}
         onRowSelectionChange={props.setSlotSelection}
@@ -223,6 +257,12 @@ export function AvailabilitySlotsTab(props: {
           </SelectionActionBar>
         )}
       />
+      {serverPagination && serverPagination.total > 0 ? (
+        <AvailabilityServerPaginationFooter
+          messages={props.messages.pagination}
+          pagination={serverPagination}
+        />
+      ) : null}
     </>
   )
 
@@ -232,5 +272,61 @@ export function AvailabilitySlotsTab(props: {
     </TabsContent>
   ) : (
     <div className="flex flex-col gap-4">{body}</div>
+  )
+}
+
+/**
+ * Footer for a server-paginated list. Mirrors the shared
+ * `DataTablePagination` layout and reuses its message templates, but the
+ * counts come from the API envelope's `total` and the buttons request the
+ * next/previous page from the server instead of slicing rows already loaded.
+ */
+function AvailabilityServerPaginationFooter({
+  messages,
+  pagination,
+}: {
+  messages: AvailabilityTabMessages["pagination"]
+  pagination: AvailabilityServerPagination
+}) {
+  const summary = resolveAvailabilityPageSummary(pagination)
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md border px-4 py-3">
+      <p className="text-sm text-muted-foreground">
+        {formatTemplate(messages.showing, {
+          start: summary.start,
+          end: summary.end,
+          total: pagination.total,
+        })}
+      </p>
+      <div className="flex items-center gap-2">
+        <p className="text-sm text-muted-foreground">
+          {formatTemplate(messages.page, {
+            page: summary.page,
+            pageCount: summary.pageCount,
+          })}
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => pagination.onPageChange(pagination.pageIndex - 1)}
+          disabled={!summary.canPreviousPage}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          {messages.previous}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => pagination.onPageChange(pagination.pageIndex + 1)}
+          disabled={!summary.canNextPage}
+        >
+          {messages.next}
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   )
 }

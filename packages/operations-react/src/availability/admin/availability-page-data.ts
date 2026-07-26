@@ -11,6 +11,12 @@ import {
  * Canonical first-page list filters for the availability index page.
  * `AvailabilityPage` hard-codes the same filters in its hooks, so the
  * loader-seeded cache entries line up with the page's query keys.
+ *
+ * The slots list is server-paginated, so this only seeds page 1 (offset 0,
+ * no filters) — the page re-queries with a new `offset` (and any product /
+ * status / date-window filters) as the operator navigates. `limit` must stay
+ * in sync with `AVAILABILITY_SLOTS_PAGE_SIZE` in `availability-page.tsx` or
+ * the seeded entry misses the page's query key.
  */
 const availabilityPageQueryFilters = {
   products: { limit: 25, offset: 0 },
