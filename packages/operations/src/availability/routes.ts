@@ -4,6 +4,7 @@ import { Hono } from "hono"
 
 import { availabilityAllocationRoutes } from "./routes-allocation.js"
 import { availabilityCoreRoutes } from "./routes-core.js"
+import { availabilityHoldRoutes } from "./routes-holds.js"
 import { availabilityPickupRoutes } from "./routes-pickups.js"
 import type { Env } from "./routes-shared.js"
 
@@ -27,6 +28,8 @@ export const availabilityAdminRoutes = new OpenAPIHono<Env>({
   .route("/", availabilityCoreRoutes)
   .route("/", availabilityAllocationRoutes)
   .route("/", availabilityPickupRoutes)
+  // Soft-hold inspection + on-demand expiry sweep.
+  .route("/", availabilityHoldRoutes)
 
 export type AvailabilityRoutes = typeof availabilityRoutes
 export type AvailabilityAdminRoutes = typeof availabilityAdminRoutes

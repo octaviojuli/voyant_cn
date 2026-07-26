@@ -4,7 +4,7 @@ export const bookingsUiZhJourney = {
   bookingJourney: {
     steps: {
       departure: "班期",
-      billing: "账单信息",
+      billing: "账单与联系人",
       travelers: "出行人",
       options: "选项",
       accommodation: "住宿",
@@ -48,6 +48,11 @@ export const bookingsUiZhJourney = {
       dependencyLimitSum: "{dependent} 最多允许 {limit} 个。",
       invalidEmail: "请输入有效的邮箱地址。",
     },
+    commitErrors: {
+      noAvailability: "该班期余位不足，仅剩 {count} 位。请减少出行人数或改选其他班期。",
+      noAvailabilityUnknown: "该班期余位不足。请减少出行人数或改选其他班期。",
+      fallback: "订单确认失败，请重试；若仍未成功请联系技术支持。",
+    },
     warnings: {
       phoneMissing: "未填写电话号码——供应商临行前联系时会用到。",
       billingCountryMissing: "未填写账单国家——填写前无法计算税费。",
@@ -85,7 +90,7 @@ export const bookingsUiZhJourney = {
       ageHintMaximum: "最大 {max} 岁",
     },
     billing: {
-      title: "账单与主联系人",
+      title: "账单与联系人",
       buyerType: "购买方类型",
       individual: "个人(B2C)",
       company: "企业(B2B)",
@@ -116,6 +121,14 @@ export const bookingsUiZhJourney = {
       ageLabel: "{age} 岁",
       copyFromBilling: "从账单信息复制",
       remove: "移除",
+      bandLabels: {
+        adult: "成人",
+        child: "儿童",
+        infant: "婴儿",
+        senior: "长者",
+        youth: "青少年",
+        student: "学生",
+      },
     },
     accommodation: {
       title: "住宿",

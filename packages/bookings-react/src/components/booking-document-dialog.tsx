@@ -22,8 +22,9 @@ import { Loader2 } from "lucide-react"
 import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod/v4"
-import { useBookingsUiMessagesOrDefault } from "../i18n/provider.js"
+import { useBookingsUiI18nOrDefault } from "../i18n/provider.js"
 import { useBookingTravelerDocumentMutation, useTravelers } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 
 import { FileDropzone } from "./file-dropzone.js"
 
@@ -31,7 +32,9 @@ const documentTypes = ["visa", "insurance", "health", "passport_copy", "other"] 
 
 const UNASSIGNED = "__unassigned__"
 
-function createDocumentFormSchema(messages: ReturnType<typeof useBookingsUiMessagesOrDefault>) {
+function createDocumentFormSchema(
+  messages: ReturnType<typeof useBookingsUiI18nOrDefault>["messages"],
+) {
   return z.object({
     type: z.enum(documentTypes).default("other"),
     fileName: z
@@ -67,7 +70,7 @@ export function BookingDocumentDialog({
   const { create } = useBookingTravelerDocumentMutation(bookingId)
   const { data: travelersData } = useTravelers(bookingId)
   const travelers = travelersData?.data ?? []
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const documentFormSchema = createDocumentFormSchema(messages)
   const typeItems = useMemo(
     () =>
@@ -85,10 +88,10 @@ export function BookingDocumentDialog({
       },
       ...travelers.map((t) => ({
         value: t.id,
-        label: `${t.firstName} ${t.lastName}`,
+        label: personDisplayName(t, locale),
       })),
     ],
-    [travelers, messages.bookingDocumentDialog.placeholders.travelerUnassigned],
+    [travelers, locale, messages.bookingDocumentDialog.placeholders.travelerUnassigned],
   )
 
   const form = useForm<DocumentFormValues, unknown, DocumentFormOutput>({
@@ -174,7 +177,7 @@ export function BookingDocumentDialog({
                     </SelectItem>
                     {travelers.map((traveler) => (
                       <SelectItem key={traveler.id} value={traveler.id}>
-                        {traveler.firstName} {traveler.lastName}
+                        {personDisplayName(traveler, locale)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -205,6 +208,7 @@ export function BookingDocumentDialog({
             <div className="flex flex-col gap-2">
               <Label>{messages.bookingDocumentDialog.fields.expiresAt}</Label>
               <DatePicker
+                displayFormat={messages.common.datePickerFormats.long}
                 value={form.watch("expiresAt") || null}
                 onChange={(next) =>
                   form.setValue("expiresAt", next ?? "", {

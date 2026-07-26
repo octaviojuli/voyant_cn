@@ -44,13 +44,17 @@ import {
   type PaxBandSpec,
   type ProductVariantOption,
   paxBandsAllowedTotalFrom,
+  paxBandsFromOptionUnits,
+  resolveTravelerBandCode,
   type TravelerFieldRequirement,
+  withResolvedBandUnits,
 } from "@voyant-travel/catalog/booking-engine"
 
 import {
   applyAddonSelections,
   bookingExtraLinesFromAddonSelections,
   bookingItemLinesFromOptionSelections,
+  bookingItemLinesFromPaxBands,
   defaultBookingNumber,
   extractBillingParty,
   extractInternalNotes,
@@ -62,7 +66,10 @@ import {
   priceOptionSelections,
   priceQuote,
   readInitialStatus,
+  resolveBandUnitPrices,
+  resolveEffectivePaxCounts,
   resolveSellAmountCentsOverride,
+  selectShapeOption,
   sumPax,
 } from "./handler-support.js"
 
@@ -257,7 +264,10 @@ export interface DraftLike {
     lastName: string
     email?: string
     phone?: string
+    /** Pax-band code the operator picked; superseded by `dateOfBirth`. */
     band?: string
+    /** ISO yyyy-mm-dd. Derives the band — see `resolveTravelerBandCode`. */
+    dateOfBirth?: string
   }>
   paymentSchedules?: BookingCreateBridgeInput["paymentSchedules"]
   documentGeneration?: BookingCreateBridgeInput["documentGeneration"]
@@ -303,15 +313,45 @@ export interface BuildOwnedProductDraftShapeOptions {
    * match the `paxBands` codes.
    */
   paxBandDependencies?: ReadonlyArray<PaxBandDependency>
+  /**
+   * The option the draft has picked (`draft.configure.variantId`). Its
+   * person units are what the occupancy bands resolve against. When
+   * omitted, the default option (or the only option) is used.
+   */
+  selectedOptionId?: string | null
+}
+
+/**
+ * Resolve the occupancy bands a product offers, in priority order:
+ *
+ *   1. Caller-supplied bands (Commerce pricing categories), enriched
+ *      with the `option_unit` each band bills as so pricing + the
+ *      committed `booking_items.option_unit_id` stay in sync.
+ *   2. Bands derived directly from the selected option's person units —
+ *      the common case. A band the product has no unit for is **not
+ *      offered**, so the journey can never collect a Child count that
+ *      would silently bill at the adult price.
+ *   3. The generic `DEFAULT_PAX_BANDS` when the option carries no
+ *      person units at all (charters, room-only products, or a product
+ *      configured before units existed).
+ */
+function resolveShapePaxBands(options: BuildOwnedProductDraftShapeOptions): {
+  paxBands: ReadonlyArray<PaxBandSpec>
+  option: ProductVariantOption | undefined
+} {
+  const option = selectShapeOption(options.productOptions ?? [], options.selectedOptionId)
+  const units = option?.units ?? []
+  if (options.paxBands && options.paxBands.length > 0) {
+    return { paxBands: withResolvedBandUnits(options.paxBands, units), option }
+  }
+  const derived = paxBandsFromOptionUnits(units)
+  return { paxBands: derived.length > 0 ? derived : DEFAULT_PAX_BANDS, option }
 }
 
 export function buildOwnedProductDraftShape(
   options: BuildOwnedProductDraftShapeOptions = {},
 ): BookingDraftShape {
-  // Use the product's configured traveler types when supplied; otherwise
-  // the generic adult/child/infant defaults.
-  const paxBands =
-    options.paxBands && options.paxBands.length > 0 ? options.paxBands : DEFAULT_PAX_BANDS
+  const { paxBands } = resolveShapePaxBands(options)
   const fields = options.travelerFields ?? defaultTravelerFields()
   const addons = options.addonCatalog ?? []
   const variants = options.productOptions ?? []
@@ -565,11 +605,14 @@ export interface CreateProductsBookingHandlerOptions extends OwnedProductsShapeL
    */
   resolveBillingPerson?: ResolveOwnedBillingPerson
   /**
-   * Generator for booking numbers. Defaults to a timestamp-based
-   * value if not supplied. Templates that have a sequence service
-   * (operator: numbering plugin) override.
+   * Generator for booking numbers. May be async so deployments can
+   * allocate from a persisted number series (the operator runtime wires
+   * `allocateBookingNumber`, which continues whatever series the
+   * workspace already issues — `VYT-CN-2026-00003` after
+   * `VYT-CN-2026-00002`). Falls back to a timestamp-based `BK-…` value
+   * only when nothing is wired and no series can be inferred.
    */
-  generateBookingNumber?: () => string
+  generateBookingNumber?: () => string | Promise<string>
   /**
    * Optional inventory-hold bridge. When wired, `placeHold`
    * decrements `availability_slots.remainingPax` against the
@@ -595,6 +638,17 @@ async function safeLoad<T>(label: string, promise: Promise<T> | undefined): Prom
     console.warn(`[products/booking-engine] ${label} failed; continuing without it`, error)
     return undefined
   }
+}
+
+/**
+ * Narrow a resolved band code onto the traveler-category enum the
+ * booking row stores. Vertical-specific bands (`student`, …) have no
+ * column value and fall back to `adult`.
+ */
+function travelerCategoryForBand(
+  code: string,
+): NonNullable<NonNullable<BookingCreateBridgeInput["travelers"]>[number]["travelerCategory"]> {
+  return code === "child" || code === "infant" || code === "senior" ? code : "adult"
 }
 
 export function createProductsBookingHandler(
@@ -671,6 +725,18 @@ export function createProductsBookingHandler(
         productOptions: productOptionCatalog,
         paxBands,
         paxBandDependencies,
+        selectedOptionId: optionId,
+      })
+
+      // The traveler roster is the more specific statement of who is
+      // travelling — a traveler moved to the Child band (or carrying a
+      // child's date of birth) must reprice, not stay billed as an
+      // adult. `resolveEffectivePaxCounts` documents when the roster
+      // wins over the Configure-step counts.
+      const effectiveCounts = resolveEffectivePaxCounts({
+        pax: draft.configure?.pax,
+        travelers: draft.travelers,
+        bands: shape.paxBands,
       })
 
       let available = false
@@ -685,7 +751,7 @@ export function createProductsBookingHandler(
               })
             : null
 
-        const paxCount = sumPax(draft.configure?.pax)
+        const paxCount = sumPax(effectiveCounts.counts)
         // Per-pax pricing fallback: when no pax is supplied yet, quote a
         // single-occupant baseline so the wizard can render a starter
         // total before the user picks counts.
@@ -705,8 +771,9 @@ export function createProductsBookingHandler(
             : priceQuote({
                 product,
                 resolvedPrice,
-                pax: draft.configure?.pax,
+                pax: effectiveCounts.counts,
                 effectivePax,
+                bands: shape.paxBands,
               })
         const pricedWithAddons = applyAddonSelections({
           priced,
@@ -910,7 +977,27 @@ export function createProductsBookingHandler(
       // `request.bookingId` would point new CRM people at a booking row that
       // never exists. The booking NUMBER is caller-supplied, written straight to
       // the booking row, and known before the create — a stable, resolvable ref.
-      const bookingNumber = generateNumber()
+      const bookingNumber = await generateNumber()
+
+      // Resolve the same bands the quote used so the committed booking
+      // records the unit each traveler is actually billed as. Enrichment
+      // failures degrade to the pre-existing behaviour (finance seeds a
+      // single required-unit row) rather than failing the commit.
+      const commitOptionId = draft.configure?.variantId ?? null
+      const commitProductOptions = await safeLoad(
+        "loadProductOptions",
+        options.loadProductOptions?.(ctx, request.entityId),
+      )
+      const { paxBands: commitBands, option: commitBandOption } = resolveShapePaxBands({
+        productOptions: commitProductOptions,
+        paxBands: await safeLoad("loadPaxBands", options.loadPaxBands?.(ctx, request.entityId)),
+        selectedOptionId: commitOptionId,
+      })
+      const commitCounts = resolveEffectivePaxCounts({
+        pax: draft.configure?.pax,
+        travelers: draft.travelers,
+        bands: commitBands,
+      })
 
       const travelers = (draft.travelers ?? []).map((t, index) => ({
         firstName: t.firstName,
@@ -919,10 +1006,10 @@ export function createProductsBookingHandler(
         phone: t.phone,
         personId: partyTravelers[index]?.personId ?? null,
         participantType: "traveler" as const,
-        travelerCategory:
-          t.band === "child" || t.band === "infant"
-            ? (t.band as "child" | "infant")
-            : ("adult" as const),
+        // Date of birth wins over the picked band when it resolves to
+        // one of the product's bands — the band is derivable, so a
+        // stale hand-picked value must not outrank a real birthday.
+        travelerCategory: travelerCategoryForBand(resolveTravelerBandCode(t, commitBands)),
       }))
 
       // Resolve (or create) a customer person from the billing contact when no
@@ -985,6 +1072,30 @@ export function createProductsBookingHandler(
             ? (draft.configure?.variantId ?? null)
             : null
 
+      // Per-band item lines. Without them the finance converter seeds a
+      // single row against the option's *required* unit (成人) for the
+      // whole party, so a mixed booking committed 2 × Adult even though
+      // one traveler was a child. Emitted only when every positively
+      // counted band resolves to a unit AND a per-unit sell amount — a
+      // partial mapping would put wrong money on the line, so we fall
+      // back to the converter's seeding instead.
+      const bandUnitPrices =
+        optionSelections.length === 0 && commitBandOption && commitOptionId
+          ? await resolveBandUnitPrices({
+              ctx,
+              options,
+              productId: product.id,
+              optionId: commitOptionId,
+              draft,
+            })
+          : null
+      const bandItemLines = bookingItemLinesFromPaxBands({
+        optionId: commitOptionId,
+        bands: commitBands,
+        counts: commitCounts.counts,
+        unitPriceCentsByUnitId: bandUnitPrices,
+      })
+
       const bridge = await options.createBooking({
         productId: product.id,
         optionId: primaryOptionId,
@@ -1027,7 +1138,7 @@ export function createProductsBookingHandler(
         // redeems it atomically and re-checks status / expiry / balance.
         travelCreditRedemption: draft.travelCreditRedemption,
         taxLines: extractTaxLines(request.pricing),
-        itemLines: bookingItemLinesFromOptionSelections(optionSelections),
+        itemLines: bookingItemLinesFromOptionSelections(optionSelections) ?? bandItemLines,
         extraLines: bookingExtraLinesFromAddonSelections({
           addons: draft.addons,
           addonCatalog: await options.loadAddonCatalog?.(ctx, product.id),

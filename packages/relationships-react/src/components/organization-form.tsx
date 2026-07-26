@@ -360,6 +360,7 @@ export function OrganizationForm({ mode, onSuccess, onCancel }: OrganizationForm
             {messages.organizationForm.fields.billingCountry}
           </Label>
           <CountryCombobox
+            messages={messages.common.countryCombobox}
             value={state.billingCountry || null}
             onChange={(code) => setState((prev) => ({ ...prev, billingCountry: code ?? "" }))}
           />

@@ -29,6 +29,12 @@ function buildLanguageFallbackOrder(query: ContractTemplateDefaultQuery) {
     )
 }
 
+/** Primary language subtag, lowercased (`"zh-CN"` -> `"zh"`). */
+function primaryLanguageSubtag(value: string | null | undefined): string | null {
+  const normalized = normalizeLanguage(value)
+  return normalized ? (normalized.split(/[-_]/)[0] ?? null) : null
+}
+
 function pickBestDefaultTemplate(
   rows: ContractTemplateRow[],
   channelId: string | undefined,
@@ -93,6 +99,53 @@ export const contractTemplatesService = {
       .where(eq(contractTemplates.slug, slug))
       .limit(1)
     return row ?? null
+  },
+  /**
+   * Language-aware default lookup used by contract auto-generation.
+   *
+   * Differs from {@link contractTemplatesService.getDefaultTemplate} in two
+   * ways that matter when picking the template for a *booking*:
+   *
+   *  - it matches on the primary language subtag, so a `zh-CN` template
+   *    satisfies a `zh` booking (and vice versa) — the exact-tag matching in
+   *    `getDefaultTemplate` never pairs those up, and
+   *  - it returns `null` instead of silently falling back to an
+   *    any-language default, so the caller can fall back to its explicitly
+   *    configured template slug rather than shipping the customer a contract
+   *    in a language nobody asked for.
+   */
+  async findDefaultTemplateByLanguage(
+    db: PostgresJsDatabase,
+    query: { scope: ContractTemplateDefaultQuery["scope"]; language: string; channelId?: string },
+  ) {
+    const language = primaryLanguageSubtag(query.language)
+    if (!language) return null
+
+    const channelId = query.channelId?.trim() || undefined
+    const channelConditions = channelId
+      ? or(eq(contractTemplates.channelId, channelId), isNull(contractTemplates.channelId))
+      : isNull(contractTemplates.channelId)
+
+    const rows = await db
+      .select()
+      .from(contractTemplates)
+      .where(
+        and(
+          eq(contractTemplates.scope, query.scope),
+          eq(contractTemplates.active, true),
+          channelConditions,
+        ),
+      )
+      .orderBy(
+        desc(contractTemplates.updatedAt),
+        desc(contractTemplates.createdAt),
+        desc(contractTemplates.id),
+      )
+
+    return pickBestDefaultTemplate(
+      rows.filter((row) => primaryLanguageSubtag(row.language) === language),
+      channelId,
+    )
   },
   async getDefaultTemplate(db: PostgresJsDatabase, query: ContractTemplateDefaultQuery) {
     const channelId = query.channelId?.trim() || undefined

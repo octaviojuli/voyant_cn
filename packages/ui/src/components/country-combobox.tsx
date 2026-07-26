@@ -19,10 +19,29 @@ const COUNTRY_LIST: readonly Country[] = (countries.flat() as Country[])
 const COUNTRY_BY_CODE = new Map<string, Country>()
 for (const c of COUNTRY_LIST) COUNTRY_BY_CODE.set(c.code, c)
 
+export type CountryComboboxMessages = {
+  /** Search-input placeholder. */
+  placeholder: string
+  /** Shown when the search matches no country. */
+  empty: string
+}
+
+// i18n-literal-ok: contractual plain-English defaults; hosts pass localized
+// copy through the `messages` prop (see `data-table-pagination.tsx` for the
+// same seam).
+const defaultCountryComboboxMessages: CountryComboboxMessages = {
+  placeholder: "Search countries…",
+  empty: "No countries found.",
+}
+
 export type CountryComboboxProps = {
   value: string | null | undefined
   onChange: (code: string | null) => void
+  /** Localized copy from the host. Defaults to English. */
+  messages?: CountryComboboxMessages
+  /** Per-instance override; wins over `messages.placeholder`. */
   placeholder?: string
+  /** Per-instance override; wins over `messages.empty`. */
   emptyText?: string
   disabled?: boolean
 }
@@ -30,10 +49,13 @@ export type CountryComboboxProps = {
 export function CountryCombobox({
   value,
   onChange,
-  placeholder = "Search countries…",
-  emptyText = "No countries found.",
+  messages = defaultCountryComboboxMessages,
+  placeholder,
+  emptyText,
   disabled,
 }: CountryComboboxProps) {
+  const resolvedPlaceholder = placeholder ?? messages.placeholder
+  const resolvedEmptyText = emptyText ?? messages.empty
   const normalized = value ? value.toUpperCase() : null
   const selectedLabel = React.useMemo(() => {
     if (!normalized) return ""
@@ -81,9 +103,9 @@ export function CountryCombobox({
         }
       }}
     >
-      <ComboboxInput placeholder={placeholder} showClear={!!normalized} />
+      <ComboboxInput placeholder={resolvedPlaceholder} showClear={!!normalized} />
       <ComboboxContent>
-        <ComboboxEmpty>{emptyText}</ComboboxEmpty>
+        <ComboboxEmpty>{resolvedEmptyText}</ComboboxEmpty>
         <ComboboxList>
           <ComboboxCollection>
             {(code) => {

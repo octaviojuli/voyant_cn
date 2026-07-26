@@ -97,6 +97,7 @@ export { adminChromeZh } from "./admin/zh/chrome.js"
 export {
   createLocaleFormatters,
   formatPersonName,
+  isFamilyNameFirstLocale,
   type LocaleFormatters,
   type PersonNameParts,
 } from "./package-formatters.js"

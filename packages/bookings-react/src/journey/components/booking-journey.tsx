@@ -27,7 +27,8 @@ import {
 } from "@voyant-travel/catalog-react/booking-engine"
 import { Button } from "@voyant-travel/ui/components/button"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useBookingsUiMessagesOrDefault } from "../../i18n/index.js"
+import { formatMessage, useBookingsUiMessagesOrDefault } from "../../i18n/index.js"
+import { describeCommitError } from "../lib/commit-error.js"
 import { type Draft, emptyDraft, totalPax } from "../lib/draft-state.js"
 import { findPaidScheduleRowsMissingPaymentDate } from "../lib/payment-schedule.js"
 import {
@@ -94,7 +95,11 @@ export function BookingJourney(props: BookingJourneyProps): React.ReactElement {
         sourceConnectionId: props.sourceConnectionId,
         sourceRef: props.sourceRef,
       },
-      { buyerType: props.defaultBuyerType ?? (surface === "admin" ? "B2B" : "B2C") },
+      // B2C by default on every surface. A leisure operator books individuals
+      // far more often than companies, and defaulting to B2B silently demands
+      // an organization (an extra required step) on every single booking.
+      // Deployments that really are B2B-first pass `defaultBuyerType`.
+      { buyerType: props.defaultBuyerType ?? "B2C" },
     )
     // Seed Configure when the caller passed pre-locked state —
     // detail page picks departure + pax, booking flow only handles
@@ -654,7 +659,9 @@ export function BookingJourney(props: BookingJourneyProps): React.ReactElement {
         isStepComplete={(s) => stackedStepComplete(s, draft, shape, available)}
         // Surface both the in-process commit error and the "no valid quote"
         // Confirm block so a failed confirm is never silent.
-        commitError={commit.error ?? confirmError}
+        commitError={
+          commit.error ? commitErrorMessage(commit.error, messages) : (confirmError ?? null)
+        }
         onCancel={props.onCancelled}
         onConfirm={onConfirm}
         isCommitting={commit.isPending || isHandlingCheckout}
@@ -849,8 +856,8 @@ export function BookingJourney(props: BookingJourneyProps): React.ReactElement {
           ) : null}
 
           {commit.error ? (
-            <p className="text-destructive text-sm">
-              {commit.error instanceof Error ? commit.error.message : String(commit.error)}
+            <p className="text-destructive text-sm" role="alert" aria-live="polite">
+              {commitErrorMessage(commit.error, messages)}
             </p>
           ) : null}
         </div>
@@ -884,4 +891,24 @@ export function BookingJourney(props: BookingJourneyProps): React.ReactElement {
       ) : null}
     </div>
   )
+}
+
+/**
+ * Localized copy for a failed commit. The engine surfaces the server's raw
+ * English `Error.message` (a capacity clash used to render as a bare
+ * `Internal Server Error` under the form); classify it instead and render
+ * something the operator can act on — the remaining seats when the server
+ * tells us, an actionable sold-out line when it doesn't, and a generic
+ * localized fallback for everything else.
+ */
+function commitErrorMessage(
+  error: unknown,
+  messages: ReturnType<typeof useBookingsUiMessagesOrDefault>,
+): string {
+  const copy = messages.bookingJourney.commitErrors
+  const info = describeCommitError(error)
+  if (info.kind !== "no_availability") return copy.fallback
+  return info.remainingPax == null
+    ? copy.noAvailabilityUnknown
+    : formatMessage(copy.noAvailability, { count: info.remainingPax })
 }

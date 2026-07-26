@@ -41,10 +41,15 @@ export type TravelerEntryV1 = z.infer<typeof travelerEntryV1>
 // ─────────────────────────────────────────────────────────────────
 
 export const paxBandSpecV1 = z.object({
+  /** Stable machine-readable band code — clients localize from this, not `label`. */
   code: z.string(),
+  /** Display label; operator-authored unit name when the band resolves to a unit. */
   label: z.string(),
   minAge: z.number().int().nonnegative().optional(),
   maxAge: z.number().int().nonnegative().optional(),
+  /** `option_units.id` this band is billed as, when it resolves to a real unit. */
+  unitId: z.string().optional(),
+  unitCode: z.string().nullable().optional(),
   minCount: z.number().int().nonnegative(),
   maxCount: z.number().int().nonnegative(),
 })
@@ -85,6 +90,11 @@ export const productVariantUnitOptionV1 = z.object({
   unitType: z.string().nullable().optional(),
   minQuantity: z.number().int().nonnegative().nullable().optional(),
   maxQuantity: z.number().int().nonnegative().nullable().optional(),
+  /** Stable catalog code — drives pax-band resolution (never the label). */
+  code: z.string().nullable().optional(),
+  minAge: z.number().int().nonnegative().nullable().optional(),
+  maxAge: z.number().int().nonnegative().nullable().optional(),
+  isRequired: z.boolean().nullable().optional(),
 })
 
 export const productVariantOptionV1 = z.object({

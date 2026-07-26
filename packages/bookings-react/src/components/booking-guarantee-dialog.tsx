@@ -270,6 +270,7 @@ export function BookingGuaranteeDialog({
             <div className="flex flex-col gap-2">
               <Label>{messages.bookingGuaranteeDialog.fields.expiresAt}</Label>
               <DateTimePicker
+                displayFormat={messages.common.datePickerFormats.longWithTime}
                 value={form.watch("expiresAt") || null}
                 onChange={(next) =>
                   form.setValue("expiresAt", next ?? "", {

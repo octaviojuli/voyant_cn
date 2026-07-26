@@ -55,7 +55,10 @@ describe("OperatorAdminPageShell", () => {
     expect(
       container.querySelector("[data-slot='operator-admin-page-shell-header']")?.classList,
     ).toContain("sticky")
-    expect(screen.getByRole("button", { name: "Toggle sidebar" })).not.toBeNull()
+    // Scoped to the trigger's slot: the sidebar rail is a second control with
+    // the same accessible name ("Toggle sidebar"), so a bare role+name query
+    // is ambiguous.
+    expect(container.querySelectorAll("[data-slot='sidebar-trigger']")).toHaveLength(1)
     expect(screen.getByRole("navigation", { name: "Breadcrumb" }).textContent).toBe("Bookings")
     expect(screen.getByRole("button", { name: "New booking" })).not.toBeNull()
     expect(
@@ -77,7 +80,7 @@ describe("OperatorAdminPageShell", () => {
       </OperatorAdminWorkspaceLayout>,
     )
 
-    expect(screen.queryByRole("button", { name: "Toggle sidebar" })).toBeNull()
+    expect(container.querySelector("[data-slot='sidebar-trigger']")).toBeNull()
     expect(
       container.querySelector("[data-slot='operator-admin-page-shell-content']")?.classList,
     ).not.toContain("px-4")

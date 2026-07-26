@@ -67,7 +67,7 @@ export type BookingsUiCreateListMessages = {
     }
     labels: {
       currency: string
-      remainingCapacity: string
+      remainingCapacityCount: string
       noSpecificOption: string
       createNewPerson: string
       selectExistingPerson: string

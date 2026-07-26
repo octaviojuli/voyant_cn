@@ -7,6 +7,7 @@ import type { BookingsUiMessages } from "../i18n/messages.js"
 import { useBookingsUiI18nOrDefault } from "../i18n/provider.js"
 import type { BookingCreateExtraLineInput } from "../index.js"
 import { useBookingTaxPreview } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 import { PriceBreakdownSection, type PriceBreakdownValue } from "./price-breakdown-section.js"
 import type { TravelerEntry } from "./travelers-section.js"
 
@@ -44,7 +45,7 @@ export function BookingPreviewCard({
   messages: BookingsUiMessages
   onPricingChange: (value: PriceBreakdownValue) => void
 }) {
-  const { formatCurrency, formatNumber } = useBookingsUiI18nOrDefault()
+  const { formatCurrency, formatNumber, locale } = useBookingsUiI18nOrDefault()
   const productQuery = useProduct(productId || undefined, { enabled: Boolean(productId) })
   const mediaQuery = useProductMedia(productId, { limit: 1, enabled: Boolean(productId) })
   const product = productQuery.data ?? null
@@ -159,10 +160,7 @@ export function BookingPreviewCard({
             </span>
             <ul className="flex flex-col gap-0.5 text-sm">
               {travelers.map((traveler, idx) => {
-                const name = [traveler.firstName, traveler.lastName]
-                  .filter((part) => part.trim().length > 0)
-                  .join(" ")
-                  .trim()
+                const name = personDisplayName(traveler, locale)
                 return (
                   <li
                     key={traveler.personId ?? `traveler-${idx}`}

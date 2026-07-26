@@ -14,6 +14,7 @@
     "./runtime": "./src/runtime.ts",
     "./voyant": "./src/voyant.ts",
     "./providers/local": "./src/providers/local.ts",
+    "./providers/filesystem": "./src/providers/filesystem.ts",
     "./providers/s3-compatible": "./src/providers/s3-compatible.ts",
     "./providers/graph": "./src/providers/graph.ts",
     "./openapi/admin/media": "./openapi/admin/storage-media.json",
@@ -114,6 +115,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "@voyant-travel/voyant-typescript-config": "workspace:^",
     "hono": "catalog:",
     "typescript": "catalog:",

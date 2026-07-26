@@ -1,9 +1,11 @@
 // agent-quality: file-size exception -- booking-engine pricing, commit, and draft helpers stay together until the owned products handler support layer is split.
-import type {
-  AddonOffer,
-  CommitOwnedRequest,
-  OwnedHandlerContext,
-  ProductVariantOption,
+import {
+  type AddonOffer,
+  type CommitOwnedRequest,
+  type OwnedHandlerContext,
+  type PaxBandSpec,
+  type ProductVariantOption,
+  paxCountsFromTravelers,
 } from "@voyant-travel/catalog/booking-engine"
 import type { AnyDrizzleDb } from "@voyant-travel/db"
 import { and, eq, gte, isNull, lte, or } from "drizzle-orm"
@@ -38,6 +40,72 @@ export function sumPax(pax: Partial<Record<string, number>> | undefined): number
     if (typeof v === "number" && Number.isFinite(v) && v > 0) total += v
   }
   return total
+}
+
+/**
+ * Pick the product option a draft's bands + pricing resolve against.
+ * The draft's `variantId` wins; otherwise the option flagged default,
+ * otherwise the only option. Returns undefined when the choice is
+ * ambiguous so callers fall back to generic bands instead of guessing.
+ */
+export function selectShapeOption(
+  productOptions: ReadonlyArray<ProductVariantOption>,
+  selectedOptionId: string | null | undefined,
+): ProductVariantOption | undefined {
+  if (productOptions.length === 0) return undefined
+  if (selectedOptionId) {
+    const picked = productOptions.find((option) => option.id === selectedOptionId)
+    if (picked) return picked
+  }
+  const fallback =
+    productOptions.find((option) => option.isDefault) ??
+    (productOptions.length === 1 ? productOptions[0] : undefined)
+  return fallback
+}
+
+export interface EffectivePaxCounts {
+  counts: Record<string, number>
+  /** Which input decided the counts — useful in tests + logs. */
+  source: "configure" | "travelers"
+}
+
+/**
+ * Decide the per-band counts that drive pricing and the committed item
+ * lines.
+ *
+ * The Configure step collects counts per band; the Travelers step then
+ * names the people and can move a row to another band (or supply a date
+ * of birth that implies one). Those two must not disagree — the audit
+ * found a traveler switched to Child still quoting and billing at the
+ * adult price because only `configure.pax` was ever read.
+ *
+ * Rule: the traveler roster wins **only when it is complete** — i.e. it
+ * has as many rows as the Configure step asked for (or Configure hasn't
+ * been filled in yet). A half-entered roster leaves the Configure counts
+ * alone, so the total never silently shrinks mid-wizard.
+ */
+export function resolveEffectivePaxCounts(input: {
+  pax: Partial<Record<string, number>> | undefined
+  travelers: DraftLike["travelers"]
+  bands: ReadonlyArray<PaxBandSpec>
+  now?: Date
+}): EffectivePaxCounts {
+  const configured: Record<string, number> = {}
+  for (const [code, count] of Object.entries(input.pax ?? {})) {
+    if (typeof count === "number" && Number.isFinite(count) && count > 0) {
+      configured[code] = Math.floor(count)
+    }
+  }
+  const configuredTotal = sumPax(configured)
+  const travelers = input.travelers ?? []
+  if (travelers.length === 0) return { counts: configured, source: "configure" }
+  if (configuredTotal > 0 && travelers.length !== configuredTotal) {
+    return { counts: configured, source: "configure" }
+  }
+  return {
+    counts: paxCountsFromTravelers(travelers, input.bands, input.now),
+    source: "travelers",
+  }
 }
 
 export interface PricedLine {
@@ -330,6 +398,88 @@ export function bookingItemLinesFromOptionSelections(
   return lines.length > 0 ? lines : undefined
 }
 
+/**
+ * Resolve the per-`option_unit` sell amounts for the committing draft,
+ * reusing the exact loader the quote used so the committed line prices
+ * match the quoted ones. Returns null when the deployment wires no
+ * price resolver, the draft has no departure, or the rule carries no
+ * per-unit prices.
+ */
+export async function resolveBandUnitPrices(input: {
+  ctx: OwnedHandlerContext
+  options: CreateProductsBookingHandlerOptions
+  productId: string
+  optionId: string
+  draft: DraftLike
+}): Promise<Map<string, number> | null> {
+  if (!input.options.loadResolvedOptionPrice) return null
+  try {
+    const slotId = input.draft.configure?.departureSlotId
+    const slotDate =
+      (slotId && input.options.loadSlotDate
+        ? await input.options.loadSlotDate(input.ctx, slotId)
+        : null) ??
+      input.draft.configure?.departureDate ??
+      null
+    if (!slotDate) return null
+    const resolved = await input.options.loadResolvedOptionPrice(input.ctx, {
+      productId: input.productId,
+      optionId: input.optionId,
+      date: slotDate,
+    })
+    if (!resolved || resolved.unitPrices.length === 0) return null
+    const byUnitId = new Map<string, number>()
+    for (const unit of resolved.unitPrices) {
+      if (unit.sellAmountCents == null || unit.sellAmountCents <= 0) continue
+      byUnitId.set(unit.unitId, unit.sellAmountCents)
+    }
+    return byUnitId.size > 0 ? byUnitId : null
+  } catch (error) {
+    console.warn(
+      "[products/booking-engine] resolveBandUnitPrices failed; committing without per-band lines",
+      error,
+    )
+    return null
+  }
+}
+
+/**
+ * Build one `booking_items` line per occupancy band with a positive
+ * count, so the committed booking records the real unit (成人 / 儿童)
+ * and quantity instead of collapsing onto the option's required unit.
+ *
+ * Returns undefined — leaving the finance converter's default seeding
+ * in place — unless **every** counted band resolves to both a unit and
+ * a per-unit price. A partial mapping would stamp the wrong money on a
+ * line, which is worse than the (single-line) status quo.
+ */
+export function bookingItemLinesFromPaxBands(input: {
+  optionId: string | null | undefined
+  bands: ReadonlyArray<PaxBandSpec>
+  counts: Record<string, number>
+  unitPriceCentsByUnitId: Map<string, number> | null
+}): BookingCreateBridgeInput["itemLines"] | undefined {
+  const prices = input.unitPriceCentsByUnitId
+  if (!prices || prices.size === 0) return undefined
+  const counted = input.bands.filter((band) => (input.counts[band.code] ?? 0) > 0)
+  if (counted.length === 0) return undefined
+  const lines: NonNullable<BookingCreateBridgeInput["itemLines"]> = []
+  for (const band of counted) {
+    const unitSellAmountCents = band.unitId ? prices.get(band.unitId) : undefined
+    if (!band.unitId || unitSellAmountCents == null) return undefined
+    const quantity = input.counts[band.code] ?? 0
+    lines.push({
+      ...(input.optionId ? { optionId: input.optionId } : {}),
+      optionUnitId: band.unitId,
+      quantity,
+      title: band.label,
+      unitSellAmountCents,
+      totalSellAmountCents: unitSellAmountCents * quantity,
+    })
+  }
+  return lines.length > 0 ? lines : undefined
+}
+
 export function applyAddonSelections(input: {
   priced: PricedQuote
   addons: DraftLike["addons"] | undefined
@@ -411,6 +561,12 @@ export function bookingExtraLinesFromAddonSelections(input: {
  *    unit.sellAmountCents` for each matching band. One breakdown line
  *    per band.
  *
+ *    Bands are matched to units by `PaxBandSpec.unitId` when the shape
+ *    resolved one (the authoritative link), falling back to the unit's
+ *    derived `travelerCategory` for generic default bands. Matching on
+ *    the unit — not on a display label — is what keeps a 儿童 count
+ *    priced at the child rate.
+ *
  * 2. **Per-booking**: when no per-band match but `baseSellAmountCents`
  *    is set, charge a single `base × paxCount` line.
  *
@@ -423,23 +579,58 @@ export function priceQuote(input: {
   resolvedPrice: ResolvedOptionPrice | null
   pax: Partial<Record<string, number>> | undefined
   effectivePax: number
+  /** Occupancy bands from the draft shape, when resolved. */
+  bands?: ReadonlyArray<PaxBandSpec>
 }): PricedQuote {
-  const { product, resolvedPrice, pax, effectivePax } = input
+  const { product, resolvedPrice, pax, effectivePax, bands } = input
 
   if (resolvedPrice && resolvedPrice.unitPrices.length > 0) {
+    const priceByUnitId = new Map<string, number>()
+    const priceByCategory = new Map<string, number>()
+    for (const unit of resolvedPrice.unitPrices) {
+      const sell = unit.sellAmountCents ?? 0
+      if (sell <= 0) continue
+      priceByUnitId.set(unit.unitId, sell)
+      if (unit.travelerCategory && !priceByCategory.has(unit.travelerCategory)) {
+        priceByCategory.set(unit.travelerCategory, sell)
+      }
+    }
+
+    // Prefer the shape's own bands so the breakdown line carries the
+    // operator's unit name (成人 / 儿童) rather than an English code.
+    const bandRows: Array<{ code: string; label: string; sell: number | undefined }> =
+      bands && bands.length > 0
+        ? bands.map((band) => ({
+            code: band.code,
+            label: band.label,
+            sell:
+              (band.unitId ? priceByUnitId.get(band.unitId) : undefined) ??
+              priceByCategory.get(band.code),
+          }))
+        : resolvedPrice.unitPrices.flatMap((unit) =>
+            unit.travelerCategory
+              ? [
+                  {
+                    code: unit.travelerCategory,
+                    label: `${product.name} — ${unit.travelerCategory}`,
+                    sell: unit.sellAmountCents ?? undefined,
+                  },
+                ]
+              : [],
+          )
+
     const bandLines: PricedLine[] = []
     let total = 0
-    for (const unit of resolvedPrice.unitPrices) {
-      if (!unit.travelerCategory) continue
-      const count = pax?.[unit.travelerCategory] ?? 0
+    for (const row of bandRows) {
+      const count = pax?.[row.code] ?? 0
       if (count <= 0) continue
-      const sell = unit.sellAmountCents ?? 0
+      const sell = row.sell ?? 0
       if (sell <= 0) continue
       const lineTotal = sell * count
       total += lineTotal
       bandLines.push({
         kind: "base",
-        label: `${product.name} — ${unit.travelerCategory}`,
+        label: row.label,
         quantity: count,
         unitAmount: sell,
         totalAmount: lineTotal,

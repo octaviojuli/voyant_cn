@@ -64,6 +64,11 @@ export type CrmUiMessages = {
       monthsAgo: string
       yearsAgo: string
     }
+    /** Copy passed into `@voyant-travel/ui`'s `<CountryCombobox messages>` seam. */
+    countryCombobox: {
+      placeholder: string
+      empty: string
+    }
   }
   organizationForm: {
     fields: {

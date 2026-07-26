@@ -18,11 +18,14 @@ import {
   SelectValue,
 } from "@voyant-travel/ui/components/select"
 import {
+  type BookingsUiMessages,
   formatMessage,
   useBookingsUiI18nOrDefault,
   useBookingsUiMessagesOrDefault,
 } from "../../../i18n/index.js"
+import { orderNameFields } from "../../../lib/person-name.js"
 import type { Draft } from "../../lib/draft-state.js"
+import { ageFromDateOfBirth } from "../../lib/traveler-band.js"
 import type { DeparturePickerProps, UnitsPickerProps } from "../../types.js"
 
 /** Injectable departure-picker render slot, threaded from BookingJourneyProps. */
@@ -162,6 +165,73 @@ export function Field({
   )
 }
 
+/**
+ * The given-name + family-name pair, laid out in the locale's own reading
+ * order. Family-name-first locales (zh/ja/ko) put 姓 on the LEFT and 名 on the
+ * right; every other locale keeps given-then-family. Labels were already
+ * correct — the ORDER is the fix: a Chinese operator reading left-to-right
+ * would otherwise type 张 into the 名 box and corrupt the record at source.
+ *
+ * Storage is untouched: `firstName` stays the given name on the wire.
+ */
+/**
+ * Localized label for a pax band. The band contract carries a stable `code`
+ * (`adult` / `child` / `infant` / …) alongside a server-supplied English
+ * `label`; render by code so operators see 成人 / 儿童 / 婴儿 and fall back to
+ * the server label for vertical-specific codes the dictionary doesn't cover.
+ */
+export function bandLabel(
+  band: { code: string; label?: string },
+  bandLabels: BookingsUiMessages["bookingJourney"]["travelers"]["bandLabels"],
+): string {
+  return bandLabels[band.code as keyof typeof bandLabels] ?? band.label ?? band.code
+}
+
+export function NameFields({
+  givenNameId,
+  familyNameId,
+  givenNameLabel,
+  familyNameLabel,
+  givenName,
+  familyName,
+  onGivenNameChange,
+  onFamilyNameChange,
+}: {
+  givenNameId: string
+  familyNameId: string
+  givenNameLabel: string
+  familyNameLabel: string
+  givenName: string
+  familyName: string
+  onGivenNameChange: (v: string) => void
+  onFamilyNameChange: (v: string) => void
+}): React.ReactElement {
+  const { locale } = useBookingsUiI18nOrDefault()
+  const [first, second] = orderNameFields(
+    locale,
+    <Field
+      key="given"
+      id={givenNameId}
+      label={givenNameLabel}
+      value={givenName}
+      onChange={onGivenNameChange}
+    />,
+    <Field
+      key="family"
+      id={familyNameId}
+      label={familyNameLabel}
+      value={familyName}
+      onChange={onFamilyNameChange}
+    />,
+  )
+  return (
+    <>
+      {first}
+      {second}
+    </>
+  )
+}
+
 export function PhoneField({
   id,
   label,
@@ -218,6 +288,7 @@ export function DateField({
   onChange: (v: string) => void
   range?: "past" | "future" | "document"
 }): React.ReactElement {
+  const { datePickerFormats } = useBookingsUiMessagesOrDefault().common
   const today = new Date()
   const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1)
   const startMonth =
@@ -245,7 +316,7 @@ export function DateField({
         startMonth={startMonth}
         endMonth={endMonth}
         defaultMonth={defaultMonth}
-        displayFormat="PPP"
+        displayFormat={datePickerFormats.long}
       />
     </div>
   )
@@ -290,13 +361,8 @@ export function SelectField({
  * gracefully rather than rendering "age -3".
  */
 export function computeAge(dob: string): number | null {
-  const d = new Date(dob)
-  if (Number.isNaN(d.getTime())) return null
-  const now = new Date()
-  let age = now.getFullYear() - d.getFullYear()
-  const m = now.getMonth() - d.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age -= 1
-  return age >= 0 ? age : null
+  const age = ageFromDateOfBirth(dob)
+  return Number.isFinite(age) && age >= 0 ? age : null
 }
 
 export function ageHint(

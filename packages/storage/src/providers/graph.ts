@@ -1,4 +1,5 @@
 import type { StorageProvider, StorageProviderResolver, VoyantStorageName } from "../types.js"
+import { createFilesystemStorageProvider } from "./filesystem.js"
 import { createLocalStorageProvider } from "./local.js"
 import { createS3CompatibleStorageProvider } from "./s3-compatible.js"
 
@@ -16,6 +17,7 @@ const CONFIG = {
   documentsBucket: "@voyant-travel/storage#config.documents-bucket",
   mediaBucket: "@voyant-travel/storage#config.media-bucket",
   mediaPublicBaseUrl: "@voyant-travel/storage#config.media-public-base-url",
+  filesystemRoot: "@voyant-travel/storage#config.filesystem-root",
 } as const
 
 const SECRET = {
@@ -36,6 +38,31 @@ export function createMemoryGraphStorageProvider(
     }),
     media: createLocalStorageProvider({
       name: "memory:media",
+      baseUrl: `${apiBaseUrl}/v1/admin/media/`,
+    }),
+  })
+}
+
+/**
+ * Disk-backed resolver for single-node deployments. Objects live under
+ * `STORAGE_FILESYSTEM_ROOT` and survive restarts, unlike the memory resolver.
+ */
+export function createFilesystemGraphStorageProvider(
+  context: StorageGraphProviderContext,
+): StorageProviderResolver {
+  const apiBaseUrl = resolveApiBaseUrl(context)
+  const root = requiredString(context.getConfig(CONFIG.filesystemRoot), "STORAGE_FILESYSTEM_ROOT")
+  // Each store owns a subdirectory so a documents key can never collide with a
+  // media key of the same name.
+  return fixedStores({
+    documents: createFilesystemStorageProvider({
+      name: "filesystem:documents",
+      baseDir: `${root.replace(/\/+$/, "")}/documents`,
+      baseUrl: `${apiBaseUrl}/v1/admin/documents/files/`,
+    }),
+    media: createFilesystemStorageProvider({
+      name: "filesystem:media",
+      baseDir: `${root.replace(/\/+$/, "")}/media`,
       baseUrl: `${apiBaseUrl}/v1/admin/media/`,
     }),
   })

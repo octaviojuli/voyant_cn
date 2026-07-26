@@ -385,7 +385,9 @@ export function BookingCreateForm({
       })
       const remaining =
         !slot.unlimited && typeof slot.remainingPax === "number"
-          ? ` · ${slot.remainingPax} ${messages.bookingCreateDialog.labels.remainingCapacity}`
+          ? ` · ${formatMessage(messages.bookingCreateDialog.labels.remainingCapacityCount, {
+              count: slot.remainingPax,
+            })}`
           : ""
       return `${date}${remaining}`
     },

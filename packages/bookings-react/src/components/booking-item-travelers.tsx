@@ -11,7 +11,7 @@ import {
 } from "@voyant-travel/ui/components"
 import { Plus, Trash2, UserCheck } from "lucide-react"
 import * as React from "react"
-import { useBookingsUiMessagesOrDefault } from "../i18n/provider.js"
+import { useBookingsUiI18nOrDefault } from "../i18n/provider.js"
 import {
   type BookingItemTravelerRecord,
   type BookingTravelerRecord,
@@ -19,6 +19,7 @@ import {
   useBookingItemTravelers,
   useTravelers,
 } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 
 const roles = [
   "traveler",
@@ -38,7 +39,7 @@ export function BookingItemTravelers({ bookingId, itemId }: BookingItemTravelers
   const { data: travelerLinksData } = useBookingItemTravelers(bookingId, itemId)
   const { data: travelersData } = useTravelers(bookingId)
   const { add, remove } = useBookingItemTravelerMutation(bookingId, itemId)
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
 
   const [selectedTravelerId, setSelectedTravelerId] = React.useState("")
   const [selectedRole, setSelectedRole] = React.useState<string>("traveler")
@@ -53,9 +54,9 @@ export function BookingItemTravelers({ bookingId, itemId }: BookingItemTravelers
     () =>
       availableTravelers.map((t) => ({
         value: t.id,
-        label: `${t.firstName} ${t.lastName}`,
+        label: personDisplayName(t, locale),
       })),
-    [availableTravelers],
+    [availableTravelers, locale],
   )
   const roleItems = React.useMemo(
     () =>
@@ -103,9 +104,7 @@ export function BookingItemTravelers({ bookingId, itemId }: BookingItemTravelers
                 className="flex items-center justify-between rounded px-2 py-1 text-sm"
               >
                 <div className="flex items-center gap-2">
-                  <span>
-                    {traveler ? `${traveler.firstName} ${traveler.lastName}` : link.travelerId}
-                  </span>
+                  <span>{traveler ? personDisplayName(traveler, locale) : link.travelerId}</span>
                   <Badge variant="outline" className="text-xs">
                     {messages.bookingItemTravelers.roleLabels[link.role]}
                   </Badge>
@@ -148,7 +147,7 @@ export function BookingItemTravelers({ bookingId, itemId }: BookingItemTravelers
               <SelectContent>
                 {availableTravelers.map((traveler) => (
                   <SelectItem key={traveler.id} value={traveler.id}>
-                    {traveler.firstName} {traveler.lastName}
+                    {personDisplayName(traveler, locale)}
                   </SelectItem>
                 ))}
               </SelectContent>

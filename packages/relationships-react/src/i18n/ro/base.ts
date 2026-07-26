@@ -64,6 +64,10 @@ export const crmUiRoBaseMessages = {
       monthsAgo: "acum {count}l",
       yearsAgo: "acum {count}a",
     },
+    countryCombobox: {
+      placeholder: "Cauta tari…",
+      empty: "Nicio tara gasita.",
+    },
   },
   organizationForm: {
     fields: {

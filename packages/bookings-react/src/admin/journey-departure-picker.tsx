@@ -15,7 +15,7 @@ import { Label } from "@voyant-travel/ui/components/label"
 import { useEffect, useMemo, useState } from "react"
 
 import { getBookableDepartureSlots } from "../components/booking-create-utils.js"
-import { useBookingsUiMessagesOrDefault } from "../i18n/provider.js"
+import { formatMessage, useBookingsUiI18nOrDefault } from "../i18n/provider.js"
 import type { DeparturePickerProps } from "../journey/index.js"
 
 /**
@@ -29,12 +29,6 @@ import type { DeparturePickerProps } from "../journey/index.js"
  * Wired into `<BookingJourneyHost />` via the journey's
  * `renderDeparturePicker` slot.
  */
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-})
-
 type LoadedSlot = {
   id: string
   optionId: string | null
@@ -56,7 +50,13 @@ export function JourneyDeparturePicker({
    *  show it read-only rather than a re-editable input. */
   lockDeparture?: boolean
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault().bookingCreateDialog
+  const { formatDate, messages: allMessages } = useBookingsUiI18nOrDefault()
+  const messages = allMessages.bookingCreateDialog
+  const dateFormat: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }
   // Stable "now" so the slot query + future filter don't churn every render.
   const [nowIso] = useState(() => new Date().toISOString())
 
@@ -79,10 +79,14 @@ export function JourneyDeparturePicker({
   const slotMap = useMemo(() => new Map(slots.map((s) => [s.id, s])), [slots])
 
   const formatLabel = (slot: LoadedSlot): string => {
-    const date = dateFormatter.format(new Date(slot.startsAt))
+    const date = formatDate(new Date(slot.startsAt), dateFormat)
+    // Interpolated, not suffixed: Chinese needs "剩余 6 位", which no
+    // `${count} ${suffix}` concatenation can produce.
     const remaining =
       !slot.unlimited && typeof slot.remainingPax === "number"
-        ? ` · ${slot.remainingPax} ${messages.labels.remainingCapacity}`
+        ? ` · ${formatMessage(messages.labels.remainingCapacityCount, {
+            count: slot.remainingPax,
+          })}`
         : ""
     return `${date}${remaining}`
   }
@@ -110,7 +114,7 @@ export function JourneyDeparturePicker({
       <div className="space-y-1">
         <Label>{messages.fields.departure}</Label>
         <p className="font-medium text-sm">
-          {dateFormatter.format(new Date(`${departureDate.slice(0, 10)}T00:00:00`))}
+          {formatDate(new Date(`${departureDate.slice(0, 10)}T00:00:00`), dateFormat)}
         </p>
       </div>
     )
@@ -124,6 +128,7 @@ export function JourneyDeparturePicker({
       <div className="space-y-1">
         <Label htmlFor="bj-departure-date">{messages.fields.departure}</Label>
         <DatePicker
+          displayFormat={allMessages.common.datePickerFormats.long}
           className="w-full sm:max-w-xs"
           value={departureDate ?? ""}
           onChange={(value) => onChange({ departureDate: value || null })}

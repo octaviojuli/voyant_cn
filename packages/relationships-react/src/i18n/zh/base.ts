@@ -64,6 +64,10 @@ export const crmUiZhBaseMessages = {
       monthsAgo: "{count} 个月前",
       yearsAgo: "{count} 年前",
     },
+    countryCombobox: {
+      placeholder: "搜索国家/地区…",
+      empty: "未找到国家/地区。",
+    },
   },
   organizationForm: {
     fields: {

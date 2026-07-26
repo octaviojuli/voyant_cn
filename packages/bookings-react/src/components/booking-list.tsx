@@ -35,6 +35,7 @@ import {
   type BookingsListSortField,
   useBookings,
 } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 import { BookingDialog } from "./booking-dialog.js"
 import { BookingListFiltersPopover } from "./booking-list-filters.js"
 import { StatusBadge } from "./status-badge.js"
@@ -195,7 +196,7 @@ export function BookingList({
   const [filterPopoverOpen, setFilterPopoverOpen] = React.useState(false)
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<BookingRecord | undefined>(undefined)
-  const { formatDate, formatDateTime, formatNumber, locale } = useBookingsUiI18nOrDefault()
+  const { formatCurrency, formatDate, formatDateTime, locale } = useBookingsUiI18nOrDefault()
   const messages = useBookingsUiMessagesOrDefault()
 
   const paxMinNumber = paxMin === "" ? undefined : Number.parseInt(paxMin, 10)
@@ -454,7 +455,7 @@ export function BookingList({
                 >
                   <TableCell className="font-medium">{booking.bookingNumber}</TableCell>
                   <TableCell>{formatBookingDateTime(booking.createdAt, formatDateTime)}</TableCell>
-                  <TableCell>{formatLead(booking)}</TableCell>
+                  <TableCell>{formatLead(booking, locale)}</TableCell>
                   <TableCell>
                     {formatBookingItems(
                       booking,
@@ -470,10 +471,7 @@ export function BookingList({
                   <TableCell>
                     {booking.sellAmountCents == null
                       ? "—"
-                      : `${formatNumber(booking.sellAmountCents / 100, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} ${booking.sellCurrency}`}
+                      : formatCurrency(booking.sellAmountCents / 100, booking.sellCurrency)}
                   </TableCell>
                   <TableCell>{booking.pax ?? "—"}</TableCell>
                   <TableCell className="whitespace-nowrap">
@@ -771,6 +769,17 @@ function formatBookingDateRange(
   const sameYear = s.getFullYear() === e.getFullYear()
   const sameMonth = sameYear && s.getMonth() === e.getMonth()
 
+  // Year-first locales (zh-CN: 2026年8月12日) put the year at the FRONT and
+  // glue the parts together, so appending ", 2026" the western way produces
+  // "8月 12日 – 19日, 2026". Build those ranges by formatting the start with
+  // the full date and collapsing only the tail.
+  if (isLocaleYearFirst(locale)) {
+    const fullStart = formatDate(s, { year: "numeric", month: "short", day: "numeric" })
+    if (sameMonth) return `${fullStart}–${formatDate(e, { day: "numeric" })}`
+    if (sameYear) return `${fullStart}–${formatDate(e, { month: "short", day: "numeric" })}`
+    return `${fullStart}–${formatDate(e, { year: "numeric", month: "short", day: "numeric" })}`
+  }
+
   // For collapsed ranges we need to know whether the locale puts the
   // month before or after the day (en-US: "Jun 15", ro-RO: "15 iun.")
   // so the result reads naturally.
@@ -795,6 +804,20 @@ function formatBookingDateRange(
   return `${formatDate(s, { month: "short", day: "numeric", year: "numeric" })} – ${formatDate(e, { month: "short", day: "numeric", year: "numeric" })}`
 }
 
+/** Detect whether the locale leads with the year (zh-CN: 2026年8月12日,
+ * ja-JP: 2026/8/12) rather than trailing it (en-US: Aug 12, 2026). */
+function isLocaleYearFirst(locale: string): boolean {
+  const parts = new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).formatToParts(new Date(2026, 0, 15))
+  const yearIndex = parts.findIndex((p) => p.type === "year")
+  const monthIndex = parts.findIndex((p) => p.type === "month")
+  if (yearIndex === -1 || monthIndex === -1) return false
+  return yearIndex < monthIndex
+}
+
 /** Detect whether the locale renders the day before the month in a
  * short date format (e.g. ro-RO: "15 iun." vs en-US: "Jun 15"). */
 function isLocaleDayFirst(locale: string): boolean {
@@ -808,8 +831,11 @@ function isLocaleDayFirst(locale: string): boolean {
   return dayIndex < monthIndex
 }
 
-function formatLead(booking: BookingRecord): string {
-  const name = [booking.contactFirstName, booking.contactLastName].filter(Boolean).join(" ").trim()
+function formatLead(booking: BookingRecord, locale?: string | null): string {
+  const name = personDisplayName(
+    { firstName: booking.contactFirstName, lastName: booking.contactLastName },
+    locale,
+  )
   if (name) return name
   return booking.contactEmail ?? "—"
 }

@@ -77,6 +77,11 @@ export const storageVoyantModule = defineModule({
       key: "MEDIA_PUBLIC_BASE_URL",
       required: false,
     },
+    {
+      id: "@voyant-travel/storage#config.filesystem-root",
+      key: "STORAGE_FILESYSTEM_ROOT",
+      required: false,
+    },
   ],
   secrets: [
     {
@@ -112,6 +117,22 @@ export const storageVoyantModule = defineModule({
       runtime: {
         entry: "@voyant-travel/storage/providers/graph",
         export: "createMemoryGraphStorageProvider",
+      },
+    },
+    {
+      id: "@voyant-travel/storage#provider.filesystem",
+      port: storageObjectRuntimePort.id,
+      selection: { role: "storage", value: "filesystem" },
+      uses: {
+        config: [
+          "@voyant-travel/storage#config.api-base-url",
+          "@voyant-travel/storage#config.app-url",
+          "@voyant-travel/storage#config.filesystem-root",
+        ],
+      },
+      runtime: {
+        entry: "@voyant-travel/storage/providers/graph",
+        export: "createFilesystemGraphStorageProvider",
       },
     },
     {

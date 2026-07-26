@@ -354,6 +354,7 @@ export function BookingItemDialog({
             <div className="flex flex-col gap-2">
               <Label>{messages.bookingItemDialog.fields.serviceDate}</Label>
               <DatePicker
+                displayFormat={messages.common.datePickerFormats.long}
                 value={form.watch("serviceDate") || null}
                 onChange={(next) =>
                   form.setValue("serviceDate", next ?? "", {

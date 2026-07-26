@@ -26,21 +26,50 @@
  * `QuoteEntityDeps`.
  */
 
+// Band ↔ `option_unit` resolution (and the DOB-derived band rule) lives
+// next door so both the owned booking handler and the journey wizard
+// resolve bands from the same pure implementation.
+export * from "./pax-bands.js"
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-step descriptors
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** A single occupancy band — adult / child / infant or vertical-specific. */
 export interface PaxBandSpec {
-  /** Stable code; `"adult" | "child" | "infant"` are the canonical
-   *  three. Verticals may add senior / student / etc. */
+  /**
+   * Stable, machine-readable band code — **the authoritative half of
+   * this contract**. `"adult" | "child" | "infant" | "senior"` are the
+   * canonical values (see `CANONICAL_PAX_BAND_CODES`); verticals may
+   * add student / etc. Clients key `draft.configure.pax` and
+   * `draft.travelers[].band` off this and localize their own label
+   * from it. Never parse `label`.
+   */
   code: string
-  /** Human-readable label rendered next to the count stepper. */
+  /**
+   * Human-readable label rendered next to the count stepper.
+   *
+   * Kept for backward compatibility with consumers that render it
+   * verbatim. The server ships the operator-authored `option_unit`
+   * name here when the band resolves to a real unit (成人 / 儿童), and
+   * an English fallback otherwise — so a localized admin should render
+   * from `code`, not from this field.
+   */
   label: string
   /** Optional age window — closed-open lower, closed upper.
    *  Verticals enforce in their own validation. */
   minAge?: number
   maxAge?: number
+  /**
+   * `option_units.id` this band is billed as, when the band resolves to
+   * a real bookable unit. Present for owned products whose option
+   * carries person units; absent for generic default bands and for
+   * sourced rows. Pricing, per-band quantities and the committed
+   * `booking_items.option_unit_id` all key off this.
+   */
+  unitId?: string
+  /** The resolved unit's stable catalog code (`ADULT`, `child_6_12`, …). */
+  unitCode?: string | null
   /** Count window for this band on this product. */
   minCount: number
   maxCount: number
@@ -94,6 +123,17 @@ export interface ProductVariantUnitOption {
   unitType?: string | null
   minQuantity?: number | null
   maxQuantity?: number | null
+  /**
+   * Stable catalog code (`ADULT`, `child_6_12`, …). Drives pax-band
+   * resolution — see `paxBandCodeForUnit`. Matching is by code + age
+   * window, never by the localized `name`.
+   */
+  code?: string | null
+  /** Inclusive age window this unit is bookable for, when configured. */
+  minAge?: number | null
+  maxAge?: number | null
+  /** True when the option cannot be booked without this unit. */
+  isRequired?: boolean | null
 }
 
 /** A product option / variant selectable before pricing and booking. */
@@ -323,6 +363,12 @@ export interface BookingDraftShape {
  * Verticals override per product when they have stricter rules
  * (e.g. cruises with senior bands, or family hotels with a
  * teenager band).
+ *
+ * These are a **last-resort** fallback: an owned product whose option
+ * carries person units derives its bands from those units instead (see
+ * `paxBandsFromOptionUnits`), which is what makes per-band pricing and
+ * unit attribution line up. The English `label`s here exist for
+ * backward compatibility only — localized clients render from `code`.
  */
 export const DEFAULT_PAX_BANDS: ReadonlyArray<PaxBandSpec> = [
   { code: "adult", label: "Adult", minAge: 12, minCount: 1, maxCount: 8 },

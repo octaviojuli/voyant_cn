@@ -142,7 +142,7 @@ export function OperatorAdminSidebar({
           />
         )}
       </SidebarFooter>
-      <SidebarRail />
+      <SidebarRail messages={{ toggleSidebar: messages.toggleSidebar }} />
     </Sidebar>
   )
 }
@@ -310,6 +310,7 @@ export function OperatorAdminWorkspaceLayout({
                 className="-ml-1"
                 title={messages.toggleSidebarShortcutTitle}
                 aria-label={messages.toggleSidebar}
+                messages={{ toggleSidebar: messages.toggleSidebar }}
               />
             )}
             {headerSlot !== undefined ? (

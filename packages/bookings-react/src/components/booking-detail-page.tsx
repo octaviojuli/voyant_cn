@@ -45,6 +45,7 @@ import {
   useBookingsUiMessagesOrDefault,
 } from "../i18n/index.js"
 import { type BookingRecord, useBooking, useBookingItems, useBookingMutation } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 import { BookingActivityTimeline, type TimelineEvent } from "./booking-activity-timeline.js"
 import { BookingBillingDialog } from "./booking-billing-dialog.js"
 import { BookingCancellationDialog } from "./booking-cancellation-dialog.js"
@@ -264,10 +265,11 @@ export function BookingDetailPage({
     : undefined
 
   const billingPersonName =
-    [booking.contactFirstName, booking.contactLastName].filter(Boolean).join(" ") ||
-    (headerPerson
-      ? [headerPerson.firstName, headerPerson.lastName].filter(Boolean).join(" ")
-      : "") ||
+    personDisplayName(
+      { firstName: booking.contactFirstName, lastName: booking.contactLastName },
+      resolvedLocale,
+    ) ||
+    personDisplayName(headerPerson, resolvedLocale) ||
     headerOrganization?.name ||
     ""
   const billingHref = headerPersonId
@@ -709,7 +711,8 @@ export function BookingBillingContextCard({
   /** Open the linked CRM organization's detail page. */
   onOrganizationOpen?: (organizationId: string) => void
 }) {
-  const messages = useBookingsUiMessagesOrDefault().bookingDetailPage
+  const { locale, messages: allMessages } = useBookingsUiI18nOrDefault()
+  const messages = allMessages.bookingDetailPage
   const [editOpen, setEditOpen] = useState(false)
   const person = usePerson(booking.personId ?? undefined, {
     enabled: Boolean(booking.personId),
@@ -719,8 +722,11 @@ export function BookingBillingContextCard({
   }).data
 
   const payerName =
-    [booking.contactFirstName, booking.contactLastName].filter(Boolean).join(" ") ||
-    (person ? [person.firstName, person.lastName].filter(Boolean).join(" ") : "") ||
+    personDisplayName(
+      { firstName: booking.contactFirstName, lastName: booking.contactLastName },
+      locale,
+    ) ||
+    personDisplayName(person, locale) ||
     organization?.name ||
     ""
   const email = booking.contactEmail ?? person?.email ?? null
@@ -952,6 +958,14 @@ function getBookingStatusLabel(status: string, labels: Record<string, string>) {
   return labels[status] ?? status
 }
 
+/**
+ * Money, one way, everywhere: the locale's own currency presentation with
+ * two decimals (zh-CN "¥11,960.00", en-US "CNY 11,960.00", ro-RO
+ * "11.960,00 RON"). Previously this header emitted a bespoke
+ * `<symbol> <amount> <code>` layout with the decimals dropped and a
+ * hardcoded RON special case, so the same total read three different ways
+ * between the header, the list column, and the item tables.
+ */
 function formatAmount(
   cents: number | null,
   currency: string,
@@ -959,34 +973,20 @@ function formatAmount(
   empty: string,
 ): string {
   if (cents == null) return empty
-  const amount = cents / 100
-  const amountText = new Intl.NumberFormat(locale, {
-    maximumFractionDigits: 0,
-  }).format(amount)
-  // RON's "symbol" is just the ISO code itself, so a `<symbol> <amount> <code>`
-  // layout would print "RON 1.185 RON" — collapse it back to "1.185 RON".
-  if (currency.toUpperCase() === "RON") {
-    return `${amountText} ${currency}`
-  }
-  // Extract the locale's native symbol so we can always render
-  // `<symbol> <amount> <code>` regardless of where Intl would otherwise
-  // place the symbol for this locale (e.g. Romanian puts it after).
-  const parts = new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-    currencyDisplay: "narrowSymbol",
-    maximumFractionDigits: 0,
-  }).formatToParts(amount)
-  const symbol = parts.find((p) => p.type === "currency")?.value ?? currency
-  return `${symbol} ${amountText} ${currency}`
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents / 100)
 }
 
 function formatDate(iso: string | null, locale: string, empty: string): string {
   if (!iso) return empty
   return new Date(iso).toLocaleDateString(locale, {
+    year: "numeric",
     month: "short",
     day: "numeric",
-    year: "numeric",
   })
 }
 

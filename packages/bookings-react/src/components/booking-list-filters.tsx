@@ -33,8 +33,9 @@ import {
 import { ListFilter, X } from "lucide-react"
 import * as React from "react"
 import { BOOKING_STATUS_ALL } from "../booking-list-constants.js"
-import { useBookingsUiMessagesOrDefault } from "../i18n/provider.js"
+import { useBookingsUiI18nOrDefault } from "../i18n/provider.js"
 import { type BookingStatus, bookingStatuses } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 
 export { BOOKING_STATUS_ALL }
 
@@ -103,7 +104,7 @@ export function BookingListFiltersPopover({
   hasActiveFilters,
   onClearFilters,
 }: BookingListFiltersPopoverProps) {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const filterMessages = messages.bookingList.filters
   const statusLabels = messages.common.bookingStatusLabels
 
@@ -362,7 +363,7 @@ export function BookingListFiltersPopover({
               items={people}
               selectedItem={selectedPerson}
               getKey={(person) => person.id}
-              getLabel={formatPersonName}
+              getLabel={(person) => formatPersonLabel(person, locale)}
               getSecondary={(person) => person.email ?? undefined}
               onSearchChange={setPersonSearch}
               placeholder={filterMessages.person}
@@ -397,6 +398,7 @@ export function BookingListFiltersPopover({
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="bookings-filter-date">{filterMessages.dateRangeLabel}</Label>
             <DateRangePicker
+              displayFormat={messages.common.datePickerFormats.compact}
               value={dateRange}
               onChange={(value) => {
                 onDateRangeChange(value)
@@ -444,9 +446,8 @@ export function BookingListFiltersPopover({
   )
 }
 
-function formatPersonName(person: PersonRecord) {
-  const name = [person.firstName, person.lastName].filter(Boolean).join(" ").trim()
-  return name || person.email || person.id
+function formatPersonLabel(person: PersonRecord, locale?: string | null) {
+  return personDisplayName(person, locale) || person.email || person.id
 }
 
 /**

@@ -51,6 +51,13 @@ export const bookingsUiRoJourney = {
       dependencyLimitSum: "Maximum {limit} {dependent} permis.",
       invalidEmail: "Introdu o adresa de email valida.",
     },
+    commitErrors: {
+      noAvailability:
+        "Aceasta plecare nu mai are locuri suficiente - au ramas doar {count}. Redu numarul de participanti sau alege alta plecare.",
+      noAvailabilityUnknown:
+        "Aceasta plecare nu mai are locuri suficiente. Redu numarul de participanti sau alege alta plecare.",
+      fallback: "Rezervarea nu a putut fi confirmata. Incearca din nou sau contacteaza suportul.",
+    },
     warnings: {
       phoneMissing: "Numarul de telefon lipseste - util pentru contact furnizor in ultimul moment.",
       billingCountryMissing:
@@ -122,6 +129,14 @@ export const bookingsUiRoJourney = {
       ageLabel: "varsta {age}",
       copyFromBilling: "Copiaza din facturare",
       remove: "Elimina",
+      bandLabels: {
+        adult: "Adult",
+        child: "Copil",
+        infant: "Bebelus",
+        senior: "Senior",
+        youth: "Tanar",
+        student: "Student",
+      },
     },
     accommodation: {
       title: "Cazare",

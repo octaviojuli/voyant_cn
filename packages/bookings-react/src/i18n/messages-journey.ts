@@ -48,6 +48,19 @@ export type BookingsUiJourneyMessages = {
       dependencyLimitSum: string
       invalidEmail: string
     }
+    /**
+     * Commit (Confirm booking) failures rendered under the form. The
+     * server's raw message is English and leaks internals, so the
+     * journey renders one of these instead.
+     */
+    commitErrors: {
+      /** Slot ran out of seats and the server told us how many are left. */
+      noAvailability: string
+      /** Slot ran out of seats, remaining count unknown. */
+      noAvailabilityUnknown: string
+      /** Anything else the commit can fail with. */
+      fallback: string
+    }
     warnings: {
       phoneMissing: string
       billingCountryMissing: string
@@ -106,6 +119,13 @@ export type BookingsUiJourneyMessages = {
       ageLabel: string
       copyFromBilling: string
       remove: string
+      /**
+       * Pax-band labels keyed by the band's stable `code`. The server
+       * ships an English `label` on the band contract; the UI renders
+       * by code so the operator sees localized copy, falling back to
+       * the server label for vertical-specific codes not listed here.
+       */
+      bandLabels: Record<"adult" | "child" | "infant" | "senior" | "youth" | "student", string>
     }
     accommodation: {
       title: string

@@ -64,6 +64,10 @@ export const crmUiEnBaseMessages = {
       monthsAgo: "{count}mo ago",
       yearsAgo: "{count}y ago",
     },
+    countryCombobox: {
+      placeholder: "Search countries…",
+      empty: "No countries found.",
+    },
   },
   organizationForm: {
     fields: {

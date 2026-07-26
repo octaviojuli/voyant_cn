@@ -323,6 +323,7 @@ export function PaymentScheduleSection({
             <div className="flex flex-col gap-1">
               <Label className="text-xs">{merged.paymentDate}</Label>
               <DatePicker
+                displayFormat={messages.common.datePickerFormats.long}
                 value={installment.paymentDate ?? ""}
                 onChange={(nextValue) => updateInstallment(idx, { paymentDate: nextValue })}
               />
@@ -404,6 +405,7 @@ export function PaymentScheduleSection({
           <div className="flex flex-col gap-1">
             <Label className="text-xs">{merged.dueDate}</Label>
             <DatePicker
+              displayFormat={messages.common.datePickerFormats.long}
               value={fullInstallment.dueDate ?? ""}
               onChange={(nextValue) => updateInstallment(0, { dueDate: nextValue })}
             />
@@ -440,6 +442,7 @@ export function PaymentScheduleSection({
                   currency={currency}
                 />
                 <DatePicker
+                  displayFormat={messages.common.datePickerFormats.long}
                   value={installment.dueDate ?? ""}
                   onChange={(nextValue) => updateInstallment(idx, { dueDate: nextValue })}
                 />

@@ -47,6 +47,7 @@ import type {
 } from "@voyant-travel/finance/payment-policy"
 
 import type { BookingEntitySummary } from "../journey/index.js"
+import { personDisplayName } from "../lib/person-name.js"
 
 export interface OperatorInfoVariables {
   /** Trading name shown to customers. */
@@ -135,6 +136,12 @@ export interface ResolveContractVariablesContext {
    *  `provenance` + supplier. When omitted the booking renders as the
    *  owned arm (voyant#2619). */
   source?: ContractSourceContext
+  /**
+   * BCP-47 locale the contract renders in. Drives person-name ORDER only
+   * (张伟 vs Ana Pop) — the `firstName` / `lastName` variables themselves are
+   * always the given / family name, never reordered.
+   */
+  locale?: string | null
 }
 
 export function resolveContractVariables(
@@ -149,8 +156,9 @@ export function resolveContractVariables(
   const operatorInfo = ctx.operatorInfo ?? {}
   const acceptance = ctx.acceptance ?? {}
 
+  const locale = ctx.locale
   const travelers = draft.travelers.map((t, i) => {
-    const fullName = [t.firstName, t.lastName].filter(Boolean).join(" ").trim()
+    const fullName = personDisplayName(t, locale)
     const docs = t.documents ?? {}
     return {
       index: i + 1,
@@ -191,7 +199,7 @@ export function resolveContractVariables(
     summary?.endDate ?? draft.configure?.dateRange?.checkOut ?? draft.configure?.departureDate ?? ""
   const durationNights = computeNights(startDate, endDate)
 
-  const customerFullName = [contact.firstName, contact.lastName].filter(Boolean).join(" ").trim()
+  const customerFullName = personDisplayName(contact, locale)
   const leadTraveler =
     contact.firstName || contact.lastName
       ? {

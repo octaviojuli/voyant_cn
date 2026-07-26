@@ -388,6 +388,7 @@ export function StorefrontBookingJourney({
                 return resolveContractVariables(draft, {
                   entityModule,
                   entityId,
+                  locale: scope.locale,
                   entitySummary,
                   pricing,
                   operatorInfo: operatorProfile,

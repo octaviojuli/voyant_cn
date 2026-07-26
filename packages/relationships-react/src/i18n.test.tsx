@@ -1,12 +1,33 @@
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   CrmUiMessagesProvider,
+  detectCrmUiFallbackLocale,
   getCrmUiI18n,
   resolveCrmUiMessages,
   useCrmUiMessagesOrDefault,
 } from "./i18n/index.js"
+
+/**
+ * Fake the browser globals the fallback detector reads. Node's test
+ * environment has no `window`, which is exactly the "server" branch — so the
+ * only way to exercise the client branch is to stub it.
+ */
+function stubBrowser({
+  storedLocale,
+  browserLocale,
+}: {
+  storedLocale?: string | null
+  browserLocale?: string | null
+}) {
+  vi.stubGlobal("window", {
+    localStorage: {
+      getItem: (key: string) => (key === "admin-locale" ? (storedLocale ?? null) : null),
+    },
+  })
+  vi.stubGlobal("navigator", { language: browserLocale ?? null })
+}
 
 describe("crm-ui i18n", () => {
   it("resolves localized package messages with fallback and overrides", () => {
@@ -73,6 +94,61 @@ describe("crm-ui i18n", () => {
     expect(html).toContain("添加跟进记录")
     expect(html).toContain("跟进")
     expect(html).toContain("客户")
+  })
+})
+
+describe("crm-ui fallback locale (#R1)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("falls back to en when there is no window (server render)", () => {
+    expect(detectCrmUiFallbackLocale()).toBe("en")
+  })
+
+  it("prefers the persisted admin locale over the browser language", () => {
+    stubBrowser({ storedLocale: "zh-CN", browserLocale: "en-GB" })
+
+    expect(detectCrmUiFallbackLocale()).toBe("zh-CN")
+  })
+
+  it("falls back to the browser language when nothing is persisted", () => {
+    stubBrowser({ storedLocale: null, browserLocale: "zh-Hans-CN" })
+
+    expect(detectCrmUiFallbackLocale()).toBe("zh-Hans-CN")
+  })
+
+  it("ignores locales this package ships no dictionary for", () => {
+    stubBrowser({ storedLocale: null, browserLocale: "fr-FR" })
+
+    // Otherwise the copy would be English while `Intl` formatted in French.
+    expect(detectCrmUiFallbackLocale()).toBe("en")
+  })
+
+  it("renders Chinese copy without a provider on a zh-CN deployment", () => {
+    stubBrowser({ storedLocale: "zh-CN" })
+
+    // The regression: the booking journey's person picker mounts CRM
+    // components bare, and a hardcoded `en` fallback made the whole sheet
+    // English even though the zh dictionary was right there.
+    const html = renderToStaticMarkup(<CrmMessageProbe />)
+
+    expect(html).toContain("新建组织")
+    expect(html).toContain("联系人")
+    expect(html).toContain("跟进")
+  })
+
+  it("still lets an explicit provider win over the detected locale", () => {
+    stubBrowser({ storedLocale: "zh-CN" })
+
+    const html = renderToStaticMarkup(
+      <CrmUiMessagesProvider locale="ro-RO">
+        <CrmMessageProbe />
+      </CrmUiMessagesProvider>,
+    )
+
+    expect(html).toContain("Organizatie noua")
+    expect(html).not.toContain("新建组织")
   })
 })
 

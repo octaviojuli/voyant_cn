@@ -6,7 +6,8 @@ import { Button } from "@voyant-travel/ui/components/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@voyant-travel/ui/components/card"
 import { Plus } from "lucide-react"
 import { useEffect, useRef } from "react"
-import { formatMessage, useBookingsUiMessagesOrDefault } from "../../../i18n/index.js"
+import { formatMessage, useBookingsUiI18nOrDefault } from "../../../i18n/index.js"
+import { personDisplayName } from "../../../lib/person-name.js"
 import {
   canCopyBillingContactToTraveler,
   type Draft,
@@ -15,15 +16,18 @@ import {
   totalPax,
 } from "../../lib/draft-state.js"
 import { isValidOptionalEmail } from "../../lib/email-validation.js"
+import { deriveTravelerBands } from "../../lib/traveler-band.js"
 import type { TravelerContactPickerProps } from "../../types.js"
 import { PaxDependencyWarnings, PaxValidation } from "./configure-steps.js"
 import {
+  bandLabel,
   computeAge,
   cryptoRowId,
   DateField,
   Field,
   JourneyErrors,
   JourneyWarnings,
+  NameFields,
   PhoneField,
   SelectField,
   type StepCommonProps,
@@ -49,13 +53,18 @@ function paxFromTravelers(
   return counts
 }
 
-/** Commit a new traveler list AND re-derive the band counts in one update. */
+/**
+ * Commit a new traveler list AND re-derive both the band of every row that a
+ * date of birth already determines, and the band counts, in one update. The
+ * band derivation runs first so the counts always match the rows.
+ */
 function applyTravelers(
   draft: Draft,
   next: Draft["travelers"],
   bands: BookingDraftShape["paxBands"],
 ): Draft {
-  return patchConfigure(setTravelers(draft, next), { pax: paxFromTravelers(next, bands) })
+  const derived = deriveTravelerBands(next, bands) as Draft["travelers"]
+  return patchConfigure(setTravelers(draft, derived), { pax: paxFromTravelers(derived, bands) })
 }
 
 export function TravelersStep({
@@ -71,7 +80,7 @@ export function TravelersStep({
   warnings?: ReadonlyArray<string>
   errors?: ReadonlyArray<string>
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { messages } = useBookingsUiI18nOrDefault()
   const travelers = draft.travelers
   const bands = shape.paxBands
   const hasBandChoice = bands.length > 1
@@ -137,6 +146,9 @@ export function TravelersStep({
               email: contact.email,
               phone: contact.phone,
               personId: contact.personId,
+              // A CRM contact with a DOB on file determines the band —
+              // `applyTravelers` derives it rather than leaving the row on 成人.
+              ...(contact.dateOfBirth ? { dateOfBirth: contact.dateOfBirth } : {}),
             }
             setDraft(applyTravelers(draft, next, bands))
           }
@@ -208,7 +220,7 @@ function TravelerCard({
   showBandSelect?: boolean
   onRemove?: () => void
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const bands = shape.paxBands
   const applicableFields = shape.travelerFields.filter((f) => {
     if (!f.appliesToBands || f.appliesToBands.length === 0) return true
@@ -283,7 +295,7 @@ function TravelerCard({
     })
   }
 
-  const travelerName = [traveler.firstName, traveler.lastName].filter(Boolean).join(" ").trim()
+  const travelerName = personDisplayName(traveler, locale)
   return (
     <div className="space-y-4 rounded-md border p-4">
       {/* Header: who this traveler is, with subtle row-level actions. */}
@@ -335,7 +347,10 @@ function TravelerCard({
           id={`bj-trav-${idx}-band`}
           label={messages.bookingJourney.travelers.travelerType}
           value={traveler.band}
-          options={bands.map((b) => ({ value: b.code, label: b.label }))}
+          options={bands.map((b) => ({
+            value: b.code,
+            label: bandLabel(b, messages.bookingJourney.travelers.bandLabels),
+          }))}
           onChange={(code) => patchRow({ band: code as TravelerBand })}
         />
       ) : null}
@@ -354,17 +369,15 @@ function TravelerCard({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {showIdentity ? (
             <>
-              <Field
-                id={`bj-trav-${idx}-first`}
-                label={messages.bookingJourney.billing.firstName}
-                value={traveler.firstName}
-                onChange={(v) => patchRow({ firstName: v })}
-              />
-              <Field
-                id={`bj-trav-${idx}-last`}
-                label={messages.bookingJourney.billing.lastName}
-                value={traveler.lastName}
-                onChange={(v) => patchRow({ lastName: v })}
+              <NameFields
+                givenNameId={`bj-trav-${idx}-first`}
+                familyNameId={`bj-trav-${idx}-last`}
+                givenNameLabel={messages.bookingJourney.billing.firstName}
+                familyNameLabel={messages.bookingJourney.billing.lastName}
+                givenName={traveler.firstName}
+                familyName={traveler.lastName}
+                onGivenNameChange={(v) => patchRow({ firstName: v })}
+                onFamilyNameChange={(v) => patchRow({ lastName: v })}
               />
               {applicableFields.some((f) => f.key === "email") ? (
                 <Field

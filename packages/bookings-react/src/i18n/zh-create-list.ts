@@ -69,7 +69,7 @@ export const bookingsUiZhCreateList = {
     },
     labels: {
       currency: "EUR",
-      remainingCapacity: "剩余",
+      remainingCapacityCount: "剩余 {count} 位",
       noSpecificOption: "不限定选项",
       createNewPerson: "新建",
       selectExistingPerson: "选择现有",

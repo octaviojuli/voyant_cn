@@ -9,6 +9,7 @@ import { Input } from "@voyant-travel/ui/components/input"
 import { Label } from "@voyant-travel/ui/components/label"
 import { RadioGroup, RadioGroupItem } from "@voyant-travel/ui/components/radio-group"
 import { Minus, Plus } from "lucide-react"
+import { useEffect } from "react"
 import { formatMessage, useBookingsUiMessagesOrDefault } from "../../../i18n/index.js"
 import { type Draft, patchConfigure, patchPaxCount, totalPax } from "../../lib/draft-state.js"
 import {
@@ -17,6 +18,7 @@ import {
 } from "../../lib/pax-band-dependencies.js"
 import {
   ageHint,
+  bandLabel,
   DateField,
   type RenderDeparturePicker,
   type RenderUnitsPicker,
@@ -160,16 +162,18 @@ export function OptionsStep({
 
 export function PaxBands({ draft, setDraft, shape }: StepCommonProps): React.ReactElement {
   const messages = useBookingsUiMessagesOrDefault()
+  const bandLabels = messages.bookingJourney.travelers.bandLabels
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3">
       <Label>{messages.bookingJourney.travelers.partySize}</Label>
       <div className="flex flex-col gap-2">
         {shape.paxBands.map((band) => {
           const value = draft.configure.pax?.[band.code] ?? 0
+          const label = bandLabel(band, bandLabels)
           return (
             <div key={band.code} className="flex items-center gap-3 rounded-md border px-3 py-2">
               <div className="flex-1">
-                <div className="text-sm font-medium">{band.label}</div>
+                <div className="text-sm font-medium">{label}</div>
                 {band.minAge != null || band.maxAge != null ? (
                   <div className="text-muted-foreground text-xs">
                     {ageHint(band.minAge, band.maxAge, messages)}
@@ -185,7 +189,7 @@ export function PaxBands({ draft, setDraft, shape }: StepCommonProps): React.Rea
                   disabled={value <= band.minCount}
                   onClick={() => setDraft(patchPaxCount(draft, band.code, value - 1))}
                   aria-label={formatMessage(messages.bookingJourney.travelers.decrease, {
-                    label: band.label,
+                    label,
                   })}
                 >
                   <Minus className="h-3.5 w-3.5" />
@@ -199,7 +203,7 @@ export function PaxBands({ draft, setDraft, shape }: StepCommonProps): React.Rea
                   disabled={value >= band.maxCount}
                   onClick={() => setDraft(patchPaxCount(draft, band.code, value + 1))}
                   aria-label={formatMessage(messages.bookingJourney.travelers.increase, {
-                    label: band.label,
+                    label,
                   })}
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -289,10 +293,13 @@ export function PaxDependencyWarnings({
   shape: BookingDraftShape
 }): React.ReactNode {
   const messages = useBookingsUiMessagesOrDefault()
+  const bandLabels = messages.bookingJourney.travelers.bandLabels
   const violations = evaluatePaxBandDependencies(
     draft.configure.pax,
     shape.paxBandDependencies,
-    shape.paxBands,
+    // Localize the band names the violation copy interpolates ("儿童 必须
+    // 搭配至少一个 成人"), instead of echoing the server's English labels.
+    shape.paxBands.map((band) => ({ ...band, label: bandLabel(band, bandLabels) })),
   )
   if (violations.length === 0) return null
   return (
@@ -382,6 +389,26 @@ function ProductOptionFields({
 }): React.ReactElement | null {
   const messages = useBookingsUiMessagesOrDefault()
   const selectedId = draft.configure.variantId
+
+  // Anything derivable must not be demanded of the operator: when the
+  // descriptor marks an option `isDefault` (or there is only one to begin
+  // with) preselect it instead of leaving an empty radio group that blocks
+  // the step. Fires once per resolved option set — a later user pick wins
+  // because `selectedId` is then set.
+  const autoSelectId =
+    selectedId == null
+      ? (options.find((option) => option.isDefault)?.id ??
+        (options.length === 1 ? options[0]?.id : undefined))
+      : undefined
+  // `draft`/`setDraft` are recreated on every render; the resolved default is
+  // the real trigger, and it goes undefined as soon as a variant is set — so
+  // keying on it alone both fires once and lets a manual pick stand.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the resolved default only -- owner: bookings-react.
+  useEffect(() => {
+    if (!autoSelectId) return
+    setDraft(patchConfigure(draft, { variantId: autoSelectId, optionSelections: [] }))
+  }, [autoSelectId])
+
   if (options.length === 0) return null
   return (
     <div className="space-y-2">

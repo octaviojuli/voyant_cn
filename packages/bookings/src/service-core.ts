@@ -137,8 +137,26 @@ function buildBookingSearchCondition(search: string): SQL | undefined {
     ilike(bookings.contactFirstName, term),
     ilike(bookings.contactLastName, term),
     ilike(bookings.contactTaxId, term),
+    // Full-name matching in both name orders, spaced and un-spaced.
+    //
+    // Western order ("Ada Lovelace") is the spaced given-then-family
+    // form. CJK order is family-then-given and conventionally written
+    // WITHOUT a separator — a person stored as 姓=张 / 名=伟 is written
+    // and searched as "张伟", which `concat_ws(' ', ...)` renders as
+    // "张 伟" and therefore never matches. Emitting all four
+    // permutations keeps western search working unchanged while making
+    // Chinese/Japanese/Korean names findable as typed.
+    //
+    // `concat` (unlike `concat_ws`) already treats NULL as the empty
+    // string, so no coalesce is needed for the un-spaced forms.
     // agent-quality: raw-sql reviewed -- owner: bookings; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
     sql`concat_ws(' ', ${bookings.contactFirstName}, ${bookings.contactLastName}) ilike ${term}`,
+    // agent-quality: raw-sql reviewed -- owner: bookings; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
+    sql`concat_ws(' ', ${bookings.contactLastName}, ${bookings.contactFirstName}) ilike ${term}`,
+    // agent-quality: raw-sql reviewed -- owner: bookings; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
+    sql`concat(${bookings.contactLastName}, ${bookings.contactFirstName}) ilike ${term}`,
+    // agent-quality: raw-sql reviewed -- owner: bookings; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
+    sql`concat(${bookings.contactFirstName}, ${bookings.contactLastName}) ilike ${term}`,
     ilike(bookings.contactEmail, term),
     ilike(bookings.contactPhone, term),
     ilike(bookings.contactCountry, term),
@@ -566,14 +584,58 @@ const sharingGroupBookingStatuses = [
 ] as const
 const sharingGroupAllocationStatuses = ["held", "confirmed", "fulfilled"] as const
 
-class BookingServiceError extends Error {
+/**
+ * Structured detail carried by capacity-related `BookingServiceError`s.
+ *
+ * Capacity exhaustion during a booking commit used to surface as a bare
+ * `Error` that escaped every layer up to Hono's error boundary and was
+ * reported as a 500 `Internal Server Error` — the operator saw an
+ * English stack-level message and no indication that the departure was
+ * simply full. Attaching the slot and the seat counts makes the failure
+ * identifiable and renderable per-locale by the caller.
+ */
+export interface BookingCapacityErrorDetails {
+  /** The departure slot that could not satisfy the request. */
+  slotId: string | null
+  /** Seats still available on that slot, when known. */
+  remainingPax: number | null
+  /** Seats the failed operation asked for, when known. */
+  requestedPax: number | null
+}
+
+/**
+ * Typed, catchable service error. `code` is a stable machine-readable
+ * discriminator (`insufficient_capacity`, `slot_unavailable`,
+ * `slot_not_found`, `not_found`, `invalid_transition`, …) that callers
+ * and routes branch on; `details` carries the structured context needed
+ * to render an actionable message.
+ *
+ * Exported (together with `isBookingServiceError`) so packages
+ * downstream of the booking commit path can catch this instead of
+ * letting it degrade into a 500.
+ */
+export class BookingServiceError extends Error {
+  readonly details?: BookingCapacityErrorDetails
+
   constructor(
     readonly code: string,
     message?: string,
+    details?: BookingCapacityErrorDetails,
   ) {
     super(message ?? code)
     this.name = "BookingServiceError"
+    this.details = details
   }
+}
+
+/** Type guard usable across package boundaries (survives duplicate module instances). */
+export function isBookingServiceError(error: unknown): error is BookingServiceError {
+  return (
+    error instanceof BookingServiceError ||
+    (error instanceof Error &&
+      error.name === "BookingServiceError" &&
+      typeof (error as { code?: unknown }).code === "string")
+  )
 }
 
 function toTimestamp(value?: string | null) {
@@ -2403,27 +2465,7 @@ export const bookingsService = {
     // row so the customer is charged the post-discount amount, not the
     // product's list price. Per docs/architecture/promotions-architecture.md §7.1.
     const confirmedSellAmountCents = data.confirmedSellAmountCents ?? null
-    const catalogSellAmountCents = data.catalogSellAmountCents ?? product.sellAmountCents
-    const effectiveSellAmountCents =
-      confirmedSellAmountCents != null
-        ? confirmedSellAmountCents
-        : data.sellAmountCentsOverride != null
-          ? data.sellAmountCentsOverride
-          : product.sellAmountCents
     const priceOverrideReason = data.priceOverrideReason?.trim() ?? null
-    const isManualPriceOverride =
-      confirmedSellAmountCents != null && confirmedSellAmountCents !== catalogSellAmountCents
-    const priceOverride = isManualPriceOverride
-      ? {
-          isManual: true as const,
-          originalAmountCents: catalogSellAmountCents,
-          overriddenAmountCents: confirmedSellAmountCents,
-          currency: product.sellCurrency,
-          reason: priceOverrideReason ?? "Manual price override",
-          overriddenBy: userId ?? "system",
-          overriddenAt: new Date().toISOString(),
-        }
-      : null
 
     const selectedUnits =
       data.itemLines && data.itemLines.length > 0 ? units : option === null ? [] : units
@@ -2444,6 +2486,61 @@ export const bookingsService = {
 
     const initialStatus = data.initialStatus ?? "draft"
     const bookingPax = Object.hasOwn(data, "pax") ? (data.pax ?? null) : product.pax
+
+    // Quantity basis that turns a PER-UNIT catalog amount into a
+    // booking-level TOTAL.
+    //
+    // `products.sell_amount_cents` and `products.cost_amount_cents` are
+    // both per-pax amounts — the booking engine multiplies the sell side
+    // by pax before handing us `sellAmountCentsOverride`
+    // (`unitCents * effectivePax`, inventory/booking-engine
+    // handler-support). The `bookings` header columns, by contrast, are
+    // totals: `recomputeBookingTotal` overwrites them with
+    // `Σ(booking_items.total*)`.
+    //
+    // Cost previously skipped this multiplication entirely, so every
+    // multi-pax booking booked a per-unit cost under a multiplied sell
+    // and reported an inflated margin. Both sides now scale by the same
+    // basis. Item-line quantities win when the caller itemised the
+    // booking (they are the authoritative per-unit counts); otherwise
+    // pax is the basis, matching the `unitType === "person"` quantity
+    // the seeded item rows already derive below.
+    const pricedQuantity =
+      requestedItemLines.length > 0
+        ? requestedItemLines.reduce((sum, { line }) => sum + line.quantity, 0)
+        : bookingPax && bookingPax > 0
+          ? bookingPax
+          : 1
+
+    const scaleCatalogAmount = (amountCents: number | null | undefined) =>
+      amountCents != null ? amountCents * pricedQuantity : null
+
+    // Caller-supplied totals (`sellAmountCentsOverride`,
+    // `confirmedSellAmountCents`, `catalogSellAmountCents`) already come
+    // in multiplied. Only the bare `products.*_amount_cents` fallbacks
+    // need scaling — and they all need it for the same reason.
+    const catalogSellAmountCents =
+      data.catalogSellAmountCents ?? scaleCatalogAmount(product.sellAmountCents)
+    const effectiveSellAmountCents =
+      confirmedSellAmountCents != null
+        ? confirmedSellAmountCents
+        : (data.sellAmountCentsOverride ?? scaleCatalogAmount(product.sellAmountCents))
+    const effectiveCostAmountCents = scaleCatalogAmount(product.costAmountCents)
+
+    const isManualPriceOverride =
+      confirmedSellAmountCents != null && confirmedSellAmountCents !== catalogSellAmountCents
+    const priceOverride = isManualPriceOverride
+      ? {
+          isManual: true as const,
+          originalAmountCents: catalogSellAmountCents,
+          overriddenAmountCents: confirmedSellAmountCents,
+          currency: product.sellCurrency,
+          reason: priceOverrideReason ?? "Manual price override",
+          overriddenBy: userId ?? "system",
+          overriddenAt: new Date().toISOString(),
+        }
+      : null
+
     // Map the booking lifecycle status onto the booking-item lifecycle.
     // Items don't have an `awaiting_payment` state — when the booking is
     // committed (confirmed / awaiting payment / in progress) the items
@@ -2503,7 +2600,7 @@ export const bookingsService = {
         sellCurrency: product.sellCurrency,
         sellAmountCents: effectiveSellAmountCents,
         priceOverride,
-        costAmountCents: product.costAmountCents,
+        costAmountCents: effectiveCostAmountCents,
         marginPercent: product.marginPercent,
         startDate,
         endDate,
@@ -2583,6 +2680,13 @@ export const bookingsService = {
             const totalSellAmountCents =
               line.totalSellAmountCents ??
               (line.unitSellAmountCents != null ? line.unitSellAmountCents * line.quantity : null)
+            // Cost has no per-line wire field, so each line carries the
+            // product's per-unit cost scaled by its own quantity. Summed
+            // across the lines this reproduces `effectiveCostAmountCents`
+            // exactly, which keeps `recomputeBookingTotal` (Σ of item
+            // totals) agreeing with the header instead of collapsing the
+            // booking's cost to 0 on the first item mutation.
+            const unitCostAmountCents = product.costAmountCents ?? null
             return {
               bookingId: booking.id,
               title: line.title?.trim() || unit.name,
@@ -2593,9 +2697,10 @@ export const bookingsService = {
               sellCurrency: product.sellCurrency,
               unitSellAmountCents: line.unitSellAmountCents ?? null,
               totalSellAmountCents,
-              costCurrency: null,
-              unitCostAmountCents: null,
-              totalCostAmountCents: null,
+              costCurrency: unitCostAmountCents != null ? product.sellCurrency : null,
+              unitCostAmountCents,
+              totalCostAmountCents:
+                unitCostAmountCents != null ? unitCostAmountCents * line.quantity : null,
               productId: product.id,
               optionId: unit.optionId,
               optionUnitId: unit.id,
@@ -2632,11 +2737,11 @@ export const bookingsService = {
                 costCurrency: singleSeedItem ? product.sellCurrency : null,
                 unitCostAmountCents:
                   singleSeedItem &&
-                  product.costAmountCents !== null &&
-                  product.costAmountCents !== undefined
-                    ? Math.floor(product.costAmountCents / quantity)
+                  effectiveCostAmountCents !== null &&
+                  effectiveCostAmountCents !== undefined
+                    ? Math.floor(effectiveCostAmountCents / quantity)
                     : null,
-                totalCostAmountCents: singleSeedItem ? (product.costAmountCents ?? null) : null,
+                totalCostAmountCents: singleSeedItem ? (effectiveCostAmountCents ?? null) : null,
                 productId: product.id,
                 optionId: option?.id ?? null,
                 optionUnitId: unit.id,
@@ -2657,8 +2762,8 @@ export const bookingsService = {
                 unitSellAmountCents: effectiveSellAmountCents ?? null,
                 totalSellAmountCents: effectiveSellAmountCents ?? null,
                 costCurrency: product.sellCurrency,
-                unitCostAmountCents: product.costAmountCents ?? null,
-                totalCostAmountCents: product.costAmountCents ?? null,
+                unitCostAmountCents: effectiveCostAmountCents ?? null,
+                totalCostAmountCents: effectiveCostAmountCents ?? null,
                 productId: product.id,
                 optionId: option?.id ?? null,
                 optionUnitId: null,
@@ -2739,14 +2844,33 @@ export const bookingsService = {
           "booking",
         )
 
+        // Carry the slot and the seat counts so the commit path can
+        // report "this departure only has N seats left" instead of
+        // bubbling an untyped error into a 500.
         if (capacity.status === "slot_not_found") {
-          throw new BookingServiceError("slot_not_found")
+          throw new BookingServiceError("slot_not_found", "Availability slot not found", {
+            slotId: allocation.availabilitySlotId,
+            remainingPax: null,
+            requestedPax: allocation.quantity,
+          })
         }
         if (capacity.status === "slot_unavailable") {
-          throw new BookingServiceError("slot_unavailable")
+          throw new BookingServiceError("slot_unavailable", "Availability slot is not bookable", {
+            slotId: allocation.availabilitySlotId,
+            remainingPax: capacity.slot?.remaining_pax ?? null,
+            requestedPax: allocation.quantity,
+          })
         }
         if (capacity.status === "insufficient_capacity") {
-          throw new BookingServiceError("insufficient_capacity")
+          throw new BookingServiceError(
+            "insufficient_capacity",
+            `Insufficient slot capacity: ${capacity.remainingPax} seat(s) remaining, ${allocation.quantity} requested`,
+            {
+              slotId: allocation.availabilitySlotId,
+              remainingPax: capacity.remainingPax,
+              requestedPax: allocation.quantity,
+            },
+          )
         }
       }
 
@@ -2793,15 +2917,33 @@ export const bookingsService = {
       )
     }
 
+    // Timeline entries must be renderable per-locale.
+    //
+    // `description` is `NOT NULL` and every row written before this
+    // change carries only prose, so it stays as the legacy/fallback
+    // string. The authoritative payload is `metadata.kind` plus its
+    // parameters — the same discriminator convention the price-override
+    // row below (and finance's `payment_schedule_regenerated`) already
+    // use. A renderer that knows the kind formats the sentence in the
+    // operator's language from `params`; one that doesn't falls back to
+    // `description`, so old and new rows both display.
     await db.insert(bookingActivityLog).values({
       bookingId: booking.id,
       actorId: userId ?? "system",
       activityType: "booking_converted",
       description: `Booking converted from product "${product.name}"`,
       metadata: {
+        kind: "booking_converted_from_product",
+        // Render parameters, named for the renderer rather than for the
+        // database, and kept flat so a template can interpolate them.
+        params: {
+          productName: product.name,
+          optionName: option?.name ?? null,
+        },
         productId: product.id,
         productName: product.name,
         optionId: option?.id ?? null,
+        optionName: option?.name ?? null,
         slotId: slot?.id ?? null,
         ...(convertedHold
           ? {
@@ -2819,7 +2961,15 @@ export const bookingsService = {
         actorId: userId ?? "system",
         activityType: "system_action",
         description: "Booking sell total manually overridden during create",
-        metadata: { kind: "booking_price_overridden", ...priceOverride },
+        metadata: {
+          kind: "booking_price_overridden",
+          params: {
+            originalAmountCents: priceOverride.originalAmountCents,
+            overriddenAmountCents: priceOverride.overriddenAmountCents,
+            currency: priceOverride.currency,
+          },
+          ...priceOverride,
+        },
       })
     }
 
@@ -3269,13 +3419,58 @@ export const bookingsService = {
     })
   },
 
-  async deleteBooking(db: PostgresJsDatabase, id: string) {
-    const [row] = await db
-      .delete(bookings)
-      .where(eq(bookings.id, id))
-      .returning({ id: bookings.id })
+  /**
+   * Hard-delete a booking, returning any departure capacity it still
+   * holds first.
+   *
+   * `booking_allocations.booking_id` is `ON DELETE CASCADE`, so deleting
+   * the booking row makes Postgres drop the allocation rows in the same
+   * statement — the rows that record *how many seats this booking owes
+   * back*. Without an explicit release beforehand the seats are leaked
+   * permanently and unrecoverably: the debt is gone along with its
+   * evidence. This mirrors what `cancelBooking` already does via
+   * `releaseAllocationCapacity`.
+   *
+   * Idempotent / safe for bookings that never consumed capacity:
+   * `releaseAllocationCapacity` no-ops for allocations with no
+   * `availabilitySlotId` and for statuses that don't consume capacity
+   * (already `released`/`cancelled`), so double-release is impossible.
+   * Release and delete share one transaction, so a failure to delete
+   * rolls the capacity back too.
+   */
+  async deleteBooking(db: PostgresJsDatabase, id: string, runtime: BookingServiceRuntime = {}) {
+    const slotChanges: AvailabilitySlotChangedEventPayload[] = []
 
-    return row ?? null
+    const row = await db.transaction(async (tx) => {
+      const allocations = await tx
+        .select()
+        .from(bookingAllocations)
+        .where(eq(bookingAllocations.bookingId, id))
+
+      for (const allocation of allocations) {
+        const change = await releaseAllocationCapacity(
+          tx as PostgresJsDatabase,
+          allocation,
+          "cancel",
+        )
+        if (change) slotChanges.push(change)
+      }
+
+      const [deleted] = await tx
+        .delete(bookings)
+        .where(eq(bookings.id, id))
+        .returning({ id: bookings.id })
+
+      // Booking never existed — roll the (empty) release back and report
+      // a miss so the route still answers 404.
+      return deleted ?? null
+    })
+
+    if (row) {
+      await emitSlotChanges(runtime, slotChanges)
+    }
+
+    return row
   },
 
   async confirmBooking(

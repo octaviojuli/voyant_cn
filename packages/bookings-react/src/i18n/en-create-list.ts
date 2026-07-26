@@ -74,7 +74,7 @@ export const bookingsUiEnCreateList = {
     },
     labels: {
       currency: "EUR",
-      remainingCapacity: "left",
+      remainingCapacityCount: "{count} left",
       noSpecificOption: "No specific option",
       createNewPerson: "Create new",
       selectExistingPerson: "Select existing",

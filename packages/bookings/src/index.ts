@@ -61,6 +61,7 @@ export {
 } from "./reservation-plans.js"
 export type {
   BookingCancelledEvent,
+  BookingCapacityErrorDetails,
   BookingConfirmedEvent,
   BookingTravelerSharingGroupMember,
   BookingTravelerSharingGroupSummary,
@@ -68,7 +69,12 @@ export type {
   CreateTravelerWithTravelDetailsInput,
   UpdateTravelerWithTravelDetailsInput,
 } from "./service.js"
-export { bookingsService } from "./service.js"
+// `BookingServiceError` / `isBookingServiceError` are public so the
+// packages layered above the booking commit path (booking engine,
+// booking-create orchestrator, routes) can catch capacity exhaustion as
+// a typed, renderable failure instead of letting it reach the error
+// boundary as a 500.
+export { BookingServiceError, bookingsService, isBookingServiceError } from "./service.js"
 export {
   type AddBookingGroupMemberInput,
   type BookingGroupListQuery,

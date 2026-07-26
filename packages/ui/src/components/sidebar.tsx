@@ -8,6 +8,7 @@ export {
   SidebarProvider,
   SidebarRail,
   SidebarSeparator,
+  type SidebarToggleMessages,
   SidebarTrigger,
   useSidebar,
 } from "./sidebar-core.js"

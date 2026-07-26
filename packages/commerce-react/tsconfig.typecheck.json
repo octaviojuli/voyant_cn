@@ -971,6 +971,7 @@
       "@voyant-travel/hono/openapi": ["../hono/dist/openapi.d.ts"],
       "@voyant-travel/hono/types": ["../hono/dist/types.d.ts"],
       "@voyant-travel/i18n": ["../i18n/dist/index.d.ts"],
+      "@voyant-travel/i18n/package-formatters": ["../i18n/dist/package-formatters.d.ts"],
       "@voyant-travel/identity": ["../identity/dist/index.d.ts"],
       "@voyant-travel/identity-contracts": ["../identity-contracts/dist/index.d.ts"],
       "@voyant-travel/identity-contracts/validation": [

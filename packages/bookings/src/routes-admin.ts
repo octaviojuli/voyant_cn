@@ -62,7 +62,15 @@ import { createBookingsAdminRoute as createRoute } from "./routes-openapi.js"
 import type { publicBookingRoutes } from "./routes-public.js"
 import type { Env } from "./routes-shared.js"
 import { bookingPiiAccessLog } from "./schema.js"
-import { bookingsService } from "./service.js"
+import { bookingsService, isBookingServiceError } from "./service.js"
+
+/**
+ * Service error codes that mean "the departure can't take this booking"
+ * rather than "the server broke" — mapped to 409 by the create-from-product
+ * handler. Mirrors the code→status choices the reserve route already makes.
+ */
+const CAPACITY_CONFLICT_CODES = new Set(["insufficient_capacity", "slot_unavailable"])
+
 import { bookingGroupsService } from "./service-groups.js"
 import { publicBookingsService, resolveSessionPricingSnapshot } from "./service-public.js"
 import {
@@ -1232,6 +1240,23 @@ async function decideBookingActionApproval(c: Context<Env>) {
 const isoTimestamp = z.string()
 const nullableIsoTimestamp = z.string().nullable()
 const errorResponseSchema = z.object({ error: z.string() })
+/**
+ * Conflict body for capacity/slot failures. Adds a machine-readable
+ * `code` plus the slot and seat counts on top of the plain `error`
+ * string so a client can say "only N seats left on this departure"
+ * in the operator's own language instead of rendering a server string.
+ */
+const capacityConflictResponseSchema = z.object({
+  error: z.string(),
+  code: z.string(),
+  details: z
+    .object({
+      slotId: z.string().nullable(),
+      remainingPax: z.number().nullable(),
+      requestedPax: z.number().nullable(),
+    })
+    .optional(),
+})
 const deleteResponseSchema = z.object({ success: z.boolean() })
 const idParamSchema = z.object({ id: z.string() })
 const jsonObject = z.record(z.string(), z.unknown())
@@ -1720,6 +1745,10 @@ const createFromProductRoute = createRoute({
     201: dataResponse(bookingSchema, "The created booking draft"),
     400: invalidRequestResponse,
     404: notFoundResponse("Product or option not found"),
+    409: {
+      description: "Departure is full / slot unavailable",
+      content: { "application/json": { schema: capacityConflictResponseSchema } },
+    },
   },
 })
 
@@ -1817,7 +1846,26 @@ coreCrudRoutes
   .openapi(createFromProductRoute, async (c) => {
     const data = c.req.valid("json")
     await validateBookingBillingPartyReferences(c, data)
-    const row = await bookingsService.createBookingFromProduct(c.get("db"), data, c.get("userId"))
+    let row: Awaited<ReturnType<typeof bookingsService.createBookingFromProduct>>
+    try {
+      row = await bookingsService.createBookingFromProduct(c.get("db"), data, c.get("userId"))
+    } catch (error) {
+      // A full departure is a client-visible conflict, not a server
+      // fault. Without this the typed capacity error escaped to the Hono
+      // error boundary and came back as a 500 "Internal Server Error"
+      // with the code discarded.
+      if (isBookingServiceError(error) && CAPACITY_CONFLICT_CODES.has(error.code)) {
+        return c.json(
+          {
+            error: error.message,
+            code: error.code,
+            ...(error.details ? { details: error.details } : {}),
+          },
+          409,
+        )
+      }
+      throw error
+    }
     if (!row) {
       return c.json({ error: "Product or option not found" }, 404)
     }
@@ -1863,7 +1911,11 @@ coreCrudRoutes
     return c.json({ data: row }, 200)
   })
   .openapi(deleteBookingRoute, async (c) => {
-    const row = await bookingsService.deleteBooking(c.get("db"), c.req.valid("param").id)
+    // Pass the event bus so the departure capacity the delete releases
+    // is broadcast as `availability.slot.changed`, exactly as cancel does.
+    const row = await bookingsService.deleteBooking(c.get("db"), c.req.valid("param").id, {
+      eventBus: c.get("eventBus"),
+    })
     if (!row) {
       return c.json({ error: "Booking not found" }, 404)
     }

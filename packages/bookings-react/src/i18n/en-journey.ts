@@ -50,6 +50,13 @@ export const bookingsUiEnJourney = {
       dependencyLimitSum: "At most {limit} {dependent} allowed.",
       invalidEmail: "Enter a valid email address.",
     },
+    commitErrors: {
+      noAvailability:
+        "This departure no longer has enough seats — only {count} left. Reduce the party size or pick another departure.",
+      noAvailabilityUnknown:
+        "This departure no longer has enough seats. Reduce the party size or pick another departure.",
+      fallback: "The booking could not be confirmed. Please try again, or contact support.",
+    },
     warnings: {
       phoneMissing: "Phone number not set — useful for last-minute supplier contact.",
       billingCountryMissing: "Billing country not set — taxes won't compute until it's filled in.",
@@ -119,6 +126,14 @@ export const bookingsUiEnJourney = {
       ageLabel: "age {age}",
       copyFromBilling: "Copy from billing",
       remove: "Remove",
+      bandLabels: {
+        adult: "Adult",
+        child: "Child",
+        infant: "Infant",
+        senior: "Senior",
+        youth: "Youth",
+        student: "Student",
+      },
     },
     accommodation: {
       title: "Accommodation",

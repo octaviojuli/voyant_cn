@@ -78,6 +78,7 @@ function makeDefaults(): DefaultContractVariables {
       channel: "",
       source: "",
       status: "draft",
+      language: "en",
     },
     booking: {
       bookingId: "bkg_1",
@@ -436,5 +437,64 @@ describe("buildContractVariableBindings", () => {
     expect(result.customer.email).toBe("ada@example.com")
     expect(result.customer.address.city).toBe("Bucharest")
     expect(result.customer.address.country).toBe("RO")
+  })
+
+  it("renders the hydrated customer name in the contract's own language (#R4a)", async () => {
+    getPersonById.mockResolvedValueOnce({
+      id: "per_zh",
+      firstName: "伟",
+      lastName: "张",
+      email: "zhangwei@example.cn",
+      phone: "+86 138 0000 0000",
+      dateOfBirth: "1988-04-02",
+    })
+    listAddresses.mockResolvedValueOnce([])
+
+    const resolve = buildContractVariableBindings({
+      resolveOperatorProfile: () => null,
+      resolveOperatorPaymentInstructions: () => null,
+    })
+
+    const defaults = makeDefaults()
+    defaults.contract.language = "zh-CN"
+
+    const result = (await resolve({
+      db: stubDb({}),
+      booking: { ...bookingBase, personId: "per_zh" },
+      travelers: [],
+      defaults,
+      bindings: null,
+    })) as AnyRecord
+
+    // Family name leads and there is no separator - the western join
+    // produced "伟 张" on a customer-facing artifact.
+    expect(result.customer.fullName).toBe("张伟")
+    // Stored fields are never reordered, only the rendered display name.
+    expect(result.customer.firstName).toBe("伟")
+    expect(result.customer.lastName).toBe("张")
+  })
+
+  it("keeps western order when the contract language is not CJK (#R4a)", async () => {
+    getPersonById.mockResolvedValueOnce({
+      id: "per_zh_en",
+      firstName: "伟",
+      lastName: "张",
+    })
+    listAddresses.mockResolvedValueOnce([])
+
+    const resolve = buildContractVariableBindings({
+      resolveOperatorProfile: () => null,
+      resolveOperatorPaymentInstructions: () => null,
+    })
+
+    const result = (await resolve({
+      db: stubDb({}),
+      booking: { ...bookingBase, personId: "per_zh_en" },
+      travelers: [],
+      defaults: makeDefaults(),
+      bindings: null,
+    })) as AnyRecord
+
+    expect(result.customer.fullName).toBe("伟 张")
   })
 })
