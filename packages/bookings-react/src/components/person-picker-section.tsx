@@ -29,7 +29,8 @@ import {
 } from "@voyant-travel/ui/components/combobox"
 import { Building2, Pencil, User, UserPlus } from "lucide-react"
 import * as React from "react"
-import { useBookingsUiMessagesOrDefault } from "../i18n/provider.js"
+import { useBookingsUiI18nOrDefault } from "../i18n/provider.js"
+import { personDisplayName } from "../lib/person-name.js"
 
 export type PersonPickerMode = "existing" | "new"
 export type BillingTargetMode = "person" | "organization"
@@ -135,7 +136,7 @@ export function PersonPickerSection({
   const [personSheetMode, setPersonSheetMode] = React.useState<"create" | "edit">("create")
   const [orgSheetOpen, setOrgSheetOpen] = React.useState(false)
   const [orgSheetMode, setOrgSheetMode] = React.useState<"create" | "edit">("create")
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const merged = { ...messages.personPickerSection.labels, ...labels }
   const billingTarget = value.billTo ?? "person"
 
@@ -179,8 +180,8 @@ export function PersonPickerSection({
   const setPerson = (patch: Partial<PersonPickerValue>) => onChange({ ...value, ...patch })
   const resolvePersonLabel = React.useCallback(
     (personId: string) =>
-      formatPerson(peopleMap.get(personId) ?? cachedPeopleRef.current.get(personId)),
-    [peopleMap],
+      formatPerson(peopleMap.get(personId) ?? cachedPeopleRef.current.get(personId), locale),
+    [peopleMap, locale],
   )
   const resolveOrgLabel = React.useCallback(
     (organizationId: string) =>
@@ -302,7 +303,9 @@ export function PersonPickerSection({
                     return (
                       <ComboboxItem key={person.id} value={person.id}>
                         <div className="flex min-w-0 flex-col">
-                          <span className="truncate font-medium">{formatPersonName(person)}</span>
+                          <span className="truncate font-medium">
+                            {personDisplayName(person, locale)}
+                          </span>
                           {person.email ? (
                             <span className="truncate text-xs text-muted-foreground">
                               {person.email}
@@ -425,7 +428,7 @@ export function PersonPickerSection({
               onCancel={() => setPersonSheetOpen(false)}
               onSuccess={(saved) => {
                 setPerson({ billTo: "person", personId: saved.id, organizationId: null })
-                setPersonInputValue(formatPerson(saved))
+                setPersonInputValue(formatPerson(saved, locale))
                 setPersonSheetOpen(false)
               }}
             />
@@ -463,13 +466,8 @@ export function PersonPickerSection({
   )
 }
 
-function formatPersonName(person: PersonRecord | undefined): string {
+function formatPerson(person: PersonRecord | undefined, locale?: string | null): string {
   if (!person) return ""
-  return [person.firstName, person.lastName].filter(Boolean).join(" ").trim()
-}
-
-function formatPerson(person: PersonRecord | undefined): string {
-  if (!person) return ""
-  const name = formatPersonName(person)
+  const name = personDisplayName(person, locale)
   return person.email ? `${name} · ${person.email}` : name
 }

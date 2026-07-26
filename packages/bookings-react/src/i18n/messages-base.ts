@@ -16,6 +16,20 @@ export type BookingsUiBaseMessages = {
       string
     >
     supplierStatusLabels: Record<"pending" | "confirmed" | "rejected" | "cancelled", string>
+    /**
+     * date-fns patterns for the shared `<DatePicker />` / `<DateRangePicker />`
+     * trigger labels, which format with date-fns (no `Intl` locale) and would
+     * otherwise always render English long form ("August 12th, 2026").
+     * Locale data, so it lives in the dictionary rather than in components.
+     */
+    datePickerFormats: {
+      /** Single-date trigger label. */
+      long: string
+      /** Range trigger label — each endpoint is formatted with this. */
+      compact: string
+      /** Date-time trigger label (`<DateTimePicker />`). */
+      longWithTime: string
+    }
   }
   bookingsPage: {
     title: string

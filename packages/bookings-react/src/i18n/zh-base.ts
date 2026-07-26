@@ -22,6 +22,12 @@ export const bookingsUiZhBase = {
       rejected: "已拒绝",
       cancelled: "已取消",
     },
+    // i18n-literal-ok date-fns display patterns, not user copy.
+    datePickerFormats: {
+      long: "yyyy年M月d日",
+      compact: "yyyy年M月d日",
+      longWithTime: "yyyy年M月d日 HH:mm",
+    },
   },
   bookingsPage: {
     title: "订单",

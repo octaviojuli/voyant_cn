@@ -76,7 +76,7 @@ export const bookingsUiRoCreateList = {
     },
     labels: {
       currency: "EUR",
-      remainingCapacity: "ramase",
+      remainingCapacityCount: "{count} ramase",
       noSpecificOption: "Fara optiune specifica",
       createNewPerson: "Creeaza nou",
       selectExistingPerson: "Selecteaza existent",

@@ -11,6 +11,7 @@ export {
   type CrmUiMessageOverrides,
   CrmUiMessagesProvider,
   crmUiMessageDefinitions,
+  detectCrmUiFallbackLocale,
   getCrmUiI18n,
   resolveCrmUiMessages,
   useCrmUiI18n,

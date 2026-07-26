@@ -10,6 +10,7 @@ import {
 } from "@voyant-travel/bookings"
 import { bookingPiiAccessLog } from "@voyant-travel/bookings/schema"
 import { bookingPaymentSchedules, invoices, payments } from "@voyant-travel/finance/schema"
+import { formatPersonName } from "@voyant-travel/i18n/package-formatters"
 import { and, asc, desc, eq, ne, sql } from "drizzle-orm"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 
@@ -84,7 +85,10 @@ export async function resolveContractGenerationVariables(
   )
 
   const mappedTravelers: ContractTravelerVariable[] = travelers.map((t, i) => {
-    const fullName = [t.firstName, t.lastName].filter(Boolean).join(" ").trim()
+    const fullName = formatPersonName(contractLanguage, {
+      firstName: t.firstName,
+      lastName: t.lastName,
+    })
     const travelDetails = travelerTravelDetails.get(t.id)
     return {
       id: t.id,
@@ -110,9 +114,19 @@ export async function resolveContractGenerationVariables(
     }
   })
 
+  // Customer-facing artifact: render names in the *document's* language, not
+  // the operator's UI language, so a zh-CN contract reads 张伟 and not 伟 张.
   const customerFullName =
-    [booking.contactFirstName, booking.contactLastName].filter(Boolean).join(" ").trim() ||
-    (leadTraveler ? `${leadTraveler.firstName} ${leadTraveler.lastName}`.trim() : "")
+    formatPersonName(contractLanguage, {
+      firstName: booking.contactFirstName,
+      lastName: booking.contactLastName,
+    }) ||
+    (leadTraveler
+      ? formatPersonName(contractLanguage, {
+          firstName: leadTraveler.firstName,
+          lastName: leadTraveler.lastName,
+        })
+      : "")
 
   const defaults: DefaultContractVariables = {
     today: todayIso,
@@ -132,6 +146,7 @@ export async function resolveContractGenerationVariables(
       channel: "",
       source: "",
       status: "draft",
+      language: contractLanguage,
     },
 
     booking: {
@@ -242,10 +257,10 @@ export async function resolveContractGenerationVariables(
           id: leadTraveler.id,
           firstName: leadTraveler.firstName,
           lastName: leadTraveler.lastName,
-          fullName: [leadTraveler.firstName, leadTraveler.lastName]
-            .filter(Boolean)
-            .join(" ")
-            .trim(),
+          fullName: formatPersonName(contractLanguage, {
+            firstName: leadTraveler.firstName,
+            lastName: leadTraveler.lastName,
+          }),
           email: leadTraveler.email ?? "",
           phone: leadTraveler.phone ?? "",
         }

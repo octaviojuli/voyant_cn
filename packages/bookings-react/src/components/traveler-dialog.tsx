@@ -469,6 +469,7 @@ export function TravelerDialog({
               <div className="flex flex-col gap-2">
                 <Label>{messages.travelerDialog.fields.documentExpiry}</Label>
                 <DatePicker
+                  displayFormat={messages.common.datePickerFormats.long}
                   value={form.watch("documentExpiry") || null}
                   onChange={(nextValue) =>
                     form.setValue("documentExpiry", nextValue ?? "", {
@@ -504,6 +505,7 @@ export function TravelerDialog({
               <div className="flex flex-col gap-2">
                 <Label>{messages.travelerDialog.fields.dateOfBirth}</Label>
                 <DatePicker
+                  displayFormat={messages.common.datePickerFormats.long}
                   value={form.watch("dateOfBirth") || null}
                   onChange={(nextValue) =>
                     form.setValue("dateOfBirth", nextValue ?? "", {

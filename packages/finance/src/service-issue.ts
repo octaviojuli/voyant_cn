@@ -1,6 +1,7 @@
 // agent-quality: file-size exception -- owner: finance; existing service module stays co-located until a dedicated split preserves behavior and tests.
 import { appendActionLedgerMutation } from "@voyant-travel/action-ledger"
 import { bookingItems, bookings } from "@voyant-travel/bookings/schema"
+import { formatPersonName } from "@voyant-travel/i18n/package-formatters"
 import { and, asc, eq, inArray, ne, sql } from "drizzle-orm"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 
@@ -790,10 +791,21 @@ function deriveInvoiceNumberFromProforma(proformaNumber: string): string {
   return `${proformaNumber}-INV`
 }
 
+/**
+ * Client name for the issued-invoice event payload (and everything downstream
+ * that renders it — accounting exports, invoice documents).
+ *
+ * Rendered in the *booking's* language rather than the operator's UI locale:
+ * this string lands on a customer-facing artifact, and in CJK the family name
+ * leads (张伟, not 伟 张). `contactPreferredLanguage` is the customer's own
+ * stated preference so it wins over the booking-level communication language.
+ */
 function buildClientName(booking: typeof bookings.$inferSelect | undefined): string {
-  const name = [booking?.contactFirstName, booking?.contactLastName]
-    .filter((part): part is string => typeof part === "string" && part.length > 0)
-    .join(" ")
+  const locale = booking?.contactPreferredLanguage ?? booking?.communicationLanguage ?? "en"
+  const name = formatPersonName(locale, {
+    firstName: booking?.contactFirstName,
+    lastName: booking?.contactLastName,
+  })
   return name || "Client"
 }
 

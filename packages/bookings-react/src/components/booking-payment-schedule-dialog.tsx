@@ -216,6 +216,7 @@ export function BookingPaymentScheduleDialog({
             <div className="flex flex-col gap-2">
               <Label>{messages.paymentScheduleDialog.fields.dueDate}</Label>
               <DatePicker
+                displayFormat={messages.common.datePickerFormats.long}
                 value={form.watch("dueDate") || null}
                 onChange={(next) =>
                   form.setValue("dueDate", next ?? "", {

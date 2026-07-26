@@ -398,7 +398,11 @@ function AddressInlineForm({
 
       <div className="space-y-1.5">
         <Label className="text-xs">{fields.addressCountry}</Label>
-        <CountryCombobox value={form.country} onChange={(code) => updateField("country", code)} />
+        <CountryCombobox
+          messages={messages.common.countryCombobox}
+          value={form.country}
+          onChange={(code) => updateField("country", code)}
+        />
       </div>
 
       <div className="space-y-1.5">

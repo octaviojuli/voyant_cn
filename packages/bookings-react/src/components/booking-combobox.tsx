@@ -2,8 +2,9 @@
 
 import { AsyncCombobox } from "@voyant-travel/ui/components/async-combobox"
 import * as React from "react"
-import { useBookingsUiMessagesOrDefault } from "../i18n/provider.js"
+import { useBookingsUiI18nOrDefault } from "../i18n/provider.js"
 import { type BookingRecord, useBooking, useBookings } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 
 export interface BookingComboboxProps {
   value: string | null | undefined
@@ -23,8 +24,11 @@ function compact(parts: Array<string | null | undefined>) {
   return parts.map((part) => part?.trim()).filter(Boolean) as string[]
 }
 
-function formatCustomer(booking: BookingRecord) {
-  const name = compact([booking.contactFirstName, booking.contactLastName]).join(" ")
+function formatCustomer(booking: BookingRecord, locale?: string | null) {
+  const name = personDisplayName(
+    { firstName: booking.contactFirstName, lastName: booking.contactLastName },
+    locale,
+  )
   return name || booking.contactEmail || null
 }
 
@@ -39,10 +43,12 @@ function formatDateRange(booking: BookingRecord) {
   return start ?? end ?? null
 }
 
-function formatBookingLabel(booking: BookingRecord) {
-  return compact([booking.bookingNumber, formatCustomer(booking), formatPrimaryItem(booking)]).join(
-    " - ",
-  )
+function formatBookingLabel(booking: BookingRecord, locale?: string | null) {
+  return compact([
+    booking.bookingNumber,
+    formatCustomer(booking, locale),
+    formatPrimaryItem(booking),
+  ]).join(" - ")
 }
 
 function formatBookingSecondary(booking: BookingRecord) {
@@ -60,7 +66,8 @@ export function BookingCombobox({
   clearable = true,
   limit = DEFAULT_LIMIT,
 }: BookingComboboxProps) {
-  const messages = useBookingsUiMessagesOrDefault().bookingCombobox
+  const { locale, messages: allMessages } = useBookingsUiI18nOrDefault()
+  const messages = allMessages.bookingCombobox
   const [search, setSearch] = React.useState("")
   const listQuery = useBookings({
     search: search || undefined,
@@ -77,7 +84,7 @@ export function BookingCombobox({
       items={bookings}
       selectedItem={selectedBooking}
       getKey={(booking) => booking.id}
-      getLabel={formatBookingLabel}
+      getLabel={(booking) => formatBookingLabel(booking, locale)}
       getSecondary={formatBookingSecondary}
       onSearchChange={setSearch}
       placeholder={placeholder ?? messages.placeholder}

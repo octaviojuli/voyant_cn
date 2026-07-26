@@ -58,6 +58,8 @@ export interface LeadContactPickerProps {
     email?: string
     phone?: string
     personId?: string
+    /** Date of birth on file for the picked person (ISO). */
+    dateOfBirth?: string
     organizationId?: string
     companyName?: string
     taxId?: string
@@ -84,6 +86,9 @@ export interface TravelerContactPickerProps {
     email?: string
     phone?: string
     personId?: string
+    /** Date of birth on file for the picked contact (ISO). Lets the journey
+     *  derive the traveler's pax band instead of demanding it. */
+    dateOfBirth?: string
   }) => void
 }
 

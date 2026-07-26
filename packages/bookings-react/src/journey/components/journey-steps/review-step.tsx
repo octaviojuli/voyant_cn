@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@voyant-travel/ui/comp
 import { Label } from "@voyant-travel/ui/components/label"
 import { Textarea } from "@voyant-travel/ui/components/textarea"
 import { Loader2 } from "lucide-react"
-import { useBookingsUiMessagesOrDefault } from "../../../i18n/index.js"
+import { useBookingsUiI18nOrDefault } from "../../../i18n/index.js"
+import { personDisplayName } from "../../../lib/person-name.js"
 import type { Draft } from "../../lib/draft-state.js"
-import { JourneyWarnings } from "./shared.js"
+import { bandLabel, JourneyWarnings } from "./shared.js"
 
 // ─────────────────────────────────────────────────────────────────
 // Review
@@ -45,11 +46,11 @@ export function ReviewStep({
   /** Live quote total + currency — drives the price-override default. */
   pricing?: { total: number; currency: string } | null
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const isPublic = surface === "public"
   const leadName =
     (draft.billing.buyerType === "B2B" ? draft.billing.company?.name : undefined) ||
-    [draft.billing.contact.firstName, draft.billing.contact.lastName].filter(Boolean).join(" ") ||
+    personDisplayName(draft.billing.contact, locale) ||
     messages.bookingJourney.values.noValue
   const leadEmail = draft.billing.contact.email || messages.bookingJourney.values.noValue
   return (
@@ -70,7 +71,8 @@ export function ReviewStep({
           <ul className="text-muted-foreground text-sm">
             {draft.travelers.map((t, i) => (
               <li key={t.rowId ?? i}>
-                {t.firstName} {t.lastName} ({t.band})
+                {personDisplayName(t, locale) || messages.bookingJourney.values.noValue} (
+                {bandLabel({ code: t.band }, messages.bookingJourney.travelers.bandLabels)})
               </li>
             ))}
           </ul>

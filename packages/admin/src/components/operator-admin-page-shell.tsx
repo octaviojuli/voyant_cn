@@ -48,6 +48,7 @@ export function OperatorAdminPageShell({
               className="-ml-1"
               title={messages?.toggleSidebarShortcutTitle ?? "Toggle sidebar (Cmd/Ctrl+B)"}
               aria-label={messages?.toggleSidebar ?? "Toggle sidebar"}
+              messages={messages ? { toggleSidebar: messages.toggleSidebar } : undefined}
             />
           ) : null}
           {breadcrumbs ? (

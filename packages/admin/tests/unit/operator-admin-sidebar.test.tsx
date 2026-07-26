@@ -46,7 +46,8 @@ describe("OperatorAdminWorkspaceLayout", () => {
     )
 
     expect(container.querySelector("main[data-slot='sidebar-inset']")).not.toBeNull()
-    expect(screen.getByRole("button", { name: "Toggle sidebar" })).not.toBeNull()
+    // Scoped to the trigger's slot — the rail shares its accessible name.
+    expect(container.querySelectorAll("[data-slot='sidebar-trigger']")).toHaveLength(1)
     expect(screen.getByText("Dashboard content")).not.toBeNull()
   })
 

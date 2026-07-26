@@ -24,7 +24,11 @@ import {
 } from "@voyant-travel/ui/components/sheet"
 import { Eye, EyeOff, Loader2, Pencil, Plus, Trash2, Users } from "lucide-react"
 import * as React from "react"
-import { formatMessage, useBookingsUiMessagesOrDefault } from "../i18n/provider.js"
+import {
+  formatMessage,
+  useBookingsUiI18nOrDefault,
+  useBookingsUiMessagesOrDefault,
+} from "../i18n/provider.js"
 import {
   type BookingTravelerDocumentRecord,
   type BookingTravelerRecord,
@@ -34,6 +38,7 @@ import {
   useTravelerMutation,
   useTravelers,
 } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 import { IconActionButton } from "./icon-action-button.js"
 import { TravelerDialog } from "./traveler-dialog.js"
 
@@ -341,9 +346,10 @@ function TravelerNameCell({
   traveler: BookingTravelerRecord
   revealed: boolean
 }) {
+  const { locale } = useBookingsUiI18nOrDefault()
   const { display, loading } = useRevealed(bookingId, traveler, revealed)
   if (loading) return <RowLoading />
-  return <span>{`${display.firstName ?? ""} ${display.lastName ?? ""}`.trim() || "—"}</span>
+  return <span>{personDisplayName(display, locale) || "—"}</span>
 }
 
 function TravelerContactCell({
@@ -480,14 +486,14 @@ function TravelerSnapshotBody({
   traveler: BookingTravelerRecord
   documents: BookingTravelerDocumentRecord[]
 }) {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const labels = messages.travelerList.snapshot
   const empty = labels.empty
   const { display, travelDetails, loading } = useRevealed(bookingId, traveler, true)
   const person = usePerson(traveler.personId ?? undefined, {
     enabled: Boolean(traveler.personId),
   }).data
-  const fullName = `${display.firstName ?? ""} ${display.lastName ?? ""}`.trim() || empty
+  const fullName = personDisplayName(display, locale) || empty
   const email = display.email ?? person?.email ?? empty
   const phone = display.phone ?? person?.phone ?? empty
   const dob = travelDetails?.dateOfBirth ?? person?.dateOfBirth ?? null

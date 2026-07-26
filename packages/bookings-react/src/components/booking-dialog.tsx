@@ -71,6 +71,7 @@ export interface BookingDialogProps {
   defaultSlotId?: string
 }
 
+/** Statuses an operator may pick by hand in the edit dialog. */
 const BOOKING_STATUS_VALUES = [
   "draft",
   "confirmed",
@@ -78,6 +79,20 @@ const BOOKING_STATUS_VALUES = [
   "completed",
   "cancelled",
 ] as const
+
+type BookingStatusValue = BookingFormValues["status"]
+
+/**
+ * The selectable statuses PLUS the booking's current one. `<SelectValue />`
+ * resolves its label from the rendered `<SelectItem>` children, so a status
+ * that isn't in the list (on_hold / awaiting_payment / expired) renders as the
+ * raw enum — "awaiting_payment" instead of 待付款. Including it also keeps the
+ * status round-trippable: the operator can save without changing it.
+ */
+function selectableStatuses(current: BookingStatusValue): ReadonlyArray<BookingStatusValue> {
+  const values: ReadonlyArray<BookingStatusValue> = BOOKING_STATUS_VALUES
+  return values.includes(current) ? values : [current, ...values]
+}
 const DEFAULT_CURRENCY = "EUR" // i18n-literal-ok ISO default currency
 const noopCurrencyChange = (_value: number | null) => {}
 
@@ -149,8 +164,10 @@ function BookingEditDialog({ open, onOpenChange, booking, onSuccess }: BookingEd
     if (!open) return
     form.reset({
       bookingNumber: booking.bookingNumber,
-      status:
-        booking.status === "on_hold" || booking.status === "expired" ? "draft" : booking.status,
+      // Never rewrite the status just to seed the form: mapping on_hold /
+      // expired to "draft" meant that merely opening this dialog on a held
+      // booking and pressing Save silently demoted it.
+      status: booking.status,
       sellCurrency: booking.sellCurrency,
       startDate: booking.startDate ?? "",
       endDate: booking.endDate ?? "",
@@ -215,7 +232,7 @@ function BookingEditDialog({ open, onOpenChange, booking, onSuccess }: BookingEd
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {BOOKING_STATUS_VALUES.map((status) => (
+                    {selectableStatuses(form.watch("status")).map((status) => (
                       <SelectItem key={status} value={status}>
                         {messages.common.bookingStatusLabels[status]}
                       </SelectItem>
@@ -250,6 +267,7 @@ function BookingEditDialog({ open, onOpenChange, booking, onSuccess }: BookingEd
                     form.setValue("endDate", nextValue?.to ?? "", { shouldDirty: true })
                   }}
                   placeholder={messages.bookingDialog.placeholders.travelDates}
+                  displayFormat={messages.common.datePickerFormats.compact}
                   className="w-full"
                 />
               </div>

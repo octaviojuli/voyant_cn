@@ -9,7 +9,8 @@ import {
 } from "@voyant-travel/ui/components/accordion"
 import { Card, CardContent } from "@voyant-travel/ui/components/card"
 import { Skeleton } from "@voyant-travel/ui/components/skeleton"
-import { formatMessage, useBookingsUiMessagesOrDefault } from "../../i18n/index.js"
+import { formatMessage, useBookingsUiI18nOrDefault } from "../../i18n/index.js"
+import { personDisplayName } from "../../lib/person-name.js"
 import type { BookingEntitySummary, JourneyStep, SidePanelState } from "../types.js"
 
 /**
@@ -36,7 +37,7 @@ export function PriceSidePanel({
    *  pricing, where they're most in context. */
   pricingExtras?: React.ReactNode
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   // Only surface pricing once the user has configured what actually drives
   // the price — otherwise the quote's baseline shows a misleading total
   // (e.g. a per-pax "from" price before any room is picked). Room products
@@ -98,7 +99,7 @@ export function PriceSidePanel({
                       <span className="text-muted-foreground"> × {line.quantity}</span>
                     ) : null}
                   </span>
-                  <span>{formatMoney(line.totalAmount, pricing.currency)}</span>
+                  <span>{formatMoney(line.totalAmount, pricing.currency, locale)}</span>
                 </li>
               ))}
             </ul>
@@ -110,14 +111,14 @@ export function PriceSidePanel({
                       {tax.label}
                       {tax.rate > 0 ? ` (${formatTaxRate(tax.rate)})` : ""}
                     </span>
-                    <span>{formatMoney(tax.amount, pricing.currency)}</span>
+                    <span>{formatMoney(tax.amount, pricing.currency, locale)}</span>
                   </li>
                 ))}
               </ul>
             ) : null}
             <div className="flex justify-between border-t pt-2 font-medium">
               <span>{messages.bookingJourney.sidePanel.total}</span>
-              <span>{formatMoney(pricing.total, pricing.currency)}</span>
+              <span>{formatMoney(pricing.total, pricing.currency, locale)}</span>
             </div>
           </div>
         ) : null}
@@ -161,7 +162,7 @@ function StepRecap({
   currentStep: JourneyStep
   draft: SidePanelState["draft"]
 }): React.ReactElement | null {
-  const messages = useBookingsUiMessagesOrDefault()
+  const messages = useBookingsUiI18nOrDefault().messages
   if (!draft) return null
   // Departure shows in the header; payment + documents aren't worth a recap
   // row — so the accordion covers the substantive in-between steps only.
@@ -204,8 +205,8 @@ function StepSummaryLine({
   step: JourneyStep
   draft: NonNullable<SidePanelState["draft"]>
 }): React.ReactElement | null {
-  const messages = useBookingsUiMessagesOrDefault()
-  const text = stepHeadline(step, draft, messages)
+  const { locale, messages } = useBookingsUiI18nOrDefault()
+  const text = stepHeadline(step, draft, messages, locale)
   if (!text) return null
   return <span className="text-muted-foreground text-xs">{text}</span>
 }
@@ -213,16 +214,17 @@ function StepSummaryLine({
 export function stepHeadline(
   step: JourneyStep,
   draft: NonNullable<SidePanelState["draft"]>,
-  messages: ReturnType<typeof useBookingsUiMessagesOrDefault>,
+  messages: ReturnType<typeof useBookingsUiI18nOrDefault>["messages"],
+  locale?: string | null,
 ): string {
   switch (step) {
     case "departure": {
       const range = draft.configure?.dateRange
       if (range?.checkIn && range?.checkOut)
-        return `${formatConfigureDate(range.checkIn)} → ${formatConfigureDate(range.checkOut)}`
+        return `${formatConfigureDate(range.checkIn, locale)} → ${formatConfigureDate(range.checkOut, locale)}`
       // Never surface the raw slot id — show the departure date.
       return draft.configure?.departureDate
-        ? formatConfigureDate(draft.configure.departureDate)
+        ? formatConfigureDate(draft.configure.departureDate, locale)
         : ""
     }
     case "options": {
@@ -239,7 +241,7 @@ export function stepHeadline(
     }
     case "billing": {
       const c = draft.billing.contact
-      const name = [c.firstName, c.lastName].filter(Boolean).join(" ").trim()
+      const name = personDisplayName(c, locale)
       const companyName =
         draft.billing.buyerType === "B2B" ? draft.billing.company?.name?.trim() : undefined
       return companyName || name || c.email || messages.bookingJourney.values.notSet
@@ -290,7 +292,7 @@ function StepDetails({
   step: JourneyStep
   draft: NonNullable<SidePanelState["draft"]>
 }): React.ReactElement | null {
-  const messages = useBookingsUiMessagesOrDefault()
+  const messages = useBookingsUiI18nOrDefault().messages
   switch (step) {
     case "departure":
       return <DepartureDetails draft={draft} />
@@ -322,7 +324,7 @@ function DepartureDetails({
 }: {
   draft: NonNullable<SidePanelState["draft"]>
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const cfg = draft.configure ?? {}
   const range = cfg.dateRange
   return (
@@ -331,19 +333,19 @@ function DepartureDetails({
       {cfg.departureDate ? (
         <Row
           label={messages.bookingJourney.sidePanel.departure}
-          value={formatConfigureDate(cfg.departureDate)}
+          value={formatConfigureDate(cfg.departureDate, locale)}
         />
       ) : null}
       {range?.checkIn ? (
         <Row
           label={messages.bookingJourney.sidePanel.checkIn}
-          value={formatConfigureDate(range.checkIn)}
+          value={formatConfigureDate(range.checkIn, locale)}
         />
       ) : null}
       {range?.checkOut ? (
         <Row
           label={messages.bookingJourney.sidePanel.checkOut}
-          value={formatConfigureDate(range.checkOut)}
+          value={formatConfigureDate(range.checkOut, locale)}
         />
       ) : null}
     </dl>
@@ -355,7 +357,7 @@ function OptionsDetails({
 }: {
   draft: NonNullable<SidePanelState["draft"]>
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const messages = useBookingsUiI18nOrDefault().messages
   const cfg = draft.configure ?? {}
   const selections = (cfg.optionSelections ?? []).filter((s) => (s.quantity ?? 0) > 0)
   return (
@@ -379,13 +381,13 @@ function BillingDetails({
 }: {
   draft: NonNullable<SidePanelState["draft"]>
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const c = draft.billing.contact
   const a = draft.billing.address
   const addressLine = [a.line1, a.line2, a.city, a.postal, a.country].filter(Boolean).join(", ")
   const contactName =
     (draft.billing.buyerType === "B2B" ? draft.billing.company?.name : undefined) ||
-    [c.firstName, c.lastName].filter(Boolean).join(" ")
+    personDisplayName(c, locale)
   return (
     <dl className="space-y-1 text-xs">
       <Row
@@ -423,7 +425,7 @@ function TravelersDetails({
 }: {
   draft: NonNullable<SidePanelState["draft"]>
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   if (draft.travelers.length === 0) {
     return (
       <p className="text-muted-foreground text-xs">
@@ -435,7 +437,7 @@ function TravelersDetails({
     <ul className="space-y-3 text-xs">
       {draft.travelers.map((t, i) => {
         const key = t.rowId ?? `t-${i}`
-        const name = [t.firstName, t.lastName].filter(Boolean).join(" ").trim()
+        const name = personDisplayName(t, locale)
         const docType = t.documents?.documentType as string | undefined
         const docNum = t.documents?.documentNumber as string | undefined
         const docExpiry = t.documents?.documentExpiry as string | undefined
@@ -474,7 +476,7 @@ function AccommodationDetails({
 }: {
   draft: NonNullable<SidePanelState["draft"]>
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const messages = useBookingsUiI18nOrDefault().messages
   const rooms = draft.accommodation?.rooms ?? []
   if (rooms.length === 0) {
     return (
@@ -506,7 +508,7 @@ function AddonsDetails({
 }: {
   draft: NonNullable<SidePanelState["draft"]>
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const messages = useBookingsUiI18nOrDefault().messages
   const addons = draft.addons ?? []
   if (addons.length === 0) {
     return (
@@ -532,7 +534,7 @@ function PaymentDetails({
 }: {
   draft: NonNullable<SidePanelState["draft"]>
 }): React.ReactElement {
-  const messages = useBookingsUiMessagesOrDefault()
+  const messages = useBookingsUiI18nOrDefault().messages
   const intent = draft.payment.intent
   const label =
     intent === "card"
@@ -564,15 +566,20 @@ function Row({ label, value }: { label: string; value: string }): React.ReactEle
 
 function stepLabel(
   step: JourneyStep,
-  messages: ReturnType<typeof useBookingsUiMessagesOrDefault>,
+  messages: ReturnType<typeof useBookingsUiI18nOrDefault>["messages"],
 ): string {
   if (step === "billing") return messages.bookingJourney.steps.billingAndContact
   return messages.bookingJourney.steps[step]
 }
 
-function formatMoney(cents: number, currency: string): string {
+function formatMoney(cents: number, currency: string, locale?: string | null): string {
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(cents / 100)
+    return new Intl.NumberFormat(locale ?? undefined, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(cents / 100)
   } catch {
     return `${(cents / 100).toFixed(2)} ${currency}`
   }
@@ -585,13 +592,13 @@ function formatTaxRate(rate: number): string {
 
 /** Format an ISO date (YYYY-MM-DD or full ISO) for the recap, falling back
  *  to the raw value when unparseable. Never surfaces a raw slot id. */
-function formatConfigureDate(iso: string): string {
+function formatConfigureDate(iso: string, locale?: string | null): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return iso
   // Date-only strings parse as UTC midnight; render them in UTC so the
   // calendar date is not shifted for viewers in timezones west of UTC.
   const timeZone = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? "UTC" : undefined
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale ?? undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",

@@ -111,6 +111,13 @@ export interface DefaultContractVariables {
     channel: string
     source: string
     status: string
+    /**
+     * The document's own language tag (`options.language` -> the template's
+     * language -> `"en"`). Exposed so `resolveVariables` extenders — and
+     * templates — can format on the *document's* locale instead of whatever
+     * locale the operator's admin session happens to be in.
+     */
+    language: string
   }
 
   booking: {
@@ -367,6 +374,18 @@ export interface AutoGenerateContractOptions {
    * renderer to pick the right locale for date/currency filters.
    */
   language?: string
+  /**
+   * When `true` (the default) and the booking states a document language,
+   * the active default template for that language wins over `templateSlug`
+   * and `language` — those are deployment-wide defaults, and a customer
+   * should get their contract in their own language when the operator has
+   * seeded one.
+   *
+   * Set to `false` when the caller already resolved a template deliberately
+   * (e.g. the admin "generate from defaults" route, which takes an explicit
+   * `language`), so an operator's explicit pick is never second-guessed.
+   */
+  preferBookingLanguage?: boolean
   /**
    * Optional variable extender — see `ResolveContractVariablesFn`.
    */

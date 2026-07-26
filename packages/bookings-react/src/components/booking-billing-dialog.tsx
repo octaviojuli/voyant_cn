@@ -38,8 +38,9 @@ import { Building2, Loader2, Search, User } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod/v4"
-import { useBookingsUiMessagesOrDefault } from "../i18n/provider.js"
+import { useBookingsUiI18nOrDefault } from "../i18n/provider.js"
 import { type BookingRecord, useBookingMutation } from "../index.js"
+import { orderNameFields, personDisplayName } from "../lib/person-name.js"
 
 const billingFormSchema = z.object({
   contactPartyType: z.enum(["individual", "company"]),
@@ -113,7 +114,8 @@ export function BookingBillingDialog({
   onSuccess,
 }: BookingBillingDialogProps) {
   const { update } = useBookingMutation()
-  const messages = useBookingsUiMessagesOrDefault().bookingBillingDialog
+  const { locale, messages: allMessages } = useBookingsUiI18nOrDefault()
+  const messages = allMessages.bookingBillingDialog
   const [crmPickerOpen, setCrmPickerOpen] = useState(false)
   const [personSearch, setPersonSearch] = useState("")
   const [organizationSearch, setOrganizationSearch] = useState("")
@@ -173,7 +175,10 @@ export function BookingBillingDialog({
     [organizations],
   )
   const selectedPersonLabel = selectedPersonId
-    ? formatPerson(peopleMap.get(selectedPersonId) ?? cachedPeopleRef.current.get(selectedPersonId))
+    ? formatPerson(
+        peopleMap.get(selectedPersonId) ?? cachedPeopleRef.current.get(selectedPersonId),
+        locale,
+      )
     : ""
   const selectedOrganizationLabel = selectedOrganizationId
     ? (organizationsMap.get(selectedOrganizationId)?.name ??
@@ -298,7 +303,7 @@ export function BookingBillingDialog({
     form.setValue("contactPhone", person.phone ?? "", { shouldDirty: true })
     setSelectedPersonId(person.id)
     setSelectedOrganizationId(null)
-    setPersonInputValue(formatPerson(person))
+    setPersonInputValue(formatPerson(person, locale))
     prepareAddressPrefill("person", person.id)
   }
 
@@ -457,6 +462,7 @@ export function BookingBillingDialog({
                       itemToStringLabel={(id) =>
                         formatPerson(
                           peopleMap.get(id as string) ?? cachedPeopleRef.current.get(id as string),
+                          locale,
                         ) || (id as string)
                       }
                       itemToStringValue={(id) => id as string}
@@ -488,7 +494,7 @@ export function BookingBillingDialog({
                                 <ComboboxItem key={person.id} value={person.id}>
                                   <div className="flex min-w-0 flex-col">
                                     <span className="truncate font-medium">
-                                      {formatPersonName(person)}
+                                      {personDisplayName(person, locale)}
                                     </span>
                                     {person.email ? (
                                       <span className="truncate text-xs text-muted-foreground">
@@ -509,24 +515,32 @@ export function BookingBillingDialog({
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <Label>
-                  {partyType === "company"
-                    ? messages.fields.companyName
-                    : messages.fields.firstName}
-                </Label>
-                <Input {...form.register("contactFirstName")} />
-              </div>
               {partyType === "company" ? (
-                <div className="flex flex-col gap-2">
-                  <Label>{messages.fields.taxId}</Label>
-                  <Input {...form.register("contactTaxId")} />
-                </div>
+                <>
+                  <div className="flex flex-col gap-2">
+                    <Label>{messages.fields.companyName}</Label>
+                    <Input {...form.register("contactFirstName")} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label>{messages.fields.taxId}</Label>
+                    <Input {...form.register("contactTaxId")} />
+                  </div>
+                </>
               ) : (
-                <div className="flex flex-col gap-2">
-                  <Label>{messages.fields.lastName}</Label>
-                  <Input {...form.register("contactLastName")} />
-                </div>
+                // Family-name-first locales (zh/ja/ko) read 姓 then 名, so the
+                // family-name box has to sit on the left or operators type the
+                // family name into the given-name field.
+                orderNameFields(
+                  locale,
+                  <div key="given" className="flex flex-col gap-2">
+                    <Label>{messages.fields.firstName}</Label>
+                    <Input {...form.register("contactFirstName")} />
+                  </div>,
+                  <div key="family" className="flex flex-col gap-2">
+                    <Label>{messages.fields.lastName}</Label>
+                    <Input {...form.register("contactLastName")} />
+                  </div>,
+                )
               )}
             </div>
 
@@ -603,13 +617,8 @@ export function BookingBillingDialog({
   )
 }
 
-function formatPersonName(person: PersonRecord | undefined): string {
+function formatPerson(person: PersonRecord | undefined, locale?: string | null): string {
   if (!person) return ""
-  return [person.firstName, person.lastName].filter(Boolean).join(" ").trim()
-}
-
-function formatPerson(person: PersonRecord | undefined): string {
-  if (!person) return ""
-  const name = formatPersonName(person)
+  const name = personDisplayName(person, locale)
   return person.email ? `${name} · ${person.email}` : name
 }

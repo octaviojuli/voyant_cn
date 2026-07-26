@@ -5,11 +5,13 @@ import { Button } from "@voyant-travel/ui/components/button"
 import { CreditCard, FileText, ScrollText } from "lucide-react"
 import { useMemo } from "react"
 import type { TimelineEvent, TimelineSource } from "../components/booking-activity-timeline.js"
+import { useBookingsUiI18nOrDefault } from "../i18n/provider.js"
 import {
   type BookingActionLedgerEntryRecord,
   type BookingActionLedgerTraveler,
   useBookingActionLedger,
 } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 
 /**
  * Fetch the booking's central action-ledger entries and map them into
@@ -25,6 +27,7 @@ export function useBookingActionLedgerEvents(bookingId: string): {
   footer: React.ReactNode | null
 } {
   const t = useOperatorAdminMessages().bookings.detail.actionLedger
+  const { locale } = useBookingsUiI18nOrDefault()
   const ledgerQuery = useBookingActionLedger(bookingId)
 
   const pages = useMemo(() => ledgerQuery.data?.pages ?? [], [ledgerQuery.data])
@@ -49,6 +52,7 @@ export function useBookingActionLedgerEvents(bookingId: string): {
             traveler,
             t.travelerFallback,
             t.targetBooking,
+            locale,
           ),
           actorId: entry.principalId,
           timestamp: entry.occurredAt,
@@ -57,7 +61,7 @@ export function useBookingActionLedgerEvents(bookingId: string): {
       }
     }
     return all
-  }, [pages, travelersById, t.targetBooking, t.travelerFallback])
+  }, [pages, travelersById, t.targetBooking, t.travelerFallback, locale])
 
   const footer = ledgerQuery.hasNextPage ? (
     <Button
@@ -107,9 +111,10 @@ function formatTarget(
   traveler: BookingActionLedgerTraveler | null,
   travelerFallback: string,
   bookingFallback: string,
+  locale?: string | null,
 ) {
   if (traveler) {
-    return [traveler.firstName, traveler.lastName].filter(Boolean).join(" ") || travelerFallback
+    return personDisplayName(traveler, locale) || travelerFallback
   }
   if (entry.targetType === "booking") return bookingFallback
   return entry.targetType.replaceAll("_", " ")
@@ -120,12 +125,13 @@ function formatLedgerDescription(
   traveler: BookingActionLedgerTraveler | null,
   travelerFallback: string,
   bookingFallback: string,
+  locale?: string | null,
 ) {
   // status / target / risk are machine-readable enum strings the
   // ledger ships unmodified (matches the standalone panel behaviour).
   const parts = [
     entry.status,
-    formatTarget(entry, traveler, travelerFallback, bookingFallback),
+    formatTarget(entry, traveler, travelerFallback, bookingFallback, locale),
     entry.evaluatedRisk,
   ]
   if (entry.routeOrToolName) parts.push(entry.routeOrToolName)

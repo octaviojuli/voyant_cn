@@ -40,6 +40,21 @@ const FAMILY_NAME_FIRST_LANGUAGES = new Set(["zh", "ja", "ko"])
 const CJK_PATTERN = /[぀-ヿ㐀-䶿一-鿿豈-﫿가-힯]/
 
 /**
+ * True when the locale's language customarily writes the family name before
+ * the given name (zh/ja/ko).
+ *
+ * Unlike {@link formatPersonName} this looks at the *locale only* — never at
+ * the characters in the value. Name-capture forms have to decide field order
+ * before anything has been typed, so a content sniff can't work there. This is
+ * the single source of truth for the repo-wide name-order convention:
+ * family-name field first in zh/ja/ko, given-name field first everywhere else.
+ */
+export function isFamilyNameFirstLocale(locale: string | null | undefined): boolean {
+  const language = normalizeLocale(locale).toLowerCase().split("-")[0] ?? ""
+  return FAMILY_NAME_FIRST_LANGUAGES.has(language)
+}
+
+/**
  * Locale-aware person display name. In family-name-first languages
  * (zh/ja/ko) a CJK name renders as family name + given name with no
  * separator (e.g. 张 + 伟 → 张伟); everything else renders as

@@ -31,6 +31,7 @@
  */
 import { bookingItems } from "@voyant-travel/bookings/schema"
 import { bookingPaymentSchedules } from "@voyant-travel/finance/schema"
+import { formatPersonName } from "@voyant-travel/i18n/package-formatters"
 import { relationshipsService } from "@voyant-travel/relationships"
 import { asc, eq } from "drizzle-orm"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
@@ -123,6 +124,9 @@ export function buildContractVariableBindings(
       db,
       booking.personId,
       booking.organizationId,
+      // The document's own language, not the operator's UI locale — this
+      // artifact is read by the customer.
+      defaults.contract.language,
     )
 
     // Public base URL for any external resources templates load when CF
@@ -266,6 +270,7 @@ async function resolveCustomerVariables(
   db: PostgresJsDatabase,
   personId: string | null,
   organizationId: string | null,
+  language: string,
 ): Promise<{
   firstName: string
   lastName: string
@@ -283,7 +288,10 @@ async function resolveCustomerVariables(
       .listAddresses(db, "person", person.id)
       .catch(() => [])
     const primary = addresses.find((a) => a.isPrimary) ?? addresses[0] ?? null
-    const fullName = [person.firstName, person.lastName].filter(Boolean).join(" ").trim()
+    const fullName = formatPersonName(language, {
+      firstName: person.firstName,
+      lastName: person.lastName,
+    })
     return {
       firstName: person.firstName ?? "",
       lastName: person.lastName ?? "",

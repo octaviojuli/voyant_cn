@@ -74,6 +74,8 @@ export interface BookingJourneyHostProps {
   entityImageUrl?: string
   draftId: string
   className?: string
+  /** Buyer type the billing step starts on. Defaults to `"B2C"` (个人). */
+  defaultBuyerType?: BookingJourneyProps["defaultBuyerType"]
 }
 
 export function BookingJourneyHost({
@@ -92,6 +94,7 @@ export function BookingJourneyHost({
   entityImageUrl,
   draftId,
   className,
+  defaultBuyerType,
 }: BookingJourneyHostProps): React.ReactElement {
   const navigate = useAdminNavigate()
   const entitySummary = useEntitySummary(entityModule, entityId, {
@@ -147,6 +150,7 @@ export function BookingJourneyHost({
               email: contact.email,
               phone: contact.phone,
               personId: contact.personId,
+              dateOfBirth: contact.dateOfBirth,
             })
           }
         />
@@ -178,7 +182,9 @@ export function BookingJourneyHost({
         ...(ratePlanId ? { ratePlanId } : {}),
         ...(board ? { board } : {}),
       }}
-      defaultBuyerType="B2B"
+      // No hardcoded buyer type — the journey defaults to 个人 / B2C, which is
+      // right for a leisure operator; a B2B-first deployment overrides it.
+      {...(defaultBuyerType ? { defaultBuyerType } : {})}
       // The admin in-process commit route can reserve/hold bookings. Tokenized
       // card charges, bank-transfer checkout instructions, and agency-credit
       // account collection are separate flows that this packaged host does not
@@ -314,6 +320,7 @@ function CrmLeadPicker({
       email: person.email ?? undefined,
       phone: person.phone ?? undefined,
       personId: person.id,
+      dateOfBirth: person.dateOfBirth ?? undefined,
     })
   }, [personQuery.data])
 

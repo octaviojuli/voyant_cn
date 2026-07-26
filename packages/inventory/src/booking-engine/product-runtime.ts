@@ -33,9 +33,11 @@ import { relationshipsService } from "@voyant-travel/relationships"
 import { and, asc, eq, inArray, or } from "drizzle-orm"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import {
+  allocateBookingNumber,
   deriveTravelerCategory,
   humanizeFieldKey,
   persistBookingCreateTaxLines,
+  pricingCategoryScopeClauses,
   typeForFieldKey,
 } from "./product-runtime-support.js"
 
@@ -53,6 +55,11 @@ export function registerProductBookingHandler(
 ): void {
   registry.register(
     createProductsBookingHandler({
+      // Journey commits must join the workspace's booking-number series
+      // (`VYT-CN-2026-…`) instead of the timestamp-based `BK-…` fallback.
+      async generateBookingNumber() {
+        return host.withDatabase(async (rawDb) => allocateBookingNumber(asPostgresDb(rawDb)))
+      },
       holds: {
         async place(input) {
           return host.withDatabase(async (rawDb) => {
@@ -274,10 +281,17 @@ export function registerProductBookingHandler(
                   id: optionUnits.id,
                   optionId: optionUnits.optionId,
                   name: optionUnits.name,
+                  code: optionUnits.code,
                   description: optionUnits.description,
                   unitType: optionUnits.unitType,
                   minQuantity: optionUnits.minQuantity,
                   maxQuantity: optionUnits.maxQuantity,
+                  // Age bounds + requiredness drive pax-band resolution
+                  // (`paxBandCodeForUnit`) — the journey's occupancy bands
+                  // ARE these units.
+                  minAge: optionUnits.minAge,
+                  maxAge: optionUnits.maxAge,
+                  isRequired: optionUnits.isRequired,
                 })
                 .from(optionUnits)
                 .where(
@@ -300,10 +314,14 @@ export function registerProductBookingHandler(
           units: unitsByOptionId.get(row.id)?.map((unit) => ({
             id: unit.id,
             name: unit.name,
+            code: unit.code,
             description: unit.description,
             unitType: unit.unitType,
             minQuantity: unit.minQuantity,
             maxQuantity: unit.maxQuantity,
+            minAge: unit.minAge,
+            maxAge: unit.maxAge,
+            isRequired: unit.isRequired,
           })),
         }))
       },
@@ -319,26 +337,7 @@ export function registerProductBookingHandler(
         // to the generic default bands instead of collapsing the shape.
         try {
           const db = asPostgresDb(ctx.db)
-          const optionRows = await db
-            .select({ id: productOptions.id })
-            .from(productOptions)
-            .where(
-              and(eq(productOptions.productId, productId), eq(productOptions.status, "active")),
-            )
-          const optionIds = optionRows.map((row) => row.id)
-          const unitRows =
-            optionIds.length > 0
-              ? await db
-                  .select({ id: optionUnits.id })
-                  .from(optionUnits)
-                  .where(inArray(optionUnits.optionId, optionIds))
-              : []
-          const unitIds = unitRows.map((row) => row.id)
-
-          const scopeClauses = [eq(pricingCategories.productId, productId)]
-          if (optionIds.length > 0)
-            scopeClauses.push(inArray(pricingCategories.optionId, optionIds))
-          if (unitIds.length > 0) scopeClauses.push(inArray(pricingCategories.unitId, unitIds))
+          const scopeClauses = await pricingCategoryScopeClauses(db, productId)
           const rows = await db
             .select({
               name: pricingCategories.name,
@@ -380,7 +379,9 @@ export function registerProductBookingHandler(
             })
           }
           // No traveler types configured at all → undefined so the engine
-          // keeps the generic adult/child/infant defaults.
+          // derives bands from the option's own units (成人 / 儿童 …), or
+          // keeps the generic adult/child/infant defaults when the option
+          // has no person units either. See `resolveShapePaxBands`.
           if (bands.length === 0) return undefined
           // Adults are the universal base traveler — a product can define
           // only child/infant add-on types ("Adult" is the room base price,
@@ -393,6 +394,11 @@ export function registerProductBookingHandler(
               null,
             )
             bands.push({
+              // `code` is the authoritative half of the band contract —
+              // clients localize from it. This synthesized band has no
+              // operator-authored name to borrow, so the English label is
+              // a display fallback only (the shape builder later attaches
+              // the matching option unit via `withResolvedBandUnits`).
               code: "adult",
               label: "Adult",
               ...(childMaxAge != null ? { minAge: childMaxAge + 1 } : {}),
@@ -418,26 +424,7 @@ export function registerProductBookingHandler(
         // migration) rather than failing the whole booking shape.
         try {
           const db = asPostgresDb(ctx.db)
-          const optionRows = await db
-            .select({ id: productOptions.id })
-            .from(productOptions)
-            .where(
-              and(eq(productOptions.productId, productId), eq(productOptions.status, "active")),
-            )
-          const optionIds = optionRows.map((row) => row.id)
-          const unitRows =
-            optionIds.length > 0
-              ? await db
-                  .select({ id: optionUnits.id })
-                  .from(optionUnits)
-                  .where(inArray(optionUnits.optionId, optionIds))
-              : []
-          const unitIds = unitRows.map((row) => row.id)
-
-          const scopeClauses = [eq(pricingCategories.productId, productId)]
-          if (optionIds.length > 0)
-            scopeClauses.push(inArray(pricingCategories.optionId, optionIds))
-          if (unitIds.length > 0) scopeClauses.push(inArray(pricingCategories.unitId, unitIds))
+          const scopeClauses = await pricingCategoryScopeClauses(db, productId)
           const cats = await db
             .select({ id: pricingCategories.id, categoryType: pricingCategories.categoryType })
             .from(pricingCategories)
@@ -549,6 +536,7 @@ export function registerProductBookingHandler(
           db
             .select({
               id: optionUnits.id,
+              code: optionUnits.code,
               unitType: optionUnits.unitType,
               minAge: optionUnits.minAge,
               maxAge: optionUnits.maxAge,

@@ -48,7 +48,9 @@ export function StackedJourney({
   steps: ReadonlyArray<JourneyStep>
   renderStep: (step: JourneyStep) => React.ReactNode
   isStepComplete: (step: JourneyStep) => boolean
-  commitError: unknown
+  /** Already-localized failure copy. Never a raw `Error` — the shell
+   *  classifies the commit failure before handing it down. */
+  commitError: string | null
   onCancel?: () => void
   onConfirm?: () => void
   isCommitting?: boolean
@@ -106,8 +108,8 @@ export function StackedJourney({
           })}
 
           {commitError ? (
-            <p className="text-destructive text-sm">
-              {commitError instanceof Error ? commitError.message : String(commitError)}
+            <p className="text-destructive text-sm" role="alert" aria-live="polite">
+              {commitError}
             </p>
           ) : null}
 

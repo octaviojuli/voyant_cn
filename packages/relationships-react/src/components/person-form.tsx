@@ -1,6 +1,7 @@
 // agent-quality: file-size exception -- owner: relationships-react; existing UI surface stays co-located until a dedicated split preserves behavior and tests.
 "use client"
 
+import { isFamilyNameFirstLocale } from "@voyant-travel/i18n"
 import { useAddressMutation } from "@voyant-travel/identity-react"
 import { Button } from "@voyant-travel/ui/components/button"
 import { CountryCombobox } from "@voyant-travel/ui/components/country-combobox"
@@ -17,7 +18,7 @@ import {
 } from "@voyant-travel/ui/components/select"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 import * as React from "react"
-import { useCrmUiMessagesOrDefault } from "../i18n/index.js"
+import { useCrmUiI18nOrDefault, useCrmUiMessagesOrDefault } from "../i18n/index.js"
 import {
   type CreatePersonDocumentFromPlaintextInput,
   type CreatePersonInput,
@@ -28,6 +29,7 @@ import {
   usePersonDocuments,
   usePersonMutation,
 } from "../index.js"
+import { resolveDefaultPhoneCountry } from "../lib/locale-defaults.js"
 import { PersonAddressesSection } from "./person-addresses-section.js"
 import { PersonRelationshipsSection } from "./person-relationships-section.js"
 
@@ -150,7 +152,13 @@ export function PersonForm({ mode, initialOrganizationId, onSuccess, onCancel }:
   const [createdPerson, setCreatedPerson] = React.useState<PersonRecord | null>(null)
   const { create, update } = usePersonMutation()
   const addressMutation = useAddressMutation()
-  const messages = useCrmUiMessagesOrDefault()
+  const { locale, messages } = useCrmUiI18nOrDefault()
+  // Name-order convention: in family-name-first languages (zh/ja/ko) the 姓
+  // field comes first, so an operator reading left-to-right types the family
+  // name into the family-name box. Only the layout flips — `firstName` stays
+  // the given name in state and on the wire.
+  const familyNameFirst = isFamilyNameFirstLocale(locale)
+  const defaultPhoneCountry = resolveDefaultPhoneCountry(locale)
   const effectivePerson: PersonRecord | null =
     createdPerson ?? (mode.kind === "edit" ? mode.person : null)
   const editPersonId = effectivePerson?.id
@@ -218,6 +226,24 @@ export function PersonForm({ mode, initialOrganizationId, onSuccess, onCancel }:
     }
   }
 
+  const givenNameField = (
+    <div key="given-name" className="flex flex-col gap-1.5">
+      <Label htmlFor="person-first-name">{messages.personForm.fields.firstName}</Label>
+      <Input
+        id="person-first-name"
+        required
+        value={state.firstName}
+        onChange={field("firstName")}
+      />
+    </div>
+  )
+  const familyNameField = (
+    <div key="family-name" className="flex flex-col gap-1.5">
+      <Label htmlFor="person-last-name">{messages.personForm.fields.lastName}</Label>
+      <Input id="person-last-name" required value={state.lastName} onChange={field("lastName")} />
+    </div>
+  )
+
   return (
     <form data-slot="person-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
       <section className="flex flex-col gap-3">
@@ -225,24 +251,7 @@ export function PersonForm({ mode, initialOrganizationId, onSuccess, onCancel }:
           {messages.personForm.sections.identity}
         </h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="person-first-name">{messages.personForm.fields.firstName}</Label>
-            <Input
-              id="person-first-name"
-              required
-              value={state.firstName}
-              onChange={field("firstName")}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="person-last-name">{messages.personForm.fields.lastName}</Label>
-            <Input
-              id="person-last-name"
-              required
-              value={state.lastName}
-              onChange={field("lastName")}
-            />
-          </div>
+          {familyNameFirst ? [familyNameField, givenNameField] : [givenNameField, familyNameField]}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="person-job-title">{messages.personForm.fields.jobTitle}</Label>
             <Input id="person-job-title" value={state.jobTitle} onChange={field("jobTitle")} />
@@ -271,7 +280,9 @@ export function PersonForm({ mode, initialOrganizationId, onSuccess, onCancel }:
             <PhoneInput
               id="person-phone"
               international
-              defaultCountry="RO"
+              defaultCountry={
+                defaultPhoneCountry as React.ComponentProps<typeof PhoneInput>["defaultCountry"]
+              }
               value={state.phone}
               onChange={(value) =>
                 setState((prev) => ({ ...prev, phone: (value as string) ?? "" }))
@@ -342,6 +353,7 @@ export function PersonForm({ mode, initialOrganizationId, onSuccess, onCancel }:
                 {messages.personForm.fields.addressCountry}
               </Label>
               <CountryCombobox
+                messages={messages.common.countryCombobox}
                 value={state.addressCountry || null}
                 onChange={(code) => setState((prev) => ({ ...prev, addressCountry: code ?? "" }))}
               />

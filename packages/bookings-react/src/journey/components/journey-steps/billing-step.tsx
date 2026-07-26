@@ -13,6 +13,7 @@ import {
   Field,
   JourneyErrors,
   JourneyWarnings,
+  NameFields,
   PhoneField,
   type StepCommonProps,
 } from "./shared.js"
@@ -111,23 +112,21 @@ export function BillingStep({
         {renderLeadContactPicker ? null : (
           <>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Field
-                id="bj-billing-firstName"
-                label={messages.bookingJourney.billing.firstName}
-                value={billing.contact.firstName}
-                onChange={(v) =>
+              <NameFields
+                givenNameId="bj-billing-firstName"
+                familyNameId="bj-billing-lastName"
+                givenNameLabel={messages.bookingJourney.billing.firstName}
+                familyNameLabel={messages.bookingJourney.billing.lastName}
+                givenName={billing.contact.firstName}
+                familyName={billing.contact.lastName}
+                onGivenNameChange={(v) =>
                   setDraft(
                     patchBilling(draft, {
                       contact: { ...billing.contact, firstName: v },
                     }),
                   )
                 }
-              />
-              <Field
-                id="bj-billing-lastName"
-                label={messages.bookingJourney.billing.lastName}
-                value={billing.contact.lastName}
-                onChange={(v) =>
+                onFamilyNameChange={(v) =>
                   setDraft(
                     patchBilling(draft, {
                       contact: { ...billing.contact, lastName: v },

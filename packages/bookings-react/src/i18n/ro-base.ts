@@ -22,6 +22,8 @@ export const bookingsUiRoBase = {
       rejected: "Respins",
       cancelled: "Anulat",
     },
+    // i18n-literal-ok date-fns display patterns, not user copy.
+    datePickerFormats: { long: "d LLLL y", compact: "d LLL y", longWithTime: "d LLLL y HH:mm" },
   },
   bookingsPage: {
     title: "Rezervari",

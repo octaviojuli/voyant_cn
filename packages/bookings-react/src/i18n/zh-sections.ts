@@ -91,7 +91,7 @@ export const bookingsUiZhSections = {
     },
     scheduleStatusLabels: {
       pending: "待处理",
-      due: "已到期",
+      due: "应付",
       paid: "已付款",
       waived: "已豁免",
       cancelled: "已取消",

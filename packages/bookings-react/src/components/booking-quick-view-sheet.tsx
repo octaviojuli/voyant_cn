@@ -63,6 +63,7 @@ import {
   useRevealTraveler,
   useTravelers,
 } from "../index.js"
+import { personDisplayName } from "../lib/person-name.js"
 
 export interface BookingQuickViewSheetProps {
   bookingId: string | null | undefined
@@ -192,7 +193,7 @@ function QuickViewBody({ booking, locale }: { booking: BookingRecord; locale: st
 }
 
 function ContactSection({ booking }: { booking: BookingRecord }) {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const quick = messages.bookingQuickViewSheet
   // Source of truth for billing snapshot is the booking row itself —
   // those `contact_*` columns are stamped at create time and persist
@@ -207,8 +208,11 @@ function ContactSection({ booking }: { booking: BookingRecord }) {
   }).data
 
   const name =
-    [booking.contactFirstName, booking.contactLastName].filter(Boolean).join(" ") ||
-    (person ? [person.firstName, person.lastName].filter(Boolean).join(" ") : "") ||
+    personDisplayName(
+      { firstName: booking.contactFirstName, lastName: booking.contactLastName },
+      locale,
+    ) ||
+    personDisplayName(person, locale) ||
     organization?.name ||
     ""
   const email = booking.contactEmail ?? person?.email ?? null
@@ -352,7 +356,7 @@ function TravelerCard({
   const revealed = revealQuery.data?.data ?? null
   const travelDetails = revealed?.travelDetails ?? null
 
-  const name = [traveler.firstName, traveler.lastName].filter(Boolean).join(" ").trim()
+  const name = personDisplayName(traveler, locale)
   const category = traveler.travelerCategory ?? null
   const categoryLabel = category
     ? (quick.travelerCategoryLabels[category as keyof typeof quick.travelerCategoryLabels] ??

@@ -32,7 +32,8 @@ import {
 } from "@voyant-travel/ui/components/combobox"
 import { Pencil, UserPlus } from "lucide-react"
 import * as React from "react"
-import { useBookingsUiMessagesOrDefault } from "../i18n/provider.js"
+import { useBookingsUiI18nOrDefault } from "../i18n/provider.js"
+import { personDisplayName } from "../lib/person-name.js"
 import {
   getDynamicTravelerCategoryButtonState,
   getSelectableTravelerCategoryUnits,
@@ -69,6 +70,7 @@ export function TravelerPersonPicker({
   onSelect: (person: PersonRecord) => void
   onClear: () => void
 }) {
+  const { locale } = useBookingsUiI18nOrDefault()
   const [search, setSearch] = React.useState("")
   const [inputValue, setInputValue] = React.useState("")
   // One Sheet serves both flows: create when there's no selected person,
@@ -88,7 +90,7 @@ export function TravelerPersonPicker({
     () => new Map(people.map((person) => [person.id, person])),
     [people],
   )
-  const selectedLabel = personId ? formatPerson(peopleMap.get(personId)) : ""
+  const selectedLabel = personId ? formatPerson(peopleMap.get(personId), locale) : ""
 
   React.useEffect(() => {
     if (selectedLabel) setInputValue(selectedLabel)
@@ -139,7 +141,9 @@ export function TravelerPersonPicker({
         // input display. Without it, base-ui falls back to the raw
         // value (a `pers_…` typeid), so typing "eliza" matches
         // nothing and the trigger shows the id instead of the name.
-        itemToStringLabel={(id) => formatPerson(peopleMap.get(id as string)) || (id as string)}
+        itemToStringLabel={(id) =>
+          formatPerson(peopleMap.get(id as string), locale) || (id as string)
+        }
         itemToStringValue={(id) => id as string}
         onInputValueChange={(next) => {
           setInputValue(next)
@@ -149,7 +153,7 @@ export function TravelerPersonPicker({
         onValueChange={(next) => {
           const nextPerson = peopleMap.get((next as string | null) ?? "")
           if (nextPerson) onSelect(nextPerson)
-          setInputValue(nextPerson ? formatPerson(nextPerson) : "")
+          setInputValue(nextPerson ? formatPerson(nextPerson, locale) : "")
         }}
       >
         <ComboboxInput placeholder={labels.personSearchPlaceholder} showClear={!!personId} />
@@ -163,7 +167,9 @@ export function TravelerPersonPicker({
                 return (
                   <ComboboxItem key={person.id} value={person.id}>
                     <div className="flex min-w-0 flex-col">
-                      <span className="truncate font-medium">{formatPersonName(person)}</span>
+                      <span className="truncate font-medium">
+                        {personDisplayName(person, locale)}
+                      </span>
                       {person.email ? (
                         <span className="truncate text-xs text-muted-foreground">
                           {person.email}
@@ -194,7 +200,7 @@ export function TravelerPersonPicker({
               onCancel={() => setSheetOpen(false)}
               onSuccess={(saved) => {
                 onSelect(saved)
-                setInputValue(formatPerson(saved))
+                setInputValue(formatPerson(saved, locale))
                 setSheetOpen(false)
               }}
             />
@@ -231,14 +237,9 @@ export function createTravelerFromPerson(person: PersonRecord, role: TravelerRol
   }
 }
 
-function formatPersonName(person: PersonRecord | undefined): string {
+function formatPerson(person: PersonRecord | undefined, locale?: string | null): string {
   if (!person) return ""
-  return [person.firstName, person.lastName].filter(Boolean).join(" ").trim()
-}
-
-function formatPerson(person: PersonRecord | undefined): string {
-  if (!person) return ""
-  const name = formatPersonName(person)
+  const name = personDisplayName(person, locale)
   return person.email ? `${name} · ${person.email}` : name
 }
 
@@ -444,12 +445,12 @@ export function RelatedPersonChip({
   addLabel: string
   onAdd: (person: PersonRecord) => void
 }) {
-  const messages = useBookingsUiMessagesOrDefault()
+  const { locale, messages } = useBookingsUiI18nOrDefault()
   const kindLabels = messages.travelersSection.relationshipKindLabels
   const query = usePerson(personId)
   const person = query.data
   if (!person) return null
-  const name = formatPersonName(person) || personId
+  const name = personDisplayName(person, locale) || personId
   const kindLabel = kindLabels[kind as keyof typeof kindLabels] ?? kind
   return (
     <Button

@@ -22,6 +22,8 @@ export const bookingsUiEnBase = {
       rejected: "Rejected",
       cancelled: "Cancelled",
     },
+    // i18n-literal-ok date-fns display patterns, not user copy.
+    datePickerFormats: { long: "PPP", compact: "LLL d, y", longWithTime: "PPp" },
   },
   bookingsPage: {
     title: "Bookings",
