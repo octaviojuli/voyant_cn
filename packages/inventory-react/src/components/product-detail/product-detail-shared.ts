@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import { formatMessage } from "@voyant-travel/i18n"
+import { instantToSlotLocal } from "@voyant-travel/operations/scheduling"
 import type { ProductRecord } from "../../index.js"
 import type { ProductDetailApi, ProductMessagesRoot } from "./host.js"
 
@@ -262,14 +263,70 @@ export function formatMargin(percent: number | null): string {
   return `${percent.toFixed(0)}%`
 }
 
-export function formatSlotTime(iso: string): string {
-  const date = new Date(iso)
-  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`
+// ─────────────────────────────────────────────────────────────────────────────
+// Slot instant → wall clock
+//
+// A departure's `startsAt` / `endsAt` are instants (UTC). They only mean
+// anything to an operator when rendered in the slot's *own* timezone — the
+// same rule the service applies when it validates `dateLocal`. Rendering the
+// raw UTC fields made every Asia/Shanghai departure look like it leaves at
+// midnight, and disagreed with the availability pages, which already render
+// through `@voyant-travel/operations/scheduling`. Both surfaces now share that
+// one helper instead of keeping two conversions.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Wall-clock parts of an instant in `timezone`, or `null` when either value is
+ * unusable (an unknown IANA id, an unparseable instant). Callers degrade to the
+ * "no value" placeholder rather than crashing a whole table row.
+ */
+function slotLocalParts(iso: string, timezone: string): { date: string; time: string } | null {
+  try {
+    return instantToSlotLocal(iso, timezone)
+  } catch {
+    return null
+  }
 }
 
-export function formatSlotDate(iso: string): string {
-  const date = new Date(iso)
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`
+/** `HH:mm` of `iso` as read in the slot's own timezone. */
+export function formatSlotTime(iso: string, timezone: string): string {
+  return slotLocalParts(iso, timezone)?.time ?? "-"
+}
+
+/** `YYYY-MM-DD` of `iso` as read in the slot's own timezone. */
+export function formatSlotDate(iso: string, timezone: string): string {
+  return slotLocalParts(iso, timezone)?.date ?? "-"
+}
+
+/**
+ * Short offset label (e.g. `GMT+8`) for an instant in `timezone`, or `null`
+ * when the timezone is unknown. Produced by `Intl`, so it is already localized.
+ */
+export function formatSlotTimezoneOffset(iso: string, timezone: string): string | null {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      timeZoneName: "shortOffset",
+    }).formatToParts(new Date(iso))
+    return parts.find((part) => part.type === "timeZoneName")?.value ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * `true` when the slot runs on a different clock than the operator is sitting
+ * on, i.e. when the rendered times need an offset marker to be unambiguous.
+ * A Chinese operator looking at Asia/Shanghai departures sees no marker.
+ */
+export function isForeignSlotTimezone(
+  slotTimezone: string,
+  browserTimezone: string | null = getBrowserTimezone(),
+): boolean {
+  const slotTz = slotTimezone.trim()
+  const browserTz = browserTimezone?.trim()
+  if (!slotTz || !browserTz) return false
+  return slotTz !== browserTz
 }
 
 export type DepartureDurationMessages = ProductMessagesRoot["products"]["core"]["departureDuration"]
@@ -308,8 +365,12 @@ export function formatDuration(slot: DepartureSlot, messages: ProductMessagesRoo
   if (hours < 24) {
     return formatMessage(duration.hours, { count: hours.toFixed(hours % 1 === 0 ? 0 : 1) })
   }
-  const startDate = formatSlotDate(slot.startsAt)
-  const endDate = formatSlotDate(slot.endsAt)
+  // Calendar nights are counted on the slot's own calendar: a departure that
+  // ends at 04:00 UTC is still "the same evening" in Asia/Shanghai, and the
+  // UTC dates would have counted an extra night.
+  const startDate = slotLocalParts(slot.startsAt, slot.timezone)?.date
+  const endDate = slotLocalParts(slot.endsAt, slot.timezone)?.date
+  if (!startDate || !endDate) return "-"
   const nights = Math.round(
     (new Date(`${endDate}T00:00:00Z`).getTime() - new Date(`${startDate}T00:00:00Z`).getTime()) /
       86_400_000,

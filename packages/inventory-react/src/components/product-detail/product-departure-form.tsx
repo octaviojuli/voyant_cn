@@ -1,6 +1,8 @@
 // agent-quality: file-size exception -- owner: inventory-react; existing UI surface stays co-located until a dedicated split preserves behavior and tests.
 
+import { useQuery } from "@tanstack/react-query"
 import { formatMessage } from "@voyant-travel/i18n"
+import { instantToSlotLocal, localToInstant } from "@voyant-travel/operations/scheduling"
 import {
   Button,
   Input,
@@ -30,7 +32,10 @@ import { z } from "zod/v4"
 import { useProduct, useProductItineraries, useProductOptions } from "../../index.js"
 import { useProductResourceTemplates } from "./commerce-client.js"
 import { useProductDetailApi, useProductDetailMessages } from "./host.js"
-import { resolveProductTimezoneDefault } from "./product-detail-shared.js"
+import {
+  getProductDetailDaysQueryOptions,
+  resolveProductTimezoneDefault,
+} from "./product-detail-shared.js"
 import { getTimezoneLabel, TIMEZONE_IDS, TIMEZONE_OPTIONS } from "./timezone-options.js"
 import { zodResolver } from "./zod-resolver.js"
 
@@ -106,33 +111,84 @@ export interface DepartureFormProps {
   onCancel?: () => void
 }
 
-function combineLocalToIso(date: string, time: string): string {
-  const iso = new Date(`${date}T${time}:00Z`).toISOString()
-  return iso
+// ─────────────────────────────────────────────────────────────────────────────
+// Wall clock ⇄ instant
+//
+// The operator types a wall-clock time on the *departure's* calendar, and the
+// service validates `dateLocal` against `startsAt` rendered in that same
+// timezone. Reading and writing these fields as UTC made a 09:00 Shanghai
+// departure store 09:00Z (17:00 local) and made every stored departure read
+// back at its UTC hour. Both directions now go through the same helper the
+// availability pages use.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function combineLocalToIso(date: string, time: string, timezone: string): string {
+  try {
+    return localToInstant({ date, time, timezone })
+  } catch {
+    // The only realistic failure is a wall-clock time that does not exist in
+    // this zone (a DST spring-forward gap). Fall back to reading the input as
+    // UTC rather than blocking the save.
+    return new Date(`${date}T${time}:00Z`).toISOString()
+  }
 }
 
-function isoToLocalDate(iso: string): string {
-  const d = new Date(iso)
-  const y = d.getUTCFullYear()
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0")
-  const day = String(d.getUTCDate()).padStart(2, "0")
-  return `${y}-${m}-${day}`
+function isoToLocalDate(iso: string, timezone: string): string {
+  try {
+    return instantToSlotLocal(iso, timezone).date
+  } catch {
+    return ""
+  }
 }
 
-function isoToLocalTime(iso: string): string {
-  const d = new Date(iso)
-  const hh = String(d.getUTCHours()).padStart(2, "0")
-  const mm = String(d.getUTCMinutes()).padStart(2, "0")
-  return `${hh}:${mm}`
+function isoToLocalTime(iso: string, timezone: string): string {
+  try {
+    return instantToSlotLocal(iso, timezone).time
+  } catch {
+    return ""
+  }
+}
+
+const LOCAL_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+
+/** `date` shifted by whole calendar days, or `null` when `date` is unusable. */
+export function addCalendarDays(date: string, days: number): string | null {
+  const match = LOCAL_DATE_PATTERN.exec(date)
+  if (!match) return null
+  const shifted = new Date(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) + days * 86_400_000,
+  )
+  if (Number.isNaN(shifted.getTime())) return null
+  const month = String(shifted.getUTCMonth() + 1).padStart(2, "0")
+  const day = String(shifted.getUTCDate()).padStart(2, "0")
+  return `${shifted.getUTCFullYear()}-${month}-${day}`
+}
+
+/**
+ * Length of the product's itinerary in day rows. `dayNumber` is the authority
+ * (1..N); the row count is only a floor for defensive cases where the numbers
+ * are missing or duplicated.
+ */
+export function itineraryDayCount(days: ReadonlyArray<{ dayNumber: number }>): number {
+  return days.reduce((max, day) => Math.max(max, day.dayNumber), days.length)
+}
+
+/**
+ * Nights implied by an itinerary of `dayCount` days: 12 days ⇒ 11 nights.
+ * A 0- or 1-day itinerary implies no overnight, so nothing is derived and the
+ * end date stays optional exactly as it is today for single-day products.
+ */
+export function itineraryNightCount(dayCount: number): number {
+  return dayCount > 1 ? dayCount - 1 : 0
 }
 
 function initialValues(slot: DepartureSlot | undefined, defaultTz: string): DepartureFormValues {
   if (slot) {
     return {
       startDate: slot.dateLocal,
-      startTime: isoToLocalTime(slot.startsAt),
-      endDate: slot.endsAt ? isoToLocalDate(slot.endsAt) : "",
-      endTime: slot.endsAt ? isoToLocalTime(slot.endsAt) : "",
+      startTime: isoToLocalTime(slot.startsAt, slot.timezone),
+      endDate: slot.endsAt ? isoToLocalDate(slot.endsAt, slot.timezone) : "",
+      endTime: slot.endsAt ? isoToLocalTime(slot.endsAt, slot.timezone) : "",
       itineraryId: slot.itineraryId ?? "",
       optionId: slot.optionId ?? "",
       timezone: slot.timezone,
@@ -235,6 +291,21 @@ export function DepartureForm({ productId, slot, onSuccess, onCancel }: Departur
     }
   }, [isEditing, suggestedPax, form])
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // Derived departure length
+  //
+  // A tour's length is fixed by its itinerary, so the operator should only pick
+  // the START date. `GET /v1/admin/products/{id}/days` returns the day rows of
+  // the product's default itinerary (dayNumber 1..N), so N days ⇒ N-1 nights ⇒
+  // the departure ends N-1 days after it starts. `undefined` data means the
+  // query has not resolved yet: never stamp a value we would have to correct.
+  // ───────────────────────────────────────────────────────────────────────────
+  const { data: dayData } = useQuery(getProductDetailDaysQueryOptions(api, productId))
+  const itineraryDays = dayData ? itineraryDayCount(dayData.data) : null
+  const itineraryNights = itineraryDays == null ? null : itineraryNightCount(itineraryDays)
+  /** `true` once we know the itinerary spans at least one overnight. */
+  const hasDerivedLength = itineraryDays != null && itineraryNights != null && itineraryNights > 0
+
   const nights = (() => {
     if (!startDate || !endDate || typeof endDate !== "string" || endDate.length === 0) return 0
     const start = new Date(`${startDate}T00:00:00Z`).getTime()
@@ -249,9 +320,74 @@ export function DepartureForm({ productId, slot, onSuccess, onCancel }: Departur
   const defaultTzRef = useRef(defaultTz)
   defaultTzRef.current = defaultTz
 
+  // Same dirty-guard discipline as the timezone default: anything the operator
+  // typed by hand is never recomputed underneath them. `endDateEditedRef` stays
+  // `false` when editing an existing slot so that moving the start date still
+  // drags the itinerary-derived end along; the stored end *time* is treated as
+  // operator-authored, because there is no other place it could have come from.
+  const endDateEditedRef = useRef(false)
+  const endTimeEditedRef = useRef(Boolean(slot?.endsAt))
+  const durationEditedRef = useRef(false)
+  const prefilledDurationRef = useRef(false)
+  /** Last start date the end date was derived from — `null` means "not yet". */
+  const derivedFromStartRef = useRef<string | null>(slot ? slot.dateLocal : null)
+
   useEffect(() => {
     form.reset(initialValues(slot, defaultTzRef.current))
+    endDateEditedRef.current = false
+    endTimeEditedRef.current = Boolean(slot?.endsAt)
+    durationEditedRef.current = false
+    prefilledDurationRef.current = false
+    derivedFromStartRef.current = slot ? slot.dateLocal : null
   }, [slot, form])
+
+  // Auto-fill the end date (and a sensible end time) whenever the operator
+  // picks or changes the start date. Deliberately ordered so that a start date
+  // chosen *before* the itinerary loads is still filled in once it arrives.
+  useEffect(() => {
+    if (!startDate) {
+      // Nothing to derive from — and re-picking the same date later should
+      // still fill the end date in, so forget what we last derived from.
+      derivedFromStartRef.current = null
+      return
+    }
+    if (derivedFromStartRef.current === startDate) return
+    if (itineraryNights == null) return
+    derivedFromStartRef.current = startDate
+    if (itineraryNights <= 0) return
+
+    if (!endDateEditedRef.current) {
+      const derivedEndDate = addCalendarDays(startDate, itineraryNights)
+      if (derivedEndDate) {
+        form.setValue("endDate", derivedEndDate, { shouldDirty: false, shouldValidate: true })
+      }
+    }
+    if (!endTimeEditedRef.current) {
+      // Mirror the start time: a 12-day tour that leaves at 09:00 comes back at
+      // 09:00 on day 12 unless the operator says otherwise.
+      const startTime = form.getValues("startTime")
+      if (startTime) {
+        form.setValue("endTime", startTime, { shouldDirty: false, shouldValidate: true })
+      }
+    }
+  }, [startDate, itineraryNights, form])
+
+  // Nights / days follow only the itinerary, so they are stamped once, and only
+  // while both fields are still empty (a stored override survives an edit).
+  useEffect(() => {
+    if (prefilledDurationRef.current || durationEditedRef.current) return
+    if (itineraryDays == null || itineraryNights == null || itineraryNights <= 0) return
+    const currentNights = form.getValues("nights")
+    const currentDays = form.getValues("days")
+    const isBlank = (value: unknown) => value === "" || value == null
+    if (!isBlank(currentNights) || !isBlank(currentDays)) {
+      prefilledDurationRef.current = true
+      return
+    }
+    prefilledDurationRef.current = true
+    form.setValue("nights", itineraryNights, { shouldDirty: false })
+    form.setValue("days", itineraryDays, { shouldDirty: false })
+  }, [itineraryDays, itineraryNights, form])
 
   // Adopt the product's timezone once it loads, but only for a new departure
   // whose timezone field the operator has not touched yet.
@@ -279,7 +415,7 @@ export function DepartureForm({ productId, slot, onSuccess, onCancel }: Departur
   }, [defaultOption, form])
 
   const onSubmit = async (values: DepartureFormOutput) => {
-    const startsAt = combineLocalToIso(values.startDate, values.startTime)
+    const startsAt = combineLocalToIso(values.startDate, values.startTime, values.timezone)
 
     const effectiveEndDate =
       values.endDate && typeof values.endDate === "string" && values.endDate.length > 0
@@ -292,7 +428,11 @@ export function DepartureForm({ productId, slot, onSuccess, onCancel }: Departur
 
     const endsAt =
       hasEndTime || hasExplicitEndDate
-        ? combineLocalToIso(effectiveEndDate, hasEndTime ? (values.endTime as string) : "18:00")
+        ? combineLocalToIso(
+            effectiveEndDate,
+            hasEndTime ? (values.endTime as string) : "18:00",
+            values.timezone,
+          )
         : null
 
     const initialPax =
@@ -380,17 +520,20 @@ export function DepartureForm({ productId, slot, onSuccess, onCancel }: Departur
             <Label>
               {departureMessages.endDateLabel}{" "}
               <span className="text-muted-foreground font-normal">
-                {departureMessages.endDateOptional}
+                {hasDerivedLength
+                  ? departureMessages.endDateAuto
+                  : departureMessages.endDateOptional}
               </span>
             </Label>
             <DatePicker
               value={typeof endDate === "string" && endDate.length > 0 ? endDate : null}
-              onChange={(v) =>
+              onChange={(v) => {
+                endDateEditedRef.current = true
                 form.setValue("endDate", v ?? "", {
                   shouldValidate: true,
                   shouldDirty: true,
                 })
-              }
+              }}
               placeholder={departureMessages.datePlaceholder}
               clearable
               dateDisabled={startDate ? { before: new Date(`${startDate}T00:00:00`) } : undefined}
@@ -403,29 +546,52 @@ export function DepartureForm({ productId, slot, onSuccess, onCancel }: Departur
             <Label>
               {departureMessages.endTimeLabel}{" "}
               <span className="text-muted-foreground font-normal">
-                {departureMessages.endTimeOptional}
+                {hasDerivedLength
+                  ? departureMessages.endTimeAuto
+                  : departureMessages.endTimeOptional}
               </span>
             </Label>
-            <Input {...form.register("endTime")} type="time" />
+            <Input
+              {...form.register("endTime", {
+                onChange: () => {
+                  endTimeEditedRef.current = true
+                },
+              })}
+              type="time"
+            />
             {form.formState.errors.endTime && (
               <p className="text-xs text-destructive">{form.formState.errors.endTime.message}</p>
             )}
           </div>
         </div>
+        {hasDerivedLength ? (
+          <p className="text-xs text-muted-foreground" data-testid="itinerary-length-hint">
+            {formatMessage(departureMessages.itineraryLengthHint, {
+              days: itineraryDays,
+              nights: itineraryNights,
+            })}
+          </p>
+        ) : null}
         {nights > 0 && (
           <>
-            <p className="text-xs text-muted-foreground">
-              {formatMessage(departureMessages.multiDayHint, {
-                nights,
-                nightSuffix: nights === 1 ? "" : "s",
-                days: nights + 1,
-              })}
-            </p>
+            {hasDerivedLength ? null : (
+              <p className="text-xs text-muted-foreground">
+                {formatMessage(departureMessages.multiDayHint, {
+                  nights,
+                  nightSuffix: nights === 1 ? "" : "s",
+                  days: nights + 1,
+                })}
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <Label>{departureMessages.nightsOverrideLabel}</Label>
                 <Input
-                  {...form.register("nights")}
+                  {...form.register("nights", {
+                    onChange: () => {
+                      durationEditedRef.current = true
+                    },
+                  })}
                   type="number"
                   min="0"
                   step="1"
@@ -435,7 +601,11 @@ export function DepartureForm({ productId, slot, onSuccess, onCancel }: Departur
               <div className="flex flex-col gap-1.5">
                 <Label>{departureMessages.daysOverrideLabel}</Label>
                 <Input
-                  {...form.register("days")}
+                  {...form.register("days", {
+                    onChange: () => {
+                      durationEditedRef.current = true
+                    },
+                  })}
                   type="number"
                   min="0"
                   step="1"

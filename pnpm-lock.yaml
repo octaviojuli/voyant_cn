@@ -2685,6 +2685,9 @@ importers:
       '@voyant-travel/inventory':
         specifier: workspace:^
         version: link:../inventory
+      '@voyant-travel/operations':
+        specifier: workspace:^
+        version: link:../operations
       '@voyant-travel/storefront-react':
         specifier: workspace:^
         version: link:../storefront-react

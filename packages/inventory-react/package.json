@@ -43,6 +43,7 @@
     "@voyant-travel/finance": "workspace:^",
     "@voyant-travel/finance-react": "workspace:^",
     "@voyant-travel/inventory": "workspace:^",
+    "@voyant-travel/operations": "workspace:^",
     "@voyant-travel/storefront-react": "workspace:^",
     "@voyant-travel/ui": "workspace:^",
     "@voyant-travel/utils": "workspace:^",
@@ -62,6 +63,9 @@
       "optional": true
     },
     "@voyant-travel/finance-react": {
+      "optional": true
+    },
+    "@voyant-travel/operations": {
       "optional": true
     },
     "@voyant-travel/storefront-react": {
@@ -94,6 +98,7 @@
     "@voyant-travel/finance-react": "workspace:^",
     "@voyant-travel/i18n": "workspace:^",
     "@voyant-travel/inventory": "workspace:^",
+    "@voyant-travel/operations": "workspace:^",
     "@voyant-travel/storefront-react": "workspace:^",
     "@voyant-travel/react": "workspace:^",
     "@voyant-travel/ui": "workspace:^",

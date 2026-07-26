@@ -34,8 +34,12 @@ export const operatorAdminProductsZhOperations: OperatorAdminProductsMessages["p
       startTimeLabel: "开始时间",
       endDateLabel: "结束日期",
       endDateOptional: "(可选)",
+      endDateAuto: "(按行程自动推算，可改)",
       endTimeLabel: "结束时间",
       endTimeOptional: "(可选)",
+      endTimeAuto: "(自动填充，可改)",
+      itineraryLengthHint:
+        "时长取自行程：{days} 天 {nights} 晚。结束日期与时长按开始日期自动推算，可手动修改覆盖。",
       datePlaceholder: "选择日期",
       timezoneLabel: "时区",
       timezoneSearchPlaceholder: "搜索时区…",
