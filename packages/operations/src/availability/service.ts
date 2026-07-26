@@ -69,6 +69,7 @@ import {
   updatePickupPoint,
   updateSlotPickup,
 } from "./service-pickups.js"
+import { generateSlotsForRule } from "./service-slot-generation.js"
 import { getSlotUnitAvailability } from "./service-unit-availability.js"
 
 export const availabilityService = {
@@ -88,6 +89,7 @@ export const availabilityService = {
   createRule,
   updateRule,
   deleteRule,
+  generateSlotsForRule,
   listStartTimes,
   getStartTimeById,
   createStartTime,

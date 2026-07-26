@@ -49,6 +49,7 @@ import {
   availabilitySlotListQuerySchema,
   availabilitySlotStatusSchema,
   availabilityStartTimeListQuerySchema,
+  generateRuleSlotsSchema,
   insertAvailabilityCloseoutSchema,
   insertAvailabilityRuleSchema,
   insertAvailabilitySlotSchema,
@@ -414,6 +415,56 @@ const updateRuleRoute = createRoute({
   },
 })
 
+/**
+ * Materialize departure slots from a recurrence rule.
+ *
+ * The body is declared `required: false` on purpose (§16's `required: true`
+ * rule exists so a headerless PATCH cannot silently no-op a partial patch — an
+ * absent body here legitimately means "use the default horizon", so
+ * `@hono/zod-openapi` handing the handler `{}` is the intended contract, not a
+ * dropped payload). A body sent WITH `Content-Type: application/json` is still
+ * fully validated through the shared `openApiValidationHook`.
+ */
+const generateRuleSlotsRoute = createRoute({
+  method: "post",
+  path: "/rules/{id}/generate-slots",
+  request: {
+    params: idParamSchema,
+    body: {
+      required: false,
+      content: { "application/json": { schema: generateRuleSlotsSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description:
+        "Slot-generation result. `created` counts newly materialized departures, " +
+        "`skipped` counts dates that already had a slot for this rule, and " +
+        "`horizonDays` echoes the horizon actually applied. An inactive rule is a " +
+        "no-op (`created: 0`), not an error.",
+      content: {
+        "application/json": {
+          schema: z.object({
+            data: z.object({
+              created: z.number().int(),
+              skipped: z.number().int(),
+              horizonDays: z.number().int(),
+            }),
+          }),
+        },
+      },
+    },
+    400: {
+      description: "invalid_request: request body failed validation",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    404: {
+      description: "Availability rule not found",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+  },
+})
+
 const deleteRuleRoute = createRoute({
   method: "delete",
   path: "/rules/{id}",
@@ -473,6 +524,15 @@ const ruleRoutes = new OpenAPIHono<Env>({ defaultHook: openApiValidationHook })
       c.req.valid("json"),
     )
     return row ? c.json({ data: row }, 200) : c.json({ error: "Availability rule not found" }, 404)
+  })
+  .openapi(generateRuleSlotsRoute, async (c) => {
+    const body = c.req.valid("json")
+    const data = await availabilityService.generateSlotsForRule(
+      c.get("db"),
+      c.req.valid("param").id,
+      body?.horizonDays === undefined ? {} : { horizonDays: body.horizonDays },
+    )
+    return data ? c.json({ data }, 200) : c.json({ error: "Availability rule not found" }, 404)
   })
   .openapi(deleteRuleRoute, async (c) => {
     const row = await availabilityService.deleteRule(c.get("db"), c.req.valid("param").id)

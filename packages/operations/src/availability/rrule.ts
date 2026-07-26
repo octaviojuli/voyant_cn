@@ -1,6 +1,16 @@
 export const WEEKDAYS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] as const
 export type Weekday = (typeof WEEKDAYS)[number]
 
+/**
+ * English short weekday labels.
+ *
+ * These are the *developer-facing* defaults used by `describeRRule(...)` when
+ * no label bundle is injected. They are NOT a localization surface: any
+ * operator/customer-visible recurrence preview must pass its own localized
+ * `RRuleDescriptionLabels` (see `describeRRule`), the same way
+ * `packages/inventory-react/src/components/product-detail/rrule-labels.ts`
+ * takes its labels from the host dictionary.
+ */
 export const WEEKDAY_LABELS: Record<Weekday, string> = {
   MO: "Mon",
   TU: "Tue",
@@ -9,6 +19,78 @@ export const WEEKDAY_LABELS: Record<Weekday, string> = {
   FR: "Fri",
   SA: "Sat",
   SU: "Sun",
+}
+
+/** English full weekday names — same developer-facing default caveat. */
+export const WEEKDAY_FULL_LABELS: Record<Weekday, string> = {
+  MO: "Monday",
+  TU: "Tuesday",
+  WE: "Wednesday",
+  TH: "Thursday",
+  FR: "Friday",
+  SA: "Saturday",
+  SU: "Sunday",
+}
+
+/**
+ * Injectable label bundle for `describeRRule(...)`.
+ *
+ * Templates interpolate `{n}`, `{cadence}`, `{weekday}` and `{days}` with the
+ * same `{key}` syntax `@voyant-travel/i18n`'s `formatMessage` uses, so a host
+ * can hand its dictionary strings straight through without a translation step.
+ * Mirrors `RRuleLabels` in
+ * `packages/inventory-react/src/components/product-detail/rrule-labels.ts`.
+ */
+export type RRuleDescriptionLabels = {
+  everyDay: string
+  everyNDays: string
+  everyWeek: string
+  everyNWeeks: string
+  everyMonth: string
+  everyNMonths: string
+  everyWeekdayFull: string
+  onWeekdays: string
+  onMonthDay: string
+  onMonthDays: string
+  noWeekdays: string
+  noMonthDays: string
+  listSeparator: string
+  weekdayShort: Record<Weekday, string>
+  weekdayFull: Record<Weekday, string>
+}
+
+/**
+ * English fallback bundle. Kept so `describeRRule(rrule)` stays behaviourally
+ * identical for existing (developer/log/debug) callers; user-facing callers
+ * must pass their own bundle.
+ */
+export const DEFAULT_RRULE_DESCRIPTION_LABELS: RRuleDescriptionLabels = {
+  everyDay: "Every day",
+  everyNDays: "Every {n} days",
+  everyWeek: "Every week",
+  everyNWeeks: "Every {n} weeks",
+  everyMonth: "Every month",
+  everyNMonths: "Every {n} months",
+  everyWeekdayFull: "Every {weekday}",
+  onWeekdays: "{cadence} on {days}",
+  onMonthDay: "{cadence} on day {days}",
+  onMonthDays: "{cadence} on days {days}",
+  noWeekdays: "{cadence} (no weekdays)",
+  noMonthDays: "{cadence} (no days)",
+  listSeparator: ", ",
+  weekdayShort: WEEKDAY_LABELS,
+  weekdayFull: WEEKDAY_FULL_LABELS,
+}
+
+/** `{key}` interpolation, matching `@voyant-travel/i18n`'s `formatMessage`. */
+function formatRRuleTemplate(
+  template: string,
+  values: Record<string, string | number | null | undefined>,
+): string {
+  return template.replace(/\{(\w+)\}/g, (_match, key: string) => {
+    const value = values[key]
+    return value === null || value === undefined ? "" : String(value)
+  })
 }
 
 export type Frequency = "DAILY" | "WEEKLY" | "MONTHLY"
@@ -162,37 +244,55 @@ export function buildRRule(values: ParsedRRule): string {
 }
 
 /**
- * Human-readable preview: "Every Monday" / "Every 2 weeks on Mon, Wed, Fri"
+ * Human-readable preview: "Every Monday" / "Every 2 weeks on Mon, Wed, Fri".
+ *
+ * The wording comes entirely from `labels`, so a user-facing caller localizes
+ * the preview by passing its own bundle:
+ *
+ *     describeRRule(rule.recurrenceRule, messages.availability.rrule)
+ *
+ * Omitting `labels` falls back to `DEFAULT_RRULE_DESCRIPTION_LABELS` (English)
+ * and is only appropriate for developer-facing output — logs, debug tooling,
+ * tests. Nothing rendered to an operator or a traveler should rely on it.
  */
-export function describeRRule(rrule: string | ParsedRRule): string {
+export function describeRRule(
+  rrule: string | ParsedRRule,
+  labels: RRuleDescriptionLabels = DEFAULT_RRULE_DESCRIPTION_LABELS,
+): string {
   const parsed = typeof rrule === "string" ? parseRRule(rrule) : rrule
   const { frequency, interval, byWeekdays, byMonthDays } = parsed
-  const unit = frequency === "DAILY" ? "day" : frequency === "WEEKLY" ? "week" : "month"
-  const cadence = interval > 1 ? `Every ${interval} ${unit}s` : `Every ${unit}`
+  const cadence =
+    frequency === "DAILY"
+      ? interval > 1
+        ? formatRRuleTemplate(labels.everyNDays, { n: interval })
+        : labels.everyDay
+      : frequency === "WEEKLY"
+        ? interval > 1
+          ? formatRRuleTemplate(labels.everyNWeeks, { n: interval })
+          : labels.everyWeek
+        : interval > 1
+          ? formatRRuleTemplate(labels.everyNMonths, { n: interval })
+          : labels.everyMonth
 
   if (frequency === "WEEKLY") {
-    if (byWeekdays.length === 0) return `${cadence} (no weekdays)`
+    if (byWeekdays.length === 0) return formatRRuleTemplate(labels.noWeekdays, { cadence })
     const ordered = WEEKDAYS.filter((d) => byWeekdays.includes(d))
-    if (interval === 1 && ordered.length === 1) {
-      // "Every Monday"
-      const fullNames: Record<Weekday, string> = {
-        MO: "Monday",
-        TU: "Tuesday",
-        WE: "Wednesday",
-        TH: "Thursday",
-        FR: "Friday",
-        SA: "Saturday",
-        SU: "Sunday",
-      }
-      return `Every ${fullNames[ordered[0] as Weekday]}`
+    const first = ordered[0]
+    if (interval === 1 && ordered.length === 1 && first) {
+      return formatRRuleTemplate(labels.everyWeekdayFull, { weekday: labels.weekdayFull[first] })
     }
-    const labels = ordered.map((d) => WEEKDAY_LABELS[d])
-    return `${cadence} on ${labels.join(", ")}`
+    return formatRRuleTemplate(labels.onWeekdays, {
+      cadence,
+      days: ordered.map((d) => labels.weekdayShort[d]).join(labels.listSeparator),
+    })
   }
   if (frequency === "MONTHLY") {
-    if (byMonthDays.length === 0) return `${cadence} (no days)`
+    if (byMonthDays.length === 0) return formatRRuleTemplate(labels.noMonthDays, { cadence })
     const ordered = [...byMonthDays].sort((a, b) => a - b)
-    return `${cadence} on day${ordered.length === 1 ? "" : "s"} ${ordered.join(", ")}`
+    return formatRRuleTemplate(ordered.length === 1 ? labels.onMonthDay : labels.onMonthDays, {
+      cadence,
+      days: ordered.join(labels.listSeparator),
+    })
   }
   return cadence
 }
