@@ -121,7 +121,16 @@ export const operatorAdminProductsMessagesEnCore = {
   departuresEmpty: "No departures yet. Add a departure or create a recurring schedule.",
   departureStartColumn: "Start",
   departureEndColumn: "End",
+  departureItineraryColumn: "Itinerary",
   departureDurationColumn: "Duration",
+  departureDuration: {
+    daySingular: "1 day",
+    daysPlural: "{count} days",
+    nightSingular: "1 night",
+    nightsPlural: "{count} nights",
+    hours: "{count}h",
+    separator: " / ",
+  },
   departureStatusColumn: "Status",
   departureCapacityColumn: "Capacity",
   departureStatusOpen: "Open",
@@ -148,7 +157,19 @@ export const operatorAdminProductsMessagesEnCore = {
   departureOverrideNoUnits: "Add units to the option first.",
   schedulesTitle: "Recurring Schedules",
   newSchedule: "New Schedule",
-  schedulesEmpty: "No recurring schedules. Define a rule to auto-generate departures.",
+  schedulesEmpty:
+    "No recurring schedules. Define a rule, then generate departures from it for the next {horizonDays} days.",
+  schedulesHint:
+    "Generating from a rule creates departures for the next {horizonDays} days only. Run it again later to extend the horizon; dates that already have a departure for the rule are skipped.",
+  scheduleGenerate: "Generate departures from rule",
+  scheduleGenerateInactiveHint: "Inactive rules do not generate departures.",
+  scheduleGenerateSuccess:
+    "Generated {created} departures for the next {horizonDays} days ({skipped} already existed).",
+  scheduleGenerateNone:
+    "No new departures — every date in the next {horizonDays} days already has one.",
+  scheduleGenerateUnavailable:
+    "Departures cannot be generated from a rule right now: this deployment has not enabled it, or the rule no longer exists. Add departures manually.",
+  scheduleGenerateFailed: "Could not generate departures from this rule.",
   inactiveBadge: "Inactive",
   scheduleSummary: "Max {maxCapacity} pax · {timezone}{cutoff}",
   scheduleCutoffSuffix: " · cutoff {minutes}m",

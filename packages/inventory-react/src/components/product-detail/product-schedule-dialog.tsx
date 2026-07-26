@@ -7,16 +7,20 @@ import {
 } from "@voyant-travel/ui/components"
 import { useProductDetailMessages } from "./host.js"
 
-import { type AvailabilityRule, ScheduleForm } from "./product-schedule-form.js"
+import {
+  type AvailabilityRule,
+  ScheduleForm,
+  type ScheduleFormSaveResult,
+} from "./product-schedule-form.js"
 
-export type { AvailabilityRule }
+export type { AvailabilityRule, ScheduleFormSaveResult }
 
 type ScheduleDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   productId: string
   rule?: AvailabilityRule
-  onSuccess: () => void
+  onSuccess: (result: ScheduleFormSaveResult) => void
 }
 
 export function ScheduleDialog({

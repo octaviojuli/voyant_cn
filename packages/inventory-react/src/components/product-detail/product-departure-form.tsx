@@ -27,9 +27,10 @@ import { Loader2 } from "lucide-react"
 import { useEffect, useMemo, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod/v4"
-import { useProductItineraries, useProductOptions } from "../../index.js"
+import { useProduct, useProductItineraries, useProductOptions } from "../../index.js"
 import { useProductResourceTemplates } from "./commerce-client.js"
 import { useProductDetailApi, useProductDetailMessages } from "./host.js"
+import { resolveProductTimezoneDefault } from "./product-detail-shared.js"
 import { getTimezoneLabel, TIMEZONE_IDS, TIMEZONE_OPTIONS } from "./timezone-options.js"
 import { zodResolver } from "./zod-resolver.js"
 
@@ -175,10 +176,14 @@ export function DepartureForm({ productId, slot, onSuccess, onCancel }: Departur
     { value: "cancelled", label: productMessages.departureStatusCancelled },
   ] as const
 
-  const defaultTz =
-    typeof Intl !== "undefined"
-      ? (Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC")
-      : "UTC"
+  // The slot service validates that `dateLocal` matches `startsAt` rendered in
+  // the slot's timezone, so defaulting this field to the *browser* timezone
+  // silently shifts a departure by a day whenever the operator is not in the
+  // product's timezone. Prefer the product's own timezone; the product query is
+  // already cached by the detail page, so this costs no extra request.
+  const { data: product } = useProduct(productId)
+  const productTimezone = product?.timezone ?? null
+  const defaultTz = resolveProductTimezoneDefault(productTimezone)
 
   const form = useForm<DepartureFormValues, unknown, DepartureFormOutput>({
     resolver: zodResolver(departureFormSchema),
@@ -238,9 +243,29 @@ export function DepartureForm({ productId, slot, onSuccess, onCancel }: Departur
     return diffDays > 0 ? diffDays : 0
   })()
 
+  // Keep the freshest default out of the reset effect's dependency list: the
+  // product query resolves *after* first render, and re-running `form.reset`
+  // then would wipe whatever the operator has already typed.
+  const defaultTzRef = useRef(defaultTz)
+  defaultTzRef.current = defaultTz
+
   useEffect(() => {
-    form.reset(initialValues(slot, defaultTz))
-  }, [slot, form, defaultTz])
+    form.reset(initialValues(slot, defaultTzRef.current))
+  }, [slot, form])
+
+  // Adopt the product's timezone once it loads, but only for a new departure
+  // whose timezone field the operator has not touched yet.
+  const adoptedProductTzRef = useRef(false)
+  useEffect(() => {
+    if (isEditing || adoptedProductTzRef.current || !productTimezone) return
+    if (form.getFieldState("timezone").isDirty) return
+    adoptedProductTzRef.current = true
+    if (form.getValues("timezone") === productTimezone) return
+    form.setValue("timezone", productTimezone, {
+      shouldDirty: false,
+      shouldValidate: true,
+    })
+  }, [isEditing, productTimezone, form])
 
   useEffect(() => {
     if (!defaultOption) return
