@@ -19,6 +19,7 @@ export const operatorAdminNavZh: { nav: OperatorAdminNavMessages } = {
     flightOrders: "交易单",
     products: "产品",
     categories: "分类",
+    productRouteImport: "线路上线助理",
     bookings: "订单",
     trips: "行程",
     allTrips: "全部行程",

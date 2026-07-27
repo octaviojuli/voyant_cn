@@ -395,6 +395,24 @@ export const inventoryVoyantModule = defineModule({
         },
       },
       {
+        id: "@voyant-travel/inventory#admin.route.products-route-import",
+        path: "/products/import-drafts",
+        requiredScopes: ["products:read"],
+        runtime: {
+          entry: "@voyant-travel/inventory-react/admin",
+          export: "createInventoryAdminExtension",
+        },
+      },
+      {
+        id: "@voyant-travel/inventory#admin.route.products-route-import-detail",
+        path: "/products/import-drafts/$id",
+        requiredScopes: ["products:read"],
+        runtime: {
+          entry: "@voyant-travel/inventory-react/admin",
+          export: "createInventoryAdminExtension",
+        },
+      },
+      {
         id: "@voyant-travel/inventory#admin.route.products-detail",
         path: "/products/$id",
         requiredScopes: ["products:read"],

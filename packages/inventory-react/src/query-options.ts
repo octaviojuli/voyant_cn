@@ -35,6 +35,8 @@ import {
   productTypeListResponse,
   productTypeSingleResponse,
   productVersionsResponse,
+  routeImportDraftListResponse,
+  routeImportDraftSingleResponse,
 } from "./schemas.js"
 
 export function getProductsQueryOptions(
@@ -434,5 +436,25 @@ export function getProductMediaQueryOptions(
         client,
       )
     },
+  })
+}
+
+export function getRouteImportDraftsQueryOptions(client: FetchWithValidationOptions) {
+  return queryOptions({
+    queryKey: productsQueryKeys.importDraftsList(),
+    queryFn: () =>
+      fetchWithValidation("/v1/admin/products/import-drafts", routeImportDraftListResponse, client),
+  })
+}
+
+export function getRouteImportDraftQueryOptions(client: FetchWithValidationOptions, id: string) {
+  return queryOptions({
+    queryKey: productsQueryKeys.importDraft(id),
+    queryFn: () =>
+      fetchWithValidation(
+        `/v1/admin/products/import-drafts/${encodeURIComponent(id)}`,
+        routeImportDraftSingleResponse,
+        client,
+      ),
   })
 }

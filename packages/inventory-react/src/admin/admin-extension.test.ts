@@ -14,7 +14,11 @@ import { ProductsHost } from "./products-host.js"
 describe("createInventoryAdminExtension", () => {
   it("owns selected copy and the option-extras slot", () => {
     const extension = createSelectedInventoryAdminExtension({
-      navMessages: { products: "Produse", categories: "Categorii" },
+      navMessages: {
+        products: "Produse",
+        categories: "Categorii",
+        productRouteImport: "Import trasee",
+      },
     })
     expect(extension.routes?.every((route) => route.routeMessagesProvider)).toBe(true)
     expect(extension.navigation?.[0]).toMatchObject({
@@ -24,7 +28,14 @@ describe("createInventoryAdminExtension", () => {
           id: "products",
           title: "Produse",
           url: "/products",
-          items: [{ id: "product-categories", title: "Categorii", url: "/products/categories" }],
+          items: [
+            { id: "product-categories", title: "Categorii", url: "/products/categories" },
+            {
+              id: "product-route-import",
+              title: "Import trasee",
+              url: "/products/import-drafts",
+            },
+          ],
         },
       ],
     })
@@ -43,7 +54,7 @@ describe("createInventoryAdminExtension", () => {
     const extension = createSelectedInventoryAdminExtension({ navMessages: {} })
     expect(extension.navigation?.[0]?.items[0]).toMatchObject({
       title: "Products",
-      items: [{ title: "Categories" }],
+      items: [{ title: "Categories" }, { title: "Route import" }],
     })
   })
 
@@ -70,14 +81,18 @@ describe("createInventoryAdminExtension", () => {
     expect(extension.navigation).toBeUndefined()
   })
 
-  it("describes the list, categories and detail routes with unique ids and paths", () => {
+  it("describes the list, categories, import and detail routes with unique ids and paths", () => {
     const extension = createInventoryAdminExtension()
     const routes = extension.routes ?? []
-    expect(routes).toHaveLength(3)
-    expect(new Set(routes.map((route) => route.id)).size).toBe(3)
+    expect(routes).toHaveLength(5)
+    expect(new Set(routes.map((route) => route.id)).size).toBe(5)
+    // 静态段必须排在 `/products/$id` 之前,否则 `/products/import-drafts`
+    // 会被那条动态路由吞掉。
     expect(routes.map((route) => route.path)).toEqual([
       "/products",
       "/products/categories",
+      "/products/import-drafts",
+      "/products/import-drafts/$id",
       "/products/$id",
     ])
   })
@@ -120,7 +135,7 @@ describe("createInventoryAdminExtension", () => {
 
   it("attaches data loaders to every route and marks them data-only for SSR", () => {
     const extension = createInventoryAdminExtension()
-    expect(extension.routes).toHaveLength(3)
+    expect(extension.routes).toHaveLength(5)
     for (const route of extension.routes ?? []) {
       expect(typeof route.loader).toBe("function")
       expect(route.ssr).toBe("data-only")
@@ -133,6 +148,8 @@ describe("createInventoryAdminExtension", () => {
     expect(byId.get("products-index")?.destination).toBe("product.list")
     expect(byId.get("products-categories")?.destination).toBe("productCategory.list")
     expect(byId.get("products-detail")?.destination).toBe("product.detail")
+    expect(byId.get("products-route-import")?.destination).toBe("routeImportDraft.list")
+    expect(byId.get("products-route-import-detail")?.destination).toBe("routeImportDraft.detail")
     expect(byId.get("products-detail")?.destinationParams).toEqual({ id: "productId" })
   })
 })
