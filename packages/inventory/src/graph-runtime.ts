@@ -8,6 +8,7 @@ import { inventoryExtrasApiModule } from "./extras.js"
 import { inventoryApiModule } from "./interface.js"
 import { createProductBrochureApiExtension } from "./routes-brochure.js"
 import { createProductContentApiExtension } from "./routes-content.js"
+import { createProductImportApiExtension } from "./routes-import.js"
 import { inventoryBrochureRuntimePort, inventoryRuntimePort } from "./runtime-ports.js"
 
 function selectedModuleSurfaces(
@@ -92,6 +93,20 @@ export const createInventoryBrochureVoyantRuntime = defineGraphRuntimeFactory(
         ...brochure,
         resolveStorage: storage.resolveStorage,
       }),
+      api,
+    )
+  },
+)
+
+/**
+ * 线路上线助理。只需要存储:原始文件先存一份,复核时可回看原文。
+ * 存储没配也能用,只是少了回看入口。
+ */
+export const createInventoryImportVoyantRuntime = defineGraphRuntimeFactory(
+  async ({ api, getPort }) => {
+    const storage = await getPort(storageMediaRuntimePort)
+    return selectedExtensionSurfaces(
+      createProductImportApiExtension({ resolveStorage: storage.resolveStorage }),
       api,
     )
   },

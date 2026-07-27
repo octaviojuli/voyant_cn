@@ -83,7 +83,9 @@ async function main(): Promise<void> {
   if (
     first.deployment.mode !== "self-hosted" ||
     first.deployment.providers.database !== "postgres" ||
-    first.deployment.providers.storage !== "memory" ||
+    // 自托管默认用 filesystem:memory 把上传的字节留在进程内,重启即丢,
+    // 任何会接受上传的部署都不能用它(线上曾因此丢掉全部产品配图)。
+    first.deployment.providers.storage !== "filesystem" ||
     first.deployment.providers.auth === "voyant-cloud" ||
     first.deployment.providers.workflows === "voyant-cloud"
   ) {

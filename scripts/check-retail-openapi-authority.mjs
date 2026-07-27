@@ -32,6 +32,7 @@ const claims = new Map([
   ["@voyant-travel/inventory#content-extension.api.admin", "products"],
   ["@voyant-travel/inventory#content-extension.api.public", "products"],
   ["@voyant-travel/inventory#brochure-extension.api.admin", "products"],
+  ["@voyant-travel/inventory#import-extension.api.admin", "products"],
   ["@voyant-travel/bookings#requirements.api", "booking-requirements"],
   ["@voyant-travel/bookings#requirements.api.public", "booking-requirements"],
   ["@voyant-travel/bookings#booking-supplier-extension.api", "bookings"],
