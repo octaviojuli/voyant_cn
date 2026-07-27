@@ -71,8 +71,20 @@ describe("draftToProductGraphSpec", () => {
     expect(stay?.notes).toContain("乌鲁木齐")
   })
 
-  it("每日落脚城市取途经点末站,供总览表与线路图使用", () => {
+  it("每日落脚城市与线路示意图同源,供总览表使用", () => {
     expect(spec.itineraries[0]?.days[0]?.location).toBe("乌鲁木齐")
+  })
+
+  it("Word 类资料的落脚城市取住宿,而不是当天最后一个活动", () => {
+    // 日行标题在 Word 类资料里列的是当天活动,末站会取到「塔吉克家访」
+    // 这种体验项目——印到总览表的「住宿」一栏上就是错的。
+    const wordSpec = draftToProductGraphSpec(
+      parseRouteDocument(read("south-xinjiang-8d-word.txt")),
+      OPTIONS,
+    )
+    const locations = wordSpec.itineraries[0]?.days.map((day) => day.location)
+
+    expect(locations).toEqual(["喀什", "喀什", "塔县"])
   })
 
   it("里程与车程写进正文前言,不丢失", () => {

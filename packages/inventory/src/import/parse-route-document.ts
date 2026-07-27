@@ -305,7 +305,9 @@ function splitRouteChain(title: string): string[] {
       .replace(/(?:住宿|住)\s*[:：].*$/, "")
       // 【和田二街的烤肉…】这类是卖点文案,不是地名。
       .replace(/【[^】]*】/g, " ")
-      .split(/[-—–→>✈✚+]/)
+      // 连字符有半角、全角、连接号、减号多种写法,真实资料里都出现过;
+      // 漏掉全角 －(U+FF0D) 会让「伊宁－赛里木湖－温泉县」整块不拆。
+      .split(/[-—–－‐−~～〜→⇒>／/✈✚+]/)
       .map((part) => part.trim())
       .filter(Boolean)
   )

@@ -1,5 +1,6 @@
 import type { ProductGraphSpec } from "../authoring/spec.js"
 import type { DraftDay, RouteImportDraft } from "./draft.js"
+import { resolveOvernightCities } from "./overnight-city.js"
 
 /**
  * 把复核过的草稿翻译成产品图规格,交给 composeProduct 建库。
@@ -36,7 +37,8 @@ export function draftToProductGraphSpec(
   draft: RouteImportDraft,
   options: DraftToSpecOptions,
 ): ProductGraphSpec {
-  const days = draft.itinerary.map(toDaySpec)
+  const overnightCities = resolveOvernightCities(draft.itinerary)
+  const days = draft.itinerary.map((day, index) => toDaySpec(day, overnightCities[index] ?? null))
 
   return {
     product: {
@@ -117,13 +119,13 @@ function buildDefaultOption(options: DraftToSpecOptions): ProductGraphSpec["opti
   }
 }
 
-function toDaySpec(day: DraftDay) {
+function toDaySpec(day: DraftDay, overnightCity: string | null) {
   return {
     dayNumber: day.dayNumber,
     title: day.title || null,
     description: buildDayDescriptionHtml(day),
-    // 途经点的最后一站即当日落脚城市,总览表与线路示意图都用它。
-    location: day.routeChain.at(-1) ?? null,
+    // 落脚城市由 resolveOvernightCities 推定,与线路示意图同源。
+    location: overnightCity,
     services: buildDayServices(day),
   }
 }

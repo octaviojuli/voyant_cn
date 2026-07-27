@@ -23,6 +23,7 @@ import type { Context } from "hono"
 
 import { routeImportDraftSchema } from "./import/draft.js"
 import { UnsupportedRouteDocumentError } from "./import/extract-document.js"
+import { renderRouteMapSvg } from "./import/route-map-svg.js"
 import { importDraftService } from "./import/service.js"
 import type { Env } from "./route-env.js"
 
@@ -59,6 +60,18 @@ const draftRowSchema = z.object({
   committedAt: z.string().nullable(),
 })
 
+/**
+ * 详情比列表多一张线路概览图(SVG 源码)。
+ *
+ * 给的是源码而不是图片地址:SVG 在存储层被刻意挡住(可携带脚本,属存储型
+ * XSS 面),上传即 415,服务端也不会以 image/svg+xml 返回。界面用
+ * `<img src="data:image/svg+xml;base64,…">` 渲染——`<img>` 里的 SVG 按规范
+ * 不执行脚本,既不动那道安全控制,又能显示。
+ */
+const draftDetailSchema = draftRowSchema.extend({
+  routeMapSvg: z.string().nullable(),
+})
+
 type DraftRowLike = {
   createdAt: Date | string
   updatedAt: Date | string
@@ -74,6 +87,23 @@ function serializeDraftRow(row: DraftRowLike) {
     updatedAt: new Date(row.updatedAt).toISOString(),
     committedAt: row.committedAt ? new Date(row.committedAt).toISOString() : null,
   } as z.infer<typeof draftRowSchema>
+}
+
+/**
+ * 详情额外带上线路概览图。
+ *
+ * 图是**从草稿现算的,不落库**:改了行程图就跟着变,不存在过期版本。代价
+ * 是每次详情多算一次,而画一张图只是拼字符串,可以忽略。
+ *
+ * 列表不带——一张图几 KB,五十行就是几百 KB 的无用负载。
+ */
+function serializeDraftDetail(row: DraftRowLike) {
+  const parsed = routeImportDraftSchema.safeParse(row.draft)
+  return {
+    ...serializeDraftRow(row),
+    // 老草稿的结构可能对不上,画不出就留空,不因为一张图让详情打不开。
+    routeMapSvg: parsed.success ? renderRouteMapSvg(parsed.data) : null,
+  }
 }
 
 const errorSchema = z.object({ error: z.string() })
@@ -97,7 +127,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
     responses: {
       201: {
         description: "解析出的待复核草稿",
-        content: { "application/json": { schema: z.object({ data: draftRowSchema }) } },
+        content: { "application/json": { schema: z.object({ data: draftDetailSchema }) } },
       },
       400: { description: "缺少文件", content: { "application/json": { schema: errorSchema } } },
       413: { description: "文件过大", content: { "application/json": { schema: errorSchema } } },
@@ -141,7 +171,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
         filename: file.name,
         sourceStorageKey: storageKey,
       })
-      return c.json({ data: serializeDraftRow(row as DraftRowLike) }, 201)
+      return c.json({ data: serializeDraftDetail(row as DraftRowLike) }, 201)
     } catch (error) {
       if (error instanceof UnsupportedRouteDocumentError) {
         return c.json({ error: "只支持 Word(.docx)与 PDF 文件" }, 415)
@@ -173,7 +203,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
     responses: {
       200: {
         description: "草稿详情",
-        content: { "application/json": { schema: z.object({ data: draftRowSchema }) } },
+        content: { "application/json": { schema: z.object({ data: draftDetailSchema }) } },
       },
       404: { description: "草稿不存在", content: { "application/json": { schema: errorSchema } } },
     },
@@ -182,7 +212,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
   hono.openapi(getRoute, async (c) => {
     const row = await importDraftService.get(c.get("db"), c.req.valid("param").id)
     if (!row) return c.json({ error: "草稿不存在" }, 404)
-    return c.json({ data: serializeDraftRow(row as DraftRowLike) }, 200)
+    return c.json({ data: serializeDraftDetail(row as DraftRowLike) }, 200)
   })
 
   const updateRoute = createRoute({
@@ -198,7 +228,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
     responses: {
       200: {
         description: "保存后的草稿",
-        content: { "application/json": { schema: z.object({ data: draftRowSchema }) } },
+        content: { "application/json": { schema: z.object({ data: draftDetailSchema }) } },
       },
       404: { description: "草稿不存在", content: { "application/json": { schema: errorSchema } } },
     },
@@ -212,7 +242,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
       body.draft,
     )
     if (!row) return c.json({ error: "草稿不存在" }, 404)
-    return c.json({ data: serializeDraftRow(row as DraftRowLike) }, 200)
+    return c.json({ data: serializeDraftDetail(row as DraftRowLike) }, 200)
   })
 
   const commitBodySchema = z.object({
@@ -290,7 +320,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
     responses: {
       200: {
         description: "已放弃的草稿",
-        content: { "application/json": { schema: z.object({ data: draftRowSchema }) } },
+        content: { "application/json": { schema: z.object({ data: draftDetailSchema }) } },
       },
       404: { description: "草稿不存在", content: { "application/json": { schema: errorSchema } } },
     },
@@ -300,7 +330,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
     const body = await parseJsonBody(c, z.object({ note: z.string().optional() }).default({}))
     const row = await importDraftService.discard(c.get("db"), c.req.valid("param").id, body.note)
     if (!row) return c.json({ error: "草稿不存在" }, 404)
-    return c.json({ data: serializeDraftRow(row as DraftRowLike) }, 200)
+    return c.json({ data: serializeDraftDetail(row as DraftRowLike) }, 200)
   })
 
   return hono
