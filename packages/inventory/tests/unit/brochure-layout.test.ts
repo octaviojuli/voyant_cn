@@ -87,7 +87,10 @@ function context(overrides: Record<string, unknown> = {}) {
     pricingTiers: [],
     generatedAt: new Date("2026-07-27T00:00:00Z"),
     ...overrides,
-    // biome-ignore lint/suspicious/noExplicitAny: 测试夹具只喂渲染器读得到的字段
+    // agent-quality: unsafe-cast reviewed -- owner: inventory; 夹具刻意只铺渲染器
+    // 读得到的字段。补齐 ProductBrochureTemplateContext 的全部列意味着每加一列
+    // 都要改这里,而这组用例断言的是版面,不是表结构。
+    // biome-ignore lint/suspicious/noExplicitAny: reason -- 见上方说明
   } as any
 }
 
