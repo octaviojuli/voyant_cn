@@ -105,22 +105,68 @@ fi
 # 这一步**失败不阻断部署**。装不上只是宣传册回落到内置的纯文本排版,册子
 # 难看但功能仍在;为了一个可选的排版能力把整次发布卡住是本末倒置。
 BROWSERS_ROOT="${BROWSERS_ROOT:-/opt/voyant/browsers}"
-if [ ! -d "$BROWSERS_ROOT" ] || [ -z "$(ls -A "$BROWSERS_ROOT" 2>/dev/null)" ]; then
-  echo "[$(date +%H:%M:%S)] ==> 安装无头浏览器(宣传册排版用)"
-  mkdir -p "$BROWSERS_ROOT"
-  # 国内直连 playwright CDN 极慢,走 npmmirror 镜像。
-  if PLAYWRIGHT_BROWSERS_PATH="$BROWSERS_ROOT" \
-     PLAYWRIGHT_DOWNLOAD_HOST="https://cdn.npmmirror.com/binaries/playwright" \
-     npx --yes playwright@1.61.1 install --with-deps chromium; then
-    echo "[$(date +%H:%M:%S)] ==> 浏览器就绪:$BROWSERS_ROOT"
-  else
-    echo "!! 浏览器安装失败,宣传册将回落到纯文本排版(不影响本次部署)"
-  fi
+mkdir -p "$BROWSERS_ROOT"
+
+# 系统库与浏览器本体分开装,顺序也不能反。
+#
+# 原先一句 `playwright install --with-deps chromium` 走不通:`--with-deps`
+# 内部会 `sudo apt-get`,而这个脚本是经 SSH 以 voyant 用户跑的,没有 TTY,
+# 免密 sudo 也只开给了 systemctl/journalctl —— playwright 提权失败即整体退出,
+# **连浏览器本体都没下**。实测日志:「sudo: a password is required / Failed to
+# install browsers」。
+#
+# 因此:先用 `sudo -n` 试着装系统库(装不上就算了,不追问密码),再单独下载
+# 浏览器本体(纯下载,不需要任何权限)。
+# 逐个装,不打包成一条 apt-get:Ubuntu 24.04 把若干包改名带了 t64 后缀
+# (libasound2t64 等),一条命令里混着新旧名字会整条失败,一个都装不上。
+BROWSER_LIBS="libnss3 libnspr4 libatk1.0-0t64 libatk1.0-0 libatk-bridge2.0-0t64
+libatk-bridge2.0-0 libcups2t64 libcups2 libdrm2 libxkbcommon0 libxcomposite1
+libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2
+libasound2t64 libasound2 fonts-noto-cjk"
+if [ ! -f "$BROWSERS_ROOT/.deps-attempted" ] && command -v apt-get &>/dev/null; then
+  echo "[$(date +%H:%M:%S)] ==> 尝试安装浏览器系统库(免密 sudo,失败不阻断)"
+  installed=0
+  for pkg in $BROWSER_LIBS; do
+    sudo -n apt-get install -y --no-install-recommends "$pkg" &>/dev/null && installed=$((installed + 1))
+  done
+  echo "   装上 $installed 个;装不上多半是没有免密 sudo,下面的自检会给出结论"
+  touch "$BROWSERS_ROOT/.deps-attempted" || true
 fi
-if [ -d "$BROWSERS_ROOT" ] && ! grep -q '^PLAYWRIGHT_BROWSERS_PATH=' "$ENV_FILE" 2>/dev/null; then
+
+# 用仓库里已装的 playwright-core 下载,不走 npx 现拉:版本必然与运行时一致,
+# 也少一次网络往返。刻意不加 --with-deps —— 它内部会 sudo,非交互 SSH 下提权
+# 失败即整体退出,连浏览器本体都不会下(实测踩过)。
+PW_CLI="$APP_DIR/packages/inventory/node_modules/playwright-core/cli.js"
+if [ -z "$(ls -A "$BROWSERS_ROOT" 2>/dev/null | grep -v '^\.deps-attempted$')" ] && [ -f "$PW_CLI" ]; then
+  echo "[$(date +%H:%M:%S)] ==> 下载无头浏览器(宣传册排版用)"
+  # 国内直连 playwright CDN 极慢,走 npmmirror 镜像。
+  PLAYWRIGHT_BROWSERS_PATH="$BROWSERS_ROOT" \
+    PLAYWRIGHT_DOWNLOAD_HOST="https://cdn.npmmirror.com/binaries/playwright" \
+    node "$PW_CLI" install chromium \
+    || echo "!! 浏览器下载失败,宣传册将回落到纯文本排版(不影响本次部署)"
+fi
+
+if ! grep -q '^PLAYWRIGHT_BROWSERS_PATH=' "$ENV_FILE" 2>/dev/null; then
   echo "[$(date +%H:%M:%S)] ==> 写入 PLAYWRIGHT_BROWSERS_PATH=$BROWSERS_ROOT"
   printf '\nPLAYWRIGHT_BROWSERS_PATH="%s"\n' "$BROWSERS_ROOT" >> "$ENV_FILE"
 fi
+
+# 真启一次浏览器再下结论。「文件下下来了」不等于「能跑」——缺系统库时二进制
+# 在、一启动就炸。结论直接打进部署日志,免得又要等到线上生成一份册子、看 PDF
+# 的 Producer 才发现根本没走浏览器排版。
+# 在 inventory 包内执行:pnpm 的严格布局下,运行时正是从这里解析 playwright-core。
+echo "[$(date +%H:%M:%S)] ==> 自检:浏览器能否启动"
+(
+  cd "$APP_DIR/packages/inventory" 2>/dev/null || exit 1
+  PLAYWRIGHT_BROWSERS_PATH="$BROWSERS_ROOT" node -e '
+const p = require("playwright-core");
+p.chromium
+  .launch({ args: ["--no-sandbox", "--disable-dev-shm-usage"] })
+  .then((b) => b.close())
+  .then(() => console.log("   自检通过:宣传册走 HTML→PDF"))
+  .catch((e) => console.log("   自检未通过,宣传册回落到纯文本排版:" + String(e.message).split("\n")[0]))
+'
+) || echo "   自检未能执行(playwright-core 解析不到);宣传册回落到纯文本排版"
 
 echo "[$(date +%H:%M:%S)] ==> 执行数据库迁移"
 migrated=false

@@ -43,6 +43,9 @@ export interface LocalChromiumBrochurePrinterOptions {
 
 type RuntimeEnv = Readonly<Partial<Record<"BROCHURE_CHROMIUM_PATH", unknown>>>
 
+/** 容器与精简过的 ECS 上常常没有 /dev/shm 配额,不关共享内存会随机崩。 */
+const LAUNCH_ARGS = ["--no-sandbox", "--disable-dev-shm-usage", "--font-render-hinting=none"]
+
 function nonEmpty(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined
   const trimmed = value.trim()
@@ -86,10 +89,41 @@ async function fileExists(path: string): Promise<boolean> {
 }
 
 /**
- * 探测本机浏览器。返回可用的打印器,或 `null`。
+ * 每个可执行文件只真启一次,结果缓存。
  *
- * 探测而不是「先启动试试」:启动一次要一两秒,失败还得等超时,而这个判断
- * 在每次生成宣传册前都要做一遍。检查可执行文件在不在便宜得多。
+ * 「文件在不在」不足以说明能不能用:Chromium 依赖一串系统库(libnss3、
+ * libgbm 之类),二进制下下来了而库没装,启动才会炸。只看文件存在的话,探测
+ * 会说「能用」,然后生成宣传册直接 500——回落形同虚设。实测就踩到了:部署
+ * 装浏览器时 `--with-deps` 要 sudo,非交互 SSH 下装不了。
+ *
+ * 代价是进程内第一次生成多花一两秒,之后走缓存。
+ */
+const LAUNCH_PROBES = new Map<string, Promise<boolean>>()
+
+async function canLaunch(chromium: ChromiumLike, executablePath: string): Promise<boolean> {
+  const cached = LAUNCH_PROBES.get(executablePath)
+  if (cached) return cached
+
+  const probe = (async () => {
+    try {
+      const browser = await chromium.launch({
+        executablePath,
+        args: LAUNCH_ARGS,
+      })
+      await browser.close()
+      return true
+    } catch {
+      return false
+    }
+  })()
+
+  LAUNCH_PROBES.set(executablePath, probe)
+  return probe
+}
+
+/**
+ * 探测本机浏览器。返回可用的打印器,或 `null`——取不到不是错误,调用方回落
+ * 到内置的纯文本打印器。
  */
 export async function resolveLocalChromiumPrinter(
   env: RuntimeEnv = {},
@@ -109,6 +143,7 @@ export async function resolveLocalChromiumPrinter(
   }
 
   if (!executablePath || !(await fileExists(executablePath))) return null
+  if (!(await canLaunch(playwright.chromium, executablePath))) return null
 
   return createLocalChromiumBrochurePrinter(playwright.chromium, {
     ...options,
@@ -125,8 +160,7 @@ export function createLocalChromiumBrochurePrinter(
   return async ({ template, context }) => {
     const browser = await chromium.launch({
       ...(options.executablePath ? { executablePath: options.executablePath } : {}),
-      // 容器与精简过的 ECS 上常常没有 /dev/shm 配额,不关共享内存会随机崩。
-      args: ["--no-sandbox", "--disable-dev-shm-usage", "--font-render-hinting=none"],
+      args: LAUNCH_ARGS,
     })
 
     try {
