@@ -144,7 +144,8 @@ describe.skipIf(!DB_AVAILABLE)("createProductTaxonomyProjectionExtension", () =>
     productId = "prod_taxo_test"
     await db.execute(
       // agent-quality: raw-sql reviewed -- owner: products; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
-      sql`INSERT INTO products (id, name) VALUES (${productId}, 'Mountain Hiking Tour')`,
+      sql`INSERT INTO products (id, name, sell_currency, status, activated, visibility)
+        VALUES (${productId}, 'Mountain Hiking Tour', 'EUR', 'active', true, 'public')`,
     )
 
     // Tree: Adventure (root) > Hiking > Mountain Hiking
