@@ -195,6 +195,40 @@ describe("parseRouteDocument", () => {
       expect(draft.termsHtml).toContain("请携带身份证")
     })
 
+    it("须知被排在行程正文里时照样取得到,且不污染当天正文", () => {
+      // 实测:某份资料把整条线路的须知塞在第一天与第二天之间。尾部章节是从
+      // 最后一个日次之后开始搜的,这样既提取不到,又会让「请随身携带身份证」
+      // 原样印进第一天的行程正文。
+      const draft = parseRouteDocument(
+        [
+          "品牌",
+          "线路 2 天 1 晚",
+          "第一天：甲地-乙地",
+          "上午参观甲地博物馆",
+          "旅游需知【特别重要哦~】：",
+          "请随身携带身份证",
+          "第二天：乙地-丙地",
+          "下午前往丙地",
+          "费用包含",
+          "地面交通",
+        ].join("\n"),
+      )
+
+      expect(draft.termsHtml).toContain("请随身携带身份证")
+      expect(draft.itinerary[0]?.bodyHtml).toContain("甲地博物馆")
+      expect(draft.itinerary[0]?.bodyHtml).not.toContain("身份证")
+      // 挖掉须知不能连带吃掉后面的天。
+      expect(draft.itinerary).toHaveLength(2)
+      expect(draft.itinerary[1]?.bodyHtml).toContain("丙地")
+    })
+
+    it("尾部有须知时优先用尾部的,不走正文兜底", () => {
+      const draft = parseRouteDocument(
+        ["品牌", "线路 1 天 0 晚", "D1 甲地", "正文", "注意事项", "以尾部为准"].join("\n"),
+      )
+      expect(draft.termsHtml).toContain("以尾部为准")
+    })
+
     it("认「温馨提示」", () => {
       const draft = parseRouteDocument(
         ["品牌", "线路 1 天 0 晚", "D1 甲地", "正文", "温馨提示", "高原地区注意休息"].join("\n"),

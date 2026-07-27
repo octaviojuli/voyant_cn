@@ -6,6 +6,7 @@ import {
   type RouteImportDraft,
   routeImportDraftSchema,
 } from "./draft.js"
+import { parseHeader } from "./parse-route-header.js"
 
 /**
  * 把线路资料的纯文本解析成结构化草稿。
@@ -20,10 +21,6 @@ import {
  *   - 费用与须知集中在最后一日之后
  */
 
-/** 天数与晚数,如「12 天 11 晚」;中间可能夹空格或全角空格。 */
-const DAYS_NIGHTS = /(\d+)\s*天\s*(\d+)\s*晚/
-/** 井号标签,如 #私家出行#1 动#乌起喀止。 */
-const TAG = /#([^#\s　]+)/g
 /**
  * 日行标记。两套写法都要认:
  *   - `D1 `(PDF 类资料常用),其后必须跟空白;
@@ -106,10 +103,15 @@ export function parseRouteDocument(
   const tailStart =
     dayMarkers.length > 0 ? findTailStart(normalized, dayMarkers) : normalized.length
 
+  // 须知有时被排在行程正文里,既提取不到又会混进当天的正文——两处都要处理,
+  // 所以先把区间找出来,提取与剔除共用同一个边界。
+  const misplaced = findMisplacedTerms(normalized, dayMarkers, tailStart)
+  const misplacedText = misplaced ? normalized.slice(misplaced.start, misplaced.end) : null
+
   const draft: RouteImportDraft = {
     ...parseHeader(header, unresolved),
-    itinerary: parseDays(normalized, dayMarkers, tailStart),
-    ...parseTailSections(normalized.slice(tailStart), unresolved),
+    itinerary: parseDays(normalized, dayMarkers, tailStart, misplaced),
+    ...parseTailSections(normalized.slice(tailStart), unresolved, misplacedText),
     unresolved,
   }
 
@@ -215,125 +217,23 @@ function findTailStart(text: string, markers: DayMarker[]): number {
   return earliest
 }
 
-function parseHeader(
-  header: string,
-  unresolved: DraftUnresolved[],
-): Pick<RouteImportDraft, "brand" | "title" | "tagline" | "tags" | "days" | "nights"> {
-  const lines = header
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-
-  // 只看开头几行。再往后是引言、产品特色这些段落,里面的字样会干扰判断。
-  const headLines = lines.slice(0, HEADER_SCAN_LINES)
-
-  const brand = pickBrand(headLines)
-  const tagline = pickTagline(headLines, brand)
-
-  // 天数与标题分开找。Word 类资料的标题在首行、而「8天7晚」写在次行的
-  // 卖点串上,绑在同一行找会二选一地丢掉一个。
-  const dn = matchInLines(headLines, DAYS_NIGHTS)
-  const days = dn ? Number.parseInt(dn[1] as string, 10) : null
-  const nights = dn ? Number.parseInt(dn[2] as string, 10) : null
-  if (!dn) {
-    unresolved.push({
-      field: "days",
-      reason: "开头几行里没找到「N 天 N 晚」",
-      excerpt: tagline,
-    })
-  }
-
-  // 标签同理:PDF 类资料把 #私家出行# 单独写成一行,不在标题行上。
-  const tags: string[] = []
-  for (const line of headLines) {
-    TAG.lastIndex = 0
-    let tagMatch = TAG.exec(line)
-    while (tagMatch !== null) {
-      tags.push((tagMatch[1] as string).trim())
-      tagMatch = TAG.exec(line)
-    }
-  }
-
-  return { brand, title: cleanTitle(tagline), tagline, tags, days, nights }
-}
-
-/** 头部扫描行数。真实资料的品牌、标题、标签都落在前四行内。 */
-const HEADER_SCAN_LINES = 4
-
-/** 「引言：」「产品特色：」「简版行程」这类段落标记不是标题。 */
-const SECTION_MARKER = /^[【[]?(引言|产品特色|行程亮点|简版行程|详细行程|费用|报价)/
-
-/**
- * 卖点串:「S101+沙湾大盘鸡+独山子大峡谷+…」。
- *
- * 这行常常也带着「8天7晚」,原先因此被当成标题,产品名就成了一长串菜名。
- * 加号数量是个足够强的信号——真实线路名不会连着堆三个以上加号。
- */
-function isSellingPoints(line: string): boolean {
-  return (line.match(/\+/g)?.length ?? 0) >= 3
-}
-
-function isTitleCandidate(line: string): boolean {
-  if (SECTION_MARKER.test(line)) return false
-  if (isSellingPoints(line)) return false
-  // 纯标签行(#私家出行#1 动)去掉标签就没剩什么了。
-  return line.replace(TAG, "").replace(/[★☆*\-—–\s]/g, "").length > 0
-}
-
-/**
- * 品牌/产品线名(如「湖燃之间」)。
- *
- * 只认「短、无装饰、无天数、无括号」的首行。Word 类资料的首行是标题本身
- * (【伊犁奇遇】夏日风光8日游),误判成品牌会把真标题让给下一行的卖点串。
- */
-const MAX_BRAND_LENGTH = 8
-
-function pickBrand(lines: readonly string[]): string | null {
-  const first = lines[0]
-  if (!first) return null
-  if (first.length > MAX_BRAND_LENGTH) return null
-  if (/[-★#+【[]/.test(first)) return null
-  if (DAYS_NIGHTS.test(first) || /\d\s*日游/.test(first)) return null
-  return first
-}
-
-function pickTagline(lines: readonly string[], brand: string | null): string | null {
-  for (const line of lines) {
-    if (line === brand) continue
-    if (isTitleCandidate(line)) return line
-  }
-  return lines.find((line) => line !== brand) ?? lines[0] ?? null
-}
-
-function matchInLines(lines: readonly string[], pattern: RegExp): RegExpMatchArray | null {
-  for (const line of lines) {
-    const match = line.match(pattern)
-    if (match) return match
-  }
-  return null
-}
-
-/** 去掉 ★ - # 之类装饰与天数片段,留下可用作产品名的线路名。 */
-function cleanTitle(tagline: string | null): string {
-  if (!tagline) return ""
-  return (
-    tagline
-      .replace(TAG, " ")
-      .replace(DAYS_NIGHTS, " ")
-      .replace(/[★☆*]+/g, " ")
-      // 抠掉天数后会留下「喀纳斯禾木- -夜雪探寻」这样的空档,把连续的
-      // 连接号并成一个,否则产品名里带着一串悬空的横杠。
-      .replace(/[-—–]\s*[-—–]+/g, "-")
-      .replace(/^[-—–\s]+|[-—–\s]+$/g, "")
-      .replace(/\s{2,}/g, " ")
-      .trim()
-  )
-}
-
-function parseDays(text: string, markers: DayMarker[], tailStart: number): DraftDay[] {
+function parseDays(
+  text: string,
+  markers: DayMarker[],
+  tailStart: number,
+  /** 错位到正文里的须知区间,要从所在那天的正文里剔除。 */
+  misplaced?: { start: number; end: number } | null,
+): DraftDay[] {
   return markers.map((marker, i) => {
     const end = markers[i + 1]?.index ?? tailStart
-    const segment = text.slice(marker.index, end)
+    let segment = text.slice(marker.index, end)
+
+    // 须知落在这一天里时把它挖掉,否则整段「请随身携带身份证」会印进当天
+    // 的行程正文。区间与提取用的是同一个,不会一处删一处留。
+    if (misplaced && misplaced.start >= marker.index && misplaced.end <= end) {
+      segment = text.slice(marker.index, misplaced.start) + text.slice(misplaced.end, end)
+    }
+
     return parseDay(segment, marker.dayNumber)
   })
 }
@@ -476,9 +376,50 @@ function extractPois(body: string): DraftPoi[] {
   return pois
 }
 
+/**
+ * 找出被排在行程正文里的须知段。
+ *
+ * 有的供应商把整条线路的须知塞在第一天的正文里(实测:「旅游需知【特别重要
+ * 哦~】」夹在第一天与第二天之间)。尾部章节是从最后一个日次之后开始搜的,
+ * 这样的须知既提取不到,又会原样混进当天的行程正文——宣传册第一天会印出
+ * 「请随身携带身份证」。
+ *
+ * 边界取「下一个日次标记」与「下一个尾部章节标题」中较早的那个:须知只是
+ * 插在两天之间的一块,不能一路吞到文末。
+ */
+function findMisplacedTerms(
+  text: string,
+  markers: readonly DayMarker[],
+  tailStart: number,
+): { start: number; end: number } | null {
+  const labels = TAIL_SECTIONS.find((section) => section.field === "termsHtml")?.labels ?? []
+
+  let start = -1
+  for (const label of labels) {
+    const found = text.indexOf(label)
+    if (found !== -1 && found < tailStart && (start === -1 || found < start)) start = found
+  }
+  if (start === -1) return null
+
+  let end = tailStart
+  for (const marker of markers) {
+    if (marker.index > start && marker.index < end) end = marker.index
+  }
+  for (const section of TAIL_SECTIONS) {
+    for (const label of section.labels) {
+      const found = text.indexOf(label, start + 1)
+      if (found !== -1 && found < end) end = found
+    }
+  }
+
+  return end > start ? { start, end } : null
+}
+
 function parseTailSections(
   tail: string,
   unresolved: DraftUnresolved[],
+  /** 错位到正文里的须知段原文,尾部找不到时用它兜底。 */
+  misplacedTerms?: string | null,
 ): Pick<RouteImportDraft, "inclusionsHtml" | "exclusionsHtml" | "termsHtml"> {
   const hits = TAIL_SECTIONS.map((section) => {
     let index = -1
@@ -503,6 +444,11 @@ function parseTailSections(
     const body = block.replace(/^[^\n]*\n/, "").trim()
     result[hit.field] = body ? toListHtml(body) : null
   })
+
+  if (!result.termsHtml && misplacedTerms) {
+    const body = misplacedTerms.replace(/^[^\n]*\n/, "").trim()
+    result.termsHtml = body ? toListHtml(body) : null
+  }
 
   for (const section of TAIL_SECTIONS) {
     if (!result[section.field]) {

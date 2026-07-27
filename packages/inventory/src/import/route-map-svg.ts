@@ -122,7 +122,7 @@ export function renderRouteMapSvg(
     const from = placed[index - 1]
     const to = placed[index]
     if (!from || !to) continue
-    parts.push(connector(from, to, perRow, index))
+    parts.push(connector(from, to))
   }
 
   for (const node of placed) parts.push(nodeMarkup(node, placed))
@@ -191,7 +191,7 @@ type PlacedNode = RouteMapNode & { x: number; y: number; row: number }
  * 节点之间的连线。同一行走直线;换行时走一段绕到下一行的折线,
  * 免得直接斜穿把中间的节点连穿过去。
  */
-function connector(from: PlacedNode, to: PlacedNode, perRow: number, index: number): string {
+function connector(from: PlacedNode, to: PlacedNode): string {
   const lines = edgeLabelLines(to)
   const fromCenterY = from.y + NODE_HEIGHT / 2
   const toCenterY = to.y + NODE_HEIGHT / 2
