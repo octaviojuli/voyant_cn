@@ -16,6 +16,7 @@ export const operatorAdminSettingsMessagesRoPart1 = {
   pricingCategories: "Categorii de tarifare",
   priceCatalogs: "Cataloage de pret",
   productTypes: "Tipuri de produs",
+  routeImport: "Asistent import trasee",
   productTags: "Etichete produse",
   validationNameRequired: "Numele este obligatoriu",
   validationCodeRequired: "Codul este obligatoriu",
@@ -327,5 +328,25 @@ export const operatorAdminSettingsMessagesRoPart1 = {
     typePromo: "Promo",
     typeInternal: "Intern",
     typeOther: "Altul",
+  },
+  routeImportPage: {
+    title: "Asistent import trasee",
+    description:
+      "Valorile implicite folosite de asistent cand creeaza un produs dintr-un document de traseu.",
+    resolvedTitle: "Ce va folosi asistentul",
+    resolvedHint: "Campurile goale cad pe aceste valori.",
+    sellCurrency: "Moneda de vanzare",
+    timezone: "Fus orar",
+    productType: "Tip de produs",
+    defaultSupplier: "Furnizor implicit",
+    supplierHint:
+      "Preselectat pe pagina de verificare; schimba-l per document inainte de confirmare.",
+    adultMinAge: "Adult de la varsta",
+    childMinAge: "Copil de la varsta",
+    ageHint: "Sub varsta de copil se considera bebelus si se tarifeaza separat.",
+    save: "Salveaza",
+    saving: "Se salveaza…",
+    saved: "Salvat",
+    unset: "Nesetat",
   },
 }

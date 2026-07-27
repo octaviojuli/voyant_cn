@@ -106,7 +106,16 @@ export const createInventoryImportVoyantRuntime = defineGraphRuntimeFactory(
   async ({ api, getPort }) => {
     const storage = await getPort(storageMediaRuntimePort)
     return selectedExtensionSurfaces(
-      createProductImportApiExtension({ resolveStorage: storage.resolveStorage }),
+      createProductImportApiExtension({
+        resolveStorage: storage.resolveStorage,
+        // 助手设置在装配层读,路由层只拿到一组解析好的值——inventory 的
+        // 路由不该知道设置存在哪张表里。动态引入,免得把设置模块钉进
+        // 这个工厂的静态图。
+        resolveDefaults: async (c) => {
+          const { resolveRouteImportDefaults } = await import("@voyant-travel/operator-settings")
+          return resolveRouteImportDefaults(c.get("db"))
+        },
+      }),
       api,
     )
   },

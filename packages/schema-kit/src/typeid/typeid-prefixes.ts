@@ -68,6 +68,7 @@ export const PREFIXES = {
   product_itinerary_translations: "pitr",
   product_days: "pday",
   product_import_drafts: "pimp",
+  route_import_settings: "rimps",
   product_day_services: "pdse",
   product_day_translations: "pdtr",
   product_day_service_translations: "pdsr",

@@ -41,10 +41,25 @@ export interface ImportRoutesOptions {
    * 未配置存储则跳过,不影响解析。
    */
   resolveStorage?: (c: Context<Env>) => StorageProvider | null
-  /** 默认售价币种,来自助手设置。 */
+  /** 默认售价币种,部署装配时给定的兜底。 */
   defaultSellCurrency?: string
   /** 默认时区。 */
   defaultTimezone?: string | null
+  /**
+   * 读取助手设置里的默认值。由部署注入,inventory 不直接依赖设置模块的
+   * 存取方式;未注入时退回上面两个装配期兜底。
+   */
+  resolveDefaults?: (c: Context<Env>) => Promise<RouteImportDefaults | null>
+}
+
+/** 助手设置解析出的一组值。与 operator-settings 的返回形状对齐。 */
+export interface RouteImportDefaults {
+  sellCurrency: string
+  timezone: string | null
+  productTypeId: string | null
+  defaultSupplierId: string | null
+  adultMinAge: number
+  childMinAge: number
 }
 
 const draftIdParam = z.object({ id: z.string() })
@@ -309,14 +324,29 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
 
   hono.openapi(commitRoute, async (c) => {
     const input = await parseJsonBody(c, commitBodySchema.default({}))
+    const db = c.get("db")
 
-    const outcome = await importDraftService.commit(c.get("db"), c.req.valid("param").id, {
-      sellCurrency: input.sellCurrency ?? options.defaultSellCurrency ?? "CNY",
-      supplierId: input.supplierId ?? null,
-      productTypeId: input.productTypeId ?? null,
-      timezone: input.timezone ?? options.defaultTimezone ?? null,
-      ...(input.adultMinAge != null ? { adultMinAge: input.adultMinAge } : {}),
-      ...(input.childMinAge != null ? { childMinAge: input.childMinAge } : {}),
+    // 取值优先级:本次请求 > 助手设置 > 系统兜底。
+    // 供应商刻意只有前两级——它随每份资料变,复核界面当场选,设置里那个
+    // 只是默认选中项。
+    const defaults = (await options.resolveDefaults?.(c)) ?? null
+
+    const outcome = await importDraftService.commit(db, c.req.valid("param").id, {
+      sellCurrency:
+        input.sellCurrency ?? defaults?.sellCurrency ?? options.defaultSellCurrency ?? "CNY",
+      supplierId: input.supplierId ?? defaults?.defaultSupplierId ?? null,
+      productTypeId: input.productTypeId ?? defaults?.productTypeId ?? null,
+      timezone: input.timezone ?? defaults?.timezone ?? options.defaultTimezone ?? null,
+      ...(input.adultMinAge != null
+        ? { adultMinAge: input.adultMinAge }
+        : defaults?.adultMinAge != null
+          ? { adultMinAge: defaults.adultMinAge }
+          : {}),
+      ...(input.childMinAge != null
+        ? { childMinAge: input.childMinAge }
+        : defaults?.childMinAge != null
+          ? { childMinAge: defaults.childMinAge }
+          : {}),
       ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
     })
 

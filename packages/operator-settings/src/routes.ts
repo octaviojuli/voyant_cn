@@ -31,16 +31,20 @@ import {
   getOperatorPaymentInstructions,
   getOperatorProfile,
   getOperatorSettings,
+  getRouteImportSettings,
+  resolveRouteImportDefaults,
   toPublicOperatorProfile,
   toPublicOperatorSettings,
   updateOperatorPaymentDefaultsSchema,
   updateOperatorPaymentInstructionsSchema,
   updateOperatorProfileSchema,
   updateOperatorSettingsSchema,
+  updateRouteImportSettingsSchema,
   upsertOperatorPaymentDefaults,
   upsertOperatorPaymentInstructions,
   upsertOperatorProfile,
   upsertOperatorSettings,
+  upsertRouteImportSettings,
 } from "./service.js"
 
 type Env = { Variables: { db: PostgresJsDatabase } }
@@ -107,6 +111,32 @@ const operatorPaymentDefaultsRowSchema = z.object({
   invoicePayUrlTemplate: z.string().nullable(),
   createdAt: isoTimestamp,
   updatedAt: isoTimestamp,
+})
+
+/** `route_import_settings` row. */
+const routeImportSettingsRowSchema = z.object({
+  id: z.string(),
+  sellCurrency: z.string().nullable(),
+  timezone: z.string().nullable(),
+  productTypeId: z.string().nullable(),
+  defaultSupplierId: z.string().nullable(),
+  adultMinAge: z.number().nullable(),
+  childMinAge: z.number().nullable(),
+  createdAt: isoTimestamp,
+  updatedAt: isoTimestamp,
+})
+
+/**
+ * 助手实际会用的一组值:设置优先,缺项落到兜底。界面直接显示这个,
+ * 免得人对着一堆空值猜「那到底会用什么」。
+ */
+const routeImportDefaultsSchema = z.object({
+  sellCurrency: z.string(),
+  timezone: z.string(),
+  productTypeId: z.string().nullable(),
+  defaultSupplierId: z.string().nullable(),
+  adultMinAge: z.number(),
+  childMinAge: z.number(),
 })
 
 /**
@@ -235,6 +265,35 @@ const patchOperatorPaymentDefaultsRoute = createRoute({
   },
 })
 
+const getRouteImportSettingsRoute = createRoute({
+  method: "get",
+  path: "/v1/admin/settings/route-import",
+  responses: {
+    200: jsonContent(
+      z.object({
+        data: routeImportSettingsRowSchema.nullable(),
+        resolved: routeImportDefaultsSchema,
+      }),
+      "线路上线助理的默认值,以及实际会用的一组解析结果",
+    ),
+  },
+})
+
+const patchRouteImportSettingsRoute = createRoute({
+  method: "patch",
+  path: "/v1/admin/settings/route-import",
+  request: { body: jsonBody(updateRouteImportSettingsSchema) },
+  responses: {
+    200: jsonContent(
+      z.object({
+        data: routeImportSettingsRowSchema.nullable(),
+        resolved: routeImportDefaultsSchema,
+      }),
+      "保存后的默认值",
+    ),
+  },
+})
+
 const getPublicOperatorProfileRoute = createRoute({
   "x-voyant-api-id": "@voyant-travel/operator-settings#api.public.operator-profile",
   method: "get",
@@ -319,6 +378,28 @@ export function mountOperatorSettingsRoutes(hono: OpenApiMountTarget): void {
             { data: await upsertOperatorPaymentDefaults(c.get("db"), c.req.valid("json")) },
             200,
           ))(),
+      ),
+    )
+    .openapi(getRouteImportSettingsRoute, (c) =>
+      asRouteResponse(
+        (async () => {
+          const db = c.get("db")
+          const [data, resolved] = await Promise.all([
+            getRouteImportSettings(db),
+            resolveRouteImportDefaults(db),
+          ])
+          return c.json({ data, resolved }, 200)
+        })(),
+      ),
+    )
+    .openapi(patchRouteImportSettingsRoute, (c) =>
+      asRouteResponse(
+        (async () => {
+          const db = c.get("db")
+          const data = await upsertRouteImportSettings(db, c.req.valid("json"))
+          // 保存后连同解析结果一起返回,界面不必再取一次。
+          return c.json({ data, resolved: await resolveRouteImportDefaults(db) }, 200)
+        })(),
       ),
     )
     .openapi(getPublicOperatorProfileRoute, (c) =>
