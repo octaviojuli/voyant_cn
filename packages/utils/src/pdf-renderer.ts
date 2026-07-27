@@ -174,7 +174,13 @@ export async function renderPdfDocument(input: RenderPdfDocumentInput): Promise<
   let bold: PDFFont
   if (needsCjk) {
     pdfDoc.registerFontkit(await loadFontkit())
-    font = await pdfDoc.embedFont(await loadCjkFontBytes(), { subset: true })
+    // 不能开子集化。随包的中文字体是 CFF 轮廓(OTF),而 pdf-lib 为 CFF 生成的
+    // 子集 FontFile3 是损坏的:阅读器加载失败后回退到非嵌入字体,中文全部显示
+    // 成空心方框——正是"生成的 PDF 是乱码"的成因。改为整体嵌入,每份中文 PDF
+    // 因此增加约 1.3 MB(宣传册上限 5 MB,仍有余量)。
+    // 复现:同一段中文分别以 subset true/false 生成,前者 pdftoppm 报
+    // "Embedded font file may be invalid" 并渲染成方框,后者正常。
+    font = await pdfDoc.embedFont(await loadCjkFontBytes(), { subset: false })
     bold = font
   } else {
     font = await pdfDoc.embedFont(StandardFonts.Helvetica)
