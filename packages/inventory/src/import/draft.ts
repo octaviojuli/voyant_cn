@@ -39,6 +39,20 @@ export const draftDaySchema = z.object({
   pois: z.array(draftPoiSchema).default([]),
 })
 
+/**
+ * 已落到对象存储的文档内嵌图片。
+ *
+ * `dayNumber` 为空表示这是封面、行程总览这类整条线路的图,不属于某一天。
+ */
+export const draftImageSchema = z.object({
+  index: z.number().int().nonnegative(),
+  storageKey: z.string().min(1),
+  url: z.string().default(""),
+  contentType: z.string().default("application/octet-stream"),
+  byteSize: z.number().int().nonnegative().default(0),
+  dayNumber: z.number().int().positive().nullish(),
+})
+
 /** 未能识别的字段。带上原文片段,便于人工复核时定位。 */
 export const draftUnresolvedSchema = z.object({
   field: z.string(),
@@ -70,5 +84,6 @@ export const routeImportDraftSchema = z.object({
 export type DraftMeals = z.infer<typeof draftMealsSchema>
 export type DraftPoi = z.infer<typeof draftPoiSchema>
 export type DraftDay = z.infer<typeof draftDaySchema>
+export type DraftImage = z.infer<typeof draftImageSchema>
 export type DraftUnresolved = z.infer<typeof draftUnresolvedSchema>
 export type RouteImportDraft = z.infer<typeof routeImportDraftSchema>

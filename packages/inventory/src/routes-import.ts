@@ -70,6 +70,7 @@ const draftRowSchema = z.object({
  */
 const draftDetailSchema = draftRowSchema.extend({
   routeMapSvg: z.string().nullable(),
+  images: z.unknown().nullable(),
 })
 
 type DraftRowLike = {
@@ -103,6 +104,8 @@ function serializeDraftDetail(row: DraftRowLike) {
     ...serializeDraftRow(row),
     // 老草稿的结构可能对不上,画不出就留空,不因为一张图让详情打不开。
     routeMapSvg: parsed.success ? renderRouteMapSvg(parsed.data) : null,
+    // 文档内嵌配图,复核时要看到「第三天配的是哪张照片」。
+    images: (row.images ?? null) as z.infer<typeof draftDetailSchema>["images"],
   }
 }
 
@@ -170,6 +173,19 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
         bytes,
         filename: file.name,
         sourceStorageKey: storageKey,
+        // 配图必须走 uploads/ 前缀:媒体服务路由只放行这几个前缀,
+        // 换个前缀存下来的图取不回来。
+        ...(storage
+          ? {
+              uploadImage: async (image) => {
+                const uploaded = await storage.upload(image.bytes, {
+                  key: `uploads/route-documents/images/${crypto.randomUUID()}`,
+                  contentType: image.contentType,
+                })
+                return { key: uploaded.key, url: uploaded.url }
+              },
+            }
+          : {}),
       })
       return c.json({ data: serializeDraftDetail(row as DraftRowLike) }, 201)
     } catch (error) {

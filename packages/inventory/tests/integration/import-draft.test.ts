@@ -7,13 +7,19 @@ import { eq } from "drizzle-orm"
 import { beforeEach, describe, expect, it } from "vitest"
 
 import { importDraftService } from "../../src/import/service.js"
-import { productDays, productItineraries, products } from "../../src/schema.js"
+import { productDays, productItineraries, productMedia, products } from "../../src/schema.js"
 
 const DB_AVAILABLE = !!process.env.TEST_DATABASE_URL
 const FIXTURES = join(import.meta.dirname, "../fixtures/route-documents")
 const docxBytes = () => new Uint8Array(readFileSync(join(FIXTURES, "minimal.docx")))
 
 const COMMIT_OPTIONS = { sellCurrency: "CNY", timezone: "Asia/Shanghai" }
+
+/** 假存储:只回键,不真写盘。故意返回空 url,顺带验证兜底路径。 */
+const uploadImage = async (image: { index: number }) => ({
+  key: `uploads/route-documents/images/test-${image.index}`,
+  url: "",
+})
 
 describe.skipIf(!DB_AVAILABLE)("线路上线助理:草稿到上线", () => {
   const db = createTestDb()
@@ -145,6 +151,49 @@ describe.skipIf(!DB_AVAILABLE)("线路上线助理:草稿到上线", () => {
     expect(after?.status).toBe("discarded")
     expect(after?.note).toBe("供应商撤回")
     expect(await db.select().from(products)).toHaveLength(0)
+  })
+
+  it("内嵌图片上传时即落库,并记下归属的日次", async () => {
+    // 图片字节只存在于上传那一刻的请求里,草稿落库后就没有了,不能等到确认。
+    const { row } = await importDraftService.createFromDocument(db, {
+      bytes: docxBytes(),
+      filename: "测试线路.docx",
+      uploadImage,
+    })
+
+    const images = (row?.images ?? []) as { storageKey: string; dayNumber: number | null }[]
+    expect(images.length).toBeGreaterThan(0)
+    expect(images[0]?.storageKey).toContain("uploads/route-documents/images/")
+  })
+
+  it("未配置存储时跳过配图,不影响解析", async () => {
+    const { row } = await importDraftService.createFromDocument(db, {
+      bytes: docxBytes(),
+      filename: "测试线路.docx",
+    })
+
+    expect(row?.images).toEqual([])
+    expect((row?.draft as { itinerary?: unknown[] }).itinerary?.length).toBe(1)
+  })
+
+  it("确认后配图挂到产品上,并留出产品级封面", async () => {
+    const { row } = await importDraftService.createFromDocument(db, {
+      bytes: docxBytes(),
+      filename: "测试线路.docx",
+      uploadImage,
+    })
+    const outcome = await importDraftService.commit(db, row?.id as string, COMMIT_OPTIONS)
+    const productId = (outcome as { productId: string }).productId
+
+    const media = await db.select().from(productMedia).where(eq(productMedia.productId, productId))
+    expect(media.length).toBeGreaterThan(0)
+
+    // 全部图片都归了某一天时产品级一张也没有,产品列表里就是一块空白。
+    const productLevelCover = media.filter((item) => item.dayId === null && item.isCover)
+    expect(productLevelCover).toHaveLength(1)
+
+    // 存储没给出可访问地址时退回媒体服务路径——url 是非空列,不能留空。
+    expect(productLevelCover[0]?.url).toContain("/v1/admin/media/")
   })
 
   it("不存在的草稿返回未找到,而不是抛错", async () => {

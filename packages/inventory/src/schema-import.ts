@@ -47,6 +47,14 @@ export const productImportDrafts = pgTable(
     parsedDraft: jsonb("parsed_draft").notNull(),
     /** 提取阶段的告警,如「PDF 只能取到纯文本」。 */
     warnings: jsonb("warnings"),
+    /**
+     * 文档内嵌图片,上传时即落到对象存储,这里只留键与归属的日次。
+     *
+     * 不等到确认时再传:图片字节只存在于上传那一刻的请求里,草稿落库后就
+     * 没有了;而复核界面要让人看到「第三天配的是哪张照片」才好判断能不能
+     * 发布。形状是 DraftImage[]。
+     */
+    images: jsonb("images"),
 
     /** 确认后建出的产品。未确认时为空。 */
     productId: typeIdRef("product_id").references(() => products.id, { onDelete: "set null" }),
