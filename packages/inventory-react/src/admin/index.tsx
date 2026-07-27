@@ -77,6 +77,8 @@ export { ProductDetailSkeleton }
 export interface CreateInventoryAdminExtensionOptions {
   /** Mount path of the products pages inside the admin workspace. Default `/products`. */
   basePath?: string
+  /** Mount path of the route import assistant. Default `/route-imports`. */
+  routeImportBasePath?: string
   /** Localized page titles. Defaults are the English operator nav labels. */
   labels?: {
     products?: string
@@ -113,6 +115,11 @@ export function createInventoryAdminExtension(
 ): AdminExtension {
   const { basePath = "/products", labels = {} } = options
   const { products = "Products", categories = "Categories", routeImport = "Route import" } = labels
+
+  // 助理页刻意不挂在 `${basePath}/…` 之下:产品详情是 `${basePath}/$id`,
+  // 任何 `${basePath}/<静态段>` 都会被它当成产品 ID 吃掉。草稿本来也不是
+  // 产品的子资源——产品要到确认之后才存在。
+  const routeImportBasePath = options.routeImportBasePath ?? "/route-imports"
 
   return defineAdminExtension({
     id: "inventory",
@@ -160,7 +167,7 @@ export function createInventoryAdminExtension(
       },
       {
         id: "products-route-import",
-        path: `${basePath}/import-drafts`,
+        path: routeImportBasePath,
         title: routeImport,
         destination: "routeImportDraft.list",
         ssr: "data-only",
@@ -179,7 +186,7 @@ export function createInventoryAdminExtension(
       },
       {
         id: "products-route-import-detail",
-        path: `${basePath}/import-drafts/$id`,
+        path: `${routeImportBasePath}/$id`,
         title: routeImport,
         destination: "routeImportDraft.detail",
         destinationParams: { id: "draftId" },
@@ -320,7 +327,7 @@ export function createSelectedInventoryAdminExtension({
               {
                 id: "product-route-import",
                 title: labels.routeImport,
-                url: "/products/import-drafts",
+                url: "/route-imports",
               },
             ],
           },

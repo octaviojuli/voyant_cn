@@ -396,7 +396,7 @@ export const inventoryVoyantModule = defineModule({
       },
       {
         id: "@voyant-travel/inventory#admin.route.products-route-import",
-        path: "/products/import-drafts",
+        path: "/route-imports",
         requiredScopes: ["products:read"],
         runtime: {
           entry: "@voyant-travel/inventory-react/admin",
@@ -405,7 +405,7 @@ export const inventoryVoyantModule = defineModule({
       },
       {
         id: "@voyant-travel/inventory#admin.route.products-route-import-detail",
-        path: "/products/import-drafts/$id",
+        path: "/route-imports/$id",
         requiredScopes: ["products:read"],
         runtime: {
           entry: "@voyant-travel/inventory-react/admin",
@@ -773,7 +773,8 @@ export const inventoryImportVoyantPlugin = defineExtension({
     {
       id: "@voyant-travel/inventory#import-extension.api.admin",
       surface: "admin",
-      mount: "products",
+      // 独立挂载点。挂到 products 之下会被 /products/{id} 吃掉。
+      mount: "route-imports",
       openapi: { document: "products" },
       runtime: {
         entry: "@voyant-travel/inventory/graph-runtime",

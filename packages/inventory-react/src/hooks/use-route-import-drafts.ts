@@ -18,7 +18,7 @@ export function useRouteImportDrafts(options: UseRouteImportDraftsOptions = {}) 
   return useQuery({
     queryKey: productsQueryKeys.importDraftsList(),
     queryFn: () =>
-      fetchWithValidation("/v1/admin/products/import-drafts", routeImportDraftListResponse, {
+      fetchWithValidation("/v1/admin/route-imports", routeImportDraftListResponse, {
         baseUrl,
         fetcher,
       }),
@@ -39,7 +39,7 @@ export function useRouteImportDraft(id: string, options: UseRouteImportDraftOpti
     queryKey: productsQueryKeys.importDraft(id),
     queryFn: () =>
       fetchWithValidation(
-        `/v1/admin/products/import-drafts/${encodeURIComponent(id)}`,
+        `/v1/admin/route-imports/${encodeURIComponent(id)}`,
         routeImportDraftSingleResponse,
         { baseUrl, fetcher },
       ),

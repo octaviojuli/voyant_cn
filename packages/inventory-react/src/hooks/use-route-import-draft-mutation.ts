@@ -7,7 +7,7 @@ import { useVoyantProductsContext } from "../provider.js"
 import { productsQueryKeys } from "../query-keys.js"
 import { routeImportCommitResponse, routeImportDraftSingleResponse } from "../schemas.js"
 
-const BASE = "/v1/admin/products/import-drafts"
+const BASE = "/v1/admin/route-imports"
 
 export interface CommitRouteImportDraftInput {
   sellCurrency?: string

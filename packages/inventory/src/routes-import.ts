@@ -1,14 +1,19 @@
 /**
  * 线路上线助理的路由,归 `@voyant-travel/inventory` 所有。
  *
- *   POST   /import-drafts            — 上传线路文件,解析成待复核草稿
- *   GET    /import-drafts            — 草稿列表
- *   GET    /import-drafts/{id}       — 草稿详情
- *   PATCH  /import-drafts/{id}       — 保存复核改动
- *   POST   /import-drafts/{id}/commit  — 确认并建出产品
- *   POST   /import-drafts/{id}/discard — 放弃
+ *   POST   /            — 上传线路文件,解析成待复核草稿
+ *   GET    /            — 草稿列表
+ *   GET    /{id}        — 草稿详情
+ *   PATCH  /{id}        — 保存复核改动
+ *   POST   /{id}/commit  — 确认并建出产品
+ *   POST   /{id}/discard — 放弃
  *
- * 路径是相对的,由部署挂到 `/v1/admin/products` 之下。
+ * 路径是相对的,由部署挂到 `/v1/admin/route-imports` 之下。
+ *
+ * **不能挂到 `products` 之下**:核心产品接口有 `/products/{id}`,任何
+ * `/products/<静态段>` 都会被它当成产品 ID 吃掉,返回「Product not found」。
+ * 挂载点的先后由组合顺序决定,不是路由数组的顺序能左右的,所以给草稿一个
+ * 独立的挂载点——它本来也不是产品的子资源,产品要到确认之后才存在。
  *
  * 上传与确认分成两步是刻意的:价格、天数、费用包含错了是要赔钱的,中间
  * 必须有人过目。确认动作本身也带幂等,重复点击不会建出两个产品。
@@ -116,7 +121,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
 
   const createDraftRoute = createRoute({
     method: "post",
-    path: "/import-drafts",
+    path: "/",
     request: {
       body: {
         required: true,
@@ -198,7 +203,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
 
   const listRoute = createRoute({
     method: "get",
-    path: "/import-drafts",
+    path: "/",
     responses: {
       200: {
         description: "草稿列表",
@@ -214,7 +219,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
 
   const getRoute = createRoute({
     method: "get",
-    path: "/import-drafts/{id}",
+    path: "/{id}",
     request: { params: draftIdParam },
     responses: {
       200: {
@@ -233,7 +238,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
 
   const updateRoute = createRoute({
     method: "patch",
-    path: "/import-drafts/{id}",
+    path: "/{id}",
     request: {
       params: draftIdParam,
       body: {
@@ -273,7 +278,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
 
   const commitRoute = createRoute({
     method: "post",
-    path: "/import-drafts/{id}/commit",
+    path: "/{id}/commit",
     request: {
       params: draftIdParam,
       body: {
@@ -325,7 +330,7 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
 
   const discardRoute = createRoute({
     method: "post",
-    path: "/import-drafts/{id}/discard",
+    path: "/{id}/discard",
     request: {
       params: draftIdParam,
       body: {
@@ -352,9 +357,16 @@ export function createProductImportRoutes(options: ImportRoutesOptions = {}) {
   return hono
 }
 
+/**
+ * `module` 即挂载路径段:扩展挂在 `/v1/admin/{module}` 之下。
+ *
+ * 刻意不用 `products`:核心产品接口有 `/products/{id}`,任何
+ * `/products/<静态段>` 都会被它当成产品 ID 吃掉,返回「Product not found」。
+ * 草稿本来也不是产品的子资源——产品要到确认之后才存在。
+ */
 export const productImportExtension: Extension = {
   name: "import",
-  module: "products",
+  module: "route-imports",
 }
 
 /** 由部署装配的线路上线助理扩展。 */

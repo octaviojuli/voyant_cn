@@ -443,7 +443,7 @@ export function getRouteImportDraftsQueryOptions(client: FetchWithValidationOpti
   return queryOptions({
     queryKey: productsQueryKeys.importDraftsList(),
     queryFn: () =>
-      fetchWithValidation("/v1/admin/products/import-drafts", routeImportDraftListResponse, client),
+      fetchWithValidation("/v1/admin/route-imports", routeImportDraftListResponse, client),
   })
 }
 
@@ -452,7 +452,7 @@ export function getRouteImportDraftQueryOptions(client: FetchWithValidationOptio
     queryKey: productsQueryKeys.importDraft(id),
     queryFn: () =>
       fetchWithValidation(
-        `/v1/admin/products/import-drafts/${encodeURIComponent(id)}`,
+        `/v1/admin/route-imports/${encodeURIComponent(id)}`,
         routeImportDraftSingleResponse,
         client,
       ),

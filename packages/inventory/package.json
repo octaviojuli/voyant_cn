@@ -20,6 +20,7 @@
     "./workflows": "./src/workflow-entry.ts",
     "./workflow-runtime": "./src/workflow-runtime.ts",
     "./booking-extension": "./src/booking-extension.ts",
+    "./import-extension": "./src/routes-import.ts",
     "./catalog-policy": "./src/catalog-policy.ts",
     "./catalog-policy-destinations": "./src/catalog-policy-destinations.ts",
     "./catalog-policy-taxonomy": "./src/catalog-policy-taxonomy.ts",
@@ -190,6 +191,11 @@
         "types": "./dist/booking-extension.d.ts",
         "import": "./dist/booking-extension.js",
         "default": "./dist/booking-extension.js"
+      },
+      "./import-extension": {
+        "types": "./dist/routes-import.d.ts",
+        "import": "./dist/routes-import.js",
+        "default": "./dist/routes-import.js"
       },
       "./catalog-policy": {
         "types": "./dist/catalog-policy.d.ts",

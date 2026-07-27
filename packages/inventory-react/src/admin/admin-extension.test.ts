@@ -33,7 +33,7 @@ describe("createInventoryAdminExtension", () => {
             {
               id: "product-route-import",
               title: "Import trasee",
-              url: "/products/import-drafts",
+              url: "/route-imports",
             },
           ],
         },
@@ -91,8 +91,8 @@ describe("createInventoryAdminExtension", () => {
     expect(routes.map((route) => route.path)).toEqual([
       "/products",
       "/products/categories",
-      "/products/import-drafts",
-      "/products/import-drafts/$id",
+      "/route-imports",
+      "/route-imports/$id",
       "/products/$id",
     ])
   })
