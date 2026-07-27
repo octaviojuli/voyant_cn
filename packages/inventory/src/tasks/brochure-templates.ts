@@ -13,6 +13,7 @@ import {
   productPaxPricingTiers,
   products,
 } from "../schema.js"
+import { resolveBrochureLabels } from "./brochure-labels.js"
 
 type ProductDayRecord = typeof productDays.$inferSelect
 type ProductDayServiceRecord = typeof productDayServices.$inferSelect
@@ -142,43 +143,75 @@ export async function loadProductBrochureTemplateContext(
   }
 }
 
+/**
+ * 默认模板。正文是**给没有浏览器时那条纯文本兜底路径**用的一整篇文档:
+ * 内置的 pdf-lib 打印器会把它一行行画出来,所以标题、行程、费用都得在里面。
+ * 有浏览器时走的是 `brochure-sections.ts` 的版式,不读这段正文。
+ *
+ * 两处刻意的改动:
+ *
+ * - **不再印 `Product ID` 与 `Generated`**。这是发给客人的册子,内部主键和
+ *   生成时间戳对客人毫无意义,印上去只显得像系统导出的调试件。
+ * - **文案跟着产品语言走**。原先固定英文,中文线路的册子上印着 `Travelers`
+ *   `Total`——客人看到的就是这个。
+ */
 export function createDefaultProductBrochureTemplate(): ProductBrochureTemplateDefinition {
   return {
     bodyFormat: "markdown",
     title: ({ product }) => product.name,
     filename: ({ product }) => `${product.name.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`,
-    metadataLines: ({ product, generatedAt }) => [
-      `Product ID: ${product.id}`,
-      `Generated: ${generatedAt.toISOString()}`,
-    ],
-    body: [
-      "# {{ product.name }}",
-      "",
-      "{% if product.startDate or product.endDate %}",
-      "Dates: {{ product.startDate | default: 'TBD' }} - {{ product.endDate | default: 'TBD' }}",
-      "{% endif %}",
-      "{% if product.pax %}",
-      "Travelers: {{ product.pax }}",
-      "{% endif %}",
-      "{% if product.sellAmountCents %}",
-      "Total: {{ product.sellAmountCents | divided_by: 100.0 }} {{ product.sellCurrency }}",
-      "{% endif %}",
-      "",
-      "{% if product.description %}{{ product.description }}{% endif %}",
-      "",
-      "{% for day in days %}",
-      "## Day {{ day.dayNumber }}{% if day.title %}: {{ day.title }}{% endif %}",
-      "{% if day.location %}Location: {{ day.location }}{% endif %}",
-      "{% if day.description %}{{ day.description }}{% endif %}",
-      "",
-      "{% for service in day.services %}",
-      "- {{ service.name }} ({{ service.serviceType }}){% if service.quantity > 1 %} x{{ service.quantity }}{% endif %}",
-      "{% if service.notes %}  {{ service.notes }}{% endif %}",
-      "{% endfor %}",
-      "",
-      "{% endfor %}",
-    ].join("\n"),
+    metadataLines: () => [],
+    body: (context) => renderPlainBrochureBody(context),
   }
+}
+
+function renderPlainBrochureBody(context: ProductBrochureTemplateContext): string {
+  const { product, days } = context
+  const labels = resolveBrochureLabels(product.defaultLanguageTag)
+  const locale = product.defaultLanguageTag?.trim() || "en"
+  const lines: string[] = [`# ${product.name}`, ""]
+
+  if (days.length > 1) {
+    lines.push(labels.durationDaysNights(days.length, days.length - 1), "")
+  }
+  if (product.startDate || product.endDate) {
+    const range = [product.startDate, product.endDate].filter(Boolean).join(" – ")
+    lines.push(`${labels.dates}: ${range}`)
+  }
+  if (product.pax) lines.push(`${labels.travelers}: ${product.pax}`)
+  const price = formatBodyMoney(product.sellAmountCents, product.sellCurrency, locale)
+  if (price) lines.push(`${labels.priceFrom}: ${price}`)
+  if (product.description) lines.push("", product.description)
+
+  for (const day of days) {
+    lines.push("", `## ${labels.dayLabel(day.dayNumber)}${day.title ? `:${day.title}` : ""}`)
+    if (day.location) lines.push(`${labels.colCity}: ${day.location}`)
+    if (day.description) lines.push(day.description)
+    for (const service of day.services) {
+      const quantity = service.quantity > 1 ? ` ×${service.quantity}` : ""
+      lines.push(`- ${service.name}${quantity}`)
+    }
+  }
+
+  for (const [label, html] of [
+    [labels.inclusions, product.inclusionsHtml],
+    [labels.exclusions, product.exclusionsHtml],
+    [labels.terms, product.termsHtml],
+  ] as const) {
+    if (!html?.trim()) continue
+    lines.push("", `## ${label}`, html)
+  }
+
+  return lines.join("\n")
+}
+
+function formatBodyMoney(
+  amountCents: number | null | undefined,
+  currency: string | null | undefined,
+  locale: string,
+) {
+  if (amountCents == null || !currency) return null
+  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amountCents / 100)
 }
 
 export async function renderProductBrochureTemplate(

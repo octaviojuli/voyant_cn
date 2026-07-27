@@ -84,7 +84,8 @@ describe("product brochure routes", () => {
       expect.objectContaining({
         storage,
         keyPrefix: "brochures/products/prod_1",
-        maxSizeBytes: 5 * 1024 * 1024,
+        // 带封面与逐日配图的册子远超原来的 5 MiB。
+        maxSizeBytes: 16 * 1024 * 1024,
       }),
     )
   })

@@ -92,6 +92,28 @@ sudo nginx -t && sudo systemctl reload nginx
 **回滚只还原代码,不回滚数据库**——迁移是只进不退的;若某次迁移与上一版
 构建不兼容,回滚救不了,只能向前修复。
 
+### 宣传册用的无头浏览器
+
+宣传册走 HTML → PDF,需要服务器上有一个无头 Chromium。部署脚本会在
+`/opt/voyant/browsers`(可用 `BROWSERS_ROOT` 覆盖)装一次,并把
+`PLAYWRIGHT_BROWSERS_PATH` 写进 `.env`;目录刻意在 `APP_DIR` 之外,理由与存储
+目录相同——部署会对仓库执行 `git reset --hard`。下载走 npmmirror 镜像,直连
+playwright CDN 在国内基本拉不动。
+
+**装不上不阻断部署**。取不到浏览器时宣传册回落到内置的 pdf-lib 纯文本排版:
+册子难看,但生成不会失败。判定的是「可执行文件在不在」,所以装完不必重启就
+会在下次生成时生效;想指定别的浏览器,在 `.env` 里写
+`BROCHURE_CHROMIUM_PATH="/path/to/chrome"` 即可。
+
+排查时先看这一条是不是 `null`:
+
+```bash
+# 期望输出一个存在的可执行文件路径
+sudo -u voyant PLAYWRIGHT_BROWSERS_PATH=/opt/voyant/browsers \
+  /opt/voyant/node24/bin/node -e \
+  "import('playwright-core').then(m=>console.log(m.chromium.executablePath()))"
+```
+
 ### 健康检查探哪个地址
 
 用 **`/healthz`**,它免鉴权。不要探 `/api/healthz`:该路径需要鉴权,未登录

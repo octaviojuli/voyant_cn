@@ -775,6 +775,10 @@ export const inventoryImportVoyantPlugin = defineExtension({
       surface: "admin",
       // 独立挂载点。挂到 products 之下会被 /products/{id} 吃掉。
       mount: "route-imports",
+      // 权限资源仍是 products,不跟着挂载点走。助手做的事就是建产品,
+      // 另立一个 route-imports 资源等于要求运营去授一份新权限,而访问目录
+      // 里根本没有这一项——鉴权会落到一个谁都没有的作用域上。
+      resource: "products",
       openapi: { document: "products" },
       runtime: {
         entry: "@voyant-travel/inventory/graph-runtime",

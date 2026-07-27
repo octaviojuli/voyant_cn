@@ -1,3 +1,13 @@
+/**
+ * 宣传册样式。写给**打印**,不是写给屏幕:
+ *
+ * - 长度单位一律用 `mm`/`pt`。`vh` 在打印时按纸张高度算,一改纸型就跑位;
+ *   `rem` 受浏览器默认字号影响,不同机器出来的册子会不一样厚。
+ * - 每一天、每张表格行都禁止跨页断开。行程被腰斩成「第 5 天(下页续)」
+ *   是纸质册子最露怯的地方。
+ * - 章节标题带 `break-after: avoid`,不让标题孤零零留在页底。
+ */
+
 type ThemedBrochureStyleTheme = {
   primaryColor: string
   accentColor: string
@@ -11,6 +21,10 @@ type ThemedBrochureStyleTheme = {
 
 export function renderThemedBrochureStyles(theme: ThemedBrochureStyleTheme) {
   return `
+    @page {
+      size: A4;
+      margin: 16mm 14mm 18mm;
+    }
     :root {
       --brand-primary: ${theme.primaryColor};
       --brand-accent: ${theme.accentColor};
@@ -25,183 +39,187 @@ export function renderThemedBrochureStyles(theme: ThemedBrochureStyleTheme) {
     body {
       margin: 0;
       color: var(--text);
-      background: var(--page-bg);
-      font-family: var(--font);
-      line-height: 1.5;
-    }
-    .brochure-cover {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.85fr);
-      min-height: 82vh;
       background: var(--surface);
-      page-break-after: always;
+      font-family: var(--font);
+      font-size: 10.5pt;
+      line-height: 1.7;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    img { max-width: 100%; }
+
+    /* 封面独占一页。整页背景交给内容,不铺色块——打印时大面积底色既费墨
+       又容易在廉价打印机上出现条纹。 */
+    .brochure-cover {
+      display: flex;
+      flex-direction: column;
+      min-height: 245mm;
+      break-after: page;
     }
     .cover-image {
       width: 100%;
-      height: 100%;
-      min-height: 32rem;
+      height: 118mm;
       object-fit: cover;
+      border-radius: 3mm;
     }
+    .cover-placeholder {
+      background: linear-gradient(140deg, var(--brand-primary), var(--brand-accent));
+    }
+    /* 封面撑满整页,关键信息压在页脚一侧。不撑开的话正文全部挤在上半页,
+       下面留一大片空白,看着像内容没排完。 */
     .cover-copy {
+      flex: 1;
+      padding-top: 10mm;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      gap: 1.5rem;
-      padding: 4rem;
-      border-left: 0.5rem solid var(--brand-accent);
+      gap: 4mm;
     }
     .brand-row {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      color: var(--brand-primary);
-      font-size: 0.875rem;
-      font-weight: 700;
-      letter-spacing: 0;
+      gap: 3mm;
+      color: var(--brand-accent);
+      font-size: 10pt;
+      font-weight: 600;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
-    .brand-logo {
-      width: 2.5rem;
-      height: 2.5rem;
-      object-fit: contain;
-    }
-    h1, h2, h3, p { margin-top: 0; }
-    h1 {
-      margin-bottom: 0;
+    .brand-logo { height: 9mm; width: auto; }
+    .brochure-cover h1 {
+      margin: 0;
+      font-size: 26pt;
+      line-height: 1.3;
       color: var(--brand-primary);
-      font-size: 3.25rem;
-      line-height: 1.05;
     }
-    h2 {
-      color: var(--brand-primary);
-      font-size: 1.75rem;
-      line-height: 1.2;
-    }
-    h3 {
-      color: var(--brand-primary);
-      font-size: 1.1rem;
-      margin-bottom: 0.35rem;
-    }
-    .dek {
-      color: var(--muted);
-      font-size: 1.05rem;
+    .cover-duration {
+      margin: 0;
+      font-size: 13pt;
+      color: var(--brand-accent);
+      font-weight: 600;
     }
     .cover-facts {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1rem;
+      /* auto 把这一栏顶到封面底部,标题与图之间的空白因此收在中段,
+         而不是全部堆在页脚。 */
+      margin: auto 0 0;
+      display: flex;
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 8mm;
+      border-top: 0.4mm solid var(--border);
+      padding-top: 4mm;
+    }
+    .cover-facts dt {
       margin: 0;
-    }
-    .cover-facts div {
-      padding: 1rem;
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
-    }
-    dt {
+      font-size: 9pt;
       color: var(--muted);
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
     }
-    dd {
-      margin: 0.25rem 0 0;
-      font-weight: 700;
+    .cover-facts dd {
+      margin: 0;
+      font-size: 12pt;
+      font-weight: 600;
     }
-    .brochure-section {
-      max-width: 64rem;
-      margin: 0 auto;
-      padding: 3rem 2rem;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-    .rich-body :is(h1, h2, h3) {
+
+    .brochure-section { margin: 0 0 9mm; }
+    .brochure-section h2 {
+      margin: 0 0 4mm;
+      padding-bottom: 2mm;
+      font-size: 15pt;
       color: var(--brand-primary);
+      border-bottom: 0.6mm solid var(--brand-accent);
+      break-after: avoid;
     }
-    .rich-body img {
-      max-width: 100%;
+    .rich-body p { margin: 0 0 2.5mm; }
+    .rich-body ul, .rich-body ol { margin: 0 0 2.5mm; padding-left: 6mm; }
+    .rich-body li { margin: 0 0 1mm; }
+
+    .route-map-canvas { text-align: center; break-inside: avoid; }
+    .route-map-canvas svg { max-width: 100%; height: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+    th, td {
+      border: 0.3mm solid var(--border);
+      padding: 2mm 2.5mm;
+      text-align: left;
+      vertical-align: top;
     }
+    thead th {
+      background: var(--page-bg);
+      color: var(--brand-primary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    thead { display: table-header-group; }
+    tr { break-inside: avoid; }
+    .overview-table td:first-child { white-space: nowrap; font-weight: 600; }
+
+    .day {
+      display: grid;
+      grid-template-columns: 22mm minmax(0, 1fr);
+      gap: 4mm;
+      padding: 4mm 0;
+      border-top: 0.3mm solid var(--border);
+      break-inside: avoid;
+    }
+    .day:first-of-type { border-top: none; }
+    .day-number {
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--brand-accent);
+    }
+    .day-content h3 { margin: 0 0 1mm; font-size: 12pt; }
+    .day-content .muted { margin: 0 0 2mm; color: var(--muted); font-size: 9.5pt; }
+    .day-body { margin: 0 0 2.5mm; }
+    .day-chips { display: flex; flex-wrap: wrap; gap: 2mm; margin-bottom: 2.5mm; }
+    .chip {
+      display: inline-block;
+      padding: 1mm 2.5mm;
+      border: 0.3mm solid var(--border);
+      border-radius: 2mm;
+      background: var(--page-bg);
+      font-size: 9pt;
+    }
+    .chip b { margin-right: 1.5mm; color: var(--muted); font-weight: 600; }
+    .day-images {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2.5mm;
+    }
+    .day-images img {
+      width: 100%;
+      height: 42mm;
+      object-fit: cover;
+      border-radius: 2mm;
+    }
+
     .media-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1rem;
+      gap: 3mm;
     }
-    figure {
-      margin: 0;
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
-      overflow: hidden;
-    }
-    figure img {
-      display: block;
+    .media-grid figure { margin: 0; break-inside: avoid; }
+    .media-grid img {
       width: 100%;
-      aspect-ratio: 4 / 3;
+      height: 38mm;
       object-fit: cover;
+      border-radius: 2mm;
     }
-    figcaption {
-      padding: 0.75rem;
-      color: var(--muted);
-      font-size: 0.85rem;
+
+    /* 费用包含/不含用左边一道色条区分,客人扫一眼就知道哪段是「不含」。 */
+    .policy .rich-body {
+      border-left: 1mm solid var(--border);
+      padding-left: 4mm;
     }
-    .day {
-      display: grid;
-      grid-template-columns: 6rem minmax(0, 1fr);
-      gap: 1.5rem;
-      padding: 1.25rem 0;
-      border-top: 1px solid var(--border);
-    }
-    .day-number {
-      color: var(--brand-accent);
-      font-weight: 800;
-    }
-    .muted,
-    .day li span {
-      color: var(--muted);
-    }
-    .day ul {
-      margin: 1rem 0 0;
-      padding-left: 1.25rem;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 0.75rem;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-    }
-    th {
-      color: var(--muted);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-    }
+    .inclusions .rich-body { border-left-color: var(--brand-accent); }
+    .exclusions .rich-body { border-left-color: var(--muted); }
+    .terms .rich-body { border-left-color: var(--brand-primary); }
+
     .brochure-footer {
-      max-width: 64rem;
-      margin: 0 auto;
-      padding: 2rem;
+      margin-top: 6mm;
+      padding-top: 3mm;
+      border-top: 0.3mm solid var(--border);
       color: var(--muted);
-      font-size: 0.85rem;
-    }
-    @media (max-width: 760px) {
-      .brochure-cover,
-      .day {
-        grid-template-columns: 1fr;
-      }
-      .cover-copy {
-        padding: 2rem;
-        border-left: 0;
-        border-top: 0.5rem solid var(--brand-accent);
-      }
-      h1 {
-        font-size: 2.25rem;
-      }
-      .cover-facts,
-      .media-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    @page {
-      margin: 18mm;
+      font-size: 9pt;
+      text-align: center;
     }
   `
 }

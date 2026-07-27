@@ -92,6 +92,17 @@ export const createInventoryBrochureVoyantRuntime = defineGraphRuntimeFactory(
       createProductBrochureApiExtension({
         ...brochure,
         resolveStorage: storage.resolveStorage,
+        // 册子上的抬头与页脚取经营主体资料。动态引入,免得把设置模块钉进
+        // 这个工厂的静态图——与线路上线助理读默认值是同一种做法。
+        resolveTheme: async (c) => {
+          const { getOperatorProfile } = await import("@voyant-travel/operator-settings")
+          const profile = await getOperatorProfile(c.get("db"))
+          const brandName = profile?.name || profile?.legalName
+          if (!brandName) return null
+
+          const footer = [brandName, profile?.phone, profile?.website].filter(Boolean).join("　·　")
+          return { brandName, footerText: footer }
+        },
       }),
       api,
     )

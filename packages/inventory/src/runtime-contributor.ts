@@ -24,7 +24,7 @@ import {
   readPolicySourceFromInternalNotes,
   stampPolicySourceOnBooking,
 } from "./booking-payment-policy-runtime.js"
-import { createInventoryBrochureRuntime, createProductBrochurePrinter } from "./brochure-runtime.js"
+import { createInventoryBrochureRuntime, resolveBrochurePrinter } from "./brochure-runtime.js"
 import { catalogInventoryRuntimeExtension } from "./catalog-runtime-extension.js"
 import {
   type InventoryRuntime,
@@ -33,6 +33,7 @@ import {
 } from "./runtime-ports.js"
 import { productCapabilities, products } from "./schema.js"
 import { productsService } from "./service.js"
+import { createBasicPdfProductBrochurePrinter } from "./tasks/brochure-printers.js"
 import {
   createProductsGeneratePdfWorkflowRuntime,
   PRODUCTS_GENERATE_PDF_WORKFLOW_RUNTIME_KEY,
@@ -57,7 +58,10 @@ function createInventoryRuntime(primitives: VoyantRuntimeHostPrimitives): Invent
         PRODUCTS_GENERATE_PDF_WORKFLOW_RUNTIME_KEY,
         createProductsGeneratePdfWorkflowRuntime({
           resolveDb: () => primitives.database.resolve<PostgresJsDatabase>(bindings),
-          resolvePrinter: () => createProductBrochurePrinter(env),
+          // 与路由那条入口用同一套选取顺序,免得工作流出来的册子跟界面上
+          // 生成的不是同一个版式。都取不到就回落到内置纯文本打印器。
+          resolvePrinter: async () =>
+            (await resolveBrochurePrinter(env)) ?? createBasicPdfProductBrochurePrinter(),
         }),
       )
     },

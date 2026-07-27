@@ -4,6 +4,7 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { productsService } from "../service.js"
 import {
   createBasicPdfProductBrochurePrinter,
+  isBasicPdfProductBrochurePrinter,
   type ProductBrochurePrinter,
 } from "./brochure-printers.js"
 import {
@@ -12,16 +13,38 @@ import {
   type ProductBrochureTemplateDefinition,
   renderProductBrochureTemplate,
 } from "./brochure-templates.js"
+import type { ThemedBrochureTheme } from "./brochure-theme.js"
+import { createThemedBrochurePrinter } from "./brochure-themed.js"
 import { generateProductPdf } from "./generate-pdf.js"
 
 export interface GenerateAndStoreProductBrochureOptions {
   storage: StorageProvider
   template?: ProductBrochureTemplateDefinition
   printer?: ProductBrochurePrinter
+  /** 品牌与配色。只在有会排版的打印器时才用得上。 */
+  theme?: ThemedBrochureTheme | null
   keyPrefix?: string
   filename?: string | ((generated: { productId: string; filename: string }) => string)
   signedUrlExpiresIn?: number
   maxSizeBytes?: number
+}
+
+/**
+ * 会排版的打印器一律套上宣传册版式;只会画纯文本的内置打印器直接用。
+ *
+ * 这一步刻意放在这里而不是路由或装配层:版式属于「宣传册怎么做出来」,
+ * 而不属于「谁来调用」。放在这里,工作流与路由两条入口才会出同一份册子。
+ */
+function selectBrochurePrinter(options: GenerateAndStoreProductBrochureOptions) {
+  const printer = options.printer
+  if (!printer) return createBasicPdfProductBrochurePrinter()
+  if (isBasicPdfProductBrochurePrinter(printer)) return printer
+
+  return createThemedBrochurePrinter({
+    printer,
+    storage: options.storage,
+    ...(options.theme ? { theme: options.theme } : {}),
+  })
 }
 
 export const PRODUCT_BROCHURE_STORAGE_ERROR_MESSAGE =
@@ -53,7 +76,7 @@ export async function generateAndStoreProductBrochure(
       options.template ?? createDefaultProductBrochureTemplate(),
       templateContext,
     )
-    const printer = options.printer ?? createBasicPdfProductBrochurePrinter()
+    const printer = selectBrochurePrinter(options)
     const printed = await printer({
       template: rendered,
       context: templateContext,

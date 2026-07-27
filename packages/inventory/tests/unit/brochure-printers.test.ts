@@ -269,7 +269,11 @@ describe("product brochure template and printers", () => {
     expect(input?.template.bodyFormat).toBe("html")
     expect(input?.template.body).toContain("<main><h1>Voyant City Break</h1></main>")
     expect(input?.template.body).not.toContain("Ignored by custom sections")
-    expect(artifact.metadata).toEqual({ renderer: "browser", layout: "themed-brochure" })
+    expect(artifact.metadata).toEqual({
+      renderer: "browser",
+      layout: "themed-brochure",
+      inlinedImages: 0,
+    })
   })
 
   it("rejects the basic PDF printer for themed brochures", () => {

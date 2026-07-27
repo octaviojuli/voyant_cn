@@ -93,9 +93,13 @@ describe("draftToProductGraphSpec", () => {
     expect(day2?.description).toContain("车程约 2 小时")
   })
 
-  it("景点词条以小标题形式保留", () => {
-    const joined = spec.itineraries[0]?.days.map((day) => day.description).join("")
-    expect(joined).toContain("<strong>乌鲁木齐</strong>")
+  it("景点词条留在正文里,不再在末尾重排一遍", () => {
+    // `pois` 与 `bodyHtml` 出自同一段原文,追加等于把每条带说明的景点原样
+    // 印第二遍。宣传册上是整页整页的重复,一眼可见。
+    const joined = spec.itineraries[0]?.days.map((day) => day.description).join("") ?? ""
+
+    expect(joined).toContain("【乌鲁木齐】")
+    expect(joined.match(/【乌鲁木齐】/g)?.length).toBe(1)
   })
 
   it("简介写上天数与起止,宣传册封面直接可用", () => {

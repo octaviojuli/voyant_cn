@@ -1,4 +1,19 @@
 export {
+  createLocalChromiumBrochurePrinter,
+  type LocalChromiumBrochurePrinterOptions,
+  resolveLocalChromiumPrinter,
+} from "./brochure-chromium.js"
+export {
+  type InlineBrochureImagesOptions,
+  inlineBrochureImages,
+} from "./brochure-images.js"
+export {
+  BROCHURE_LABELS_EN,
+  BROCHURE_LABELS_ZH,
+  type BrochureLabels,
+  resolveBrochureLabels,
+} from "./brochure-labels.js"
+export {
   brochureBodyToHtml,
   brochureBodyToHtmlFragment,
   type CloudflareBrowserBrochurePrinterOptions,

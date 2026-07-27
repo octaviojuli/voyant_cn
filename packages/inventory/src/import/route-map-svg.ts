@@ -87,6 +87,21 @@ export interface RouteMapOptions {
 }
 
 /**
+ * 画图需要的那点线路概况。刻意不收 `RouteImportDraft`——宣传册要拿产品
+ * 已落库的行程画同一张图,而产品那边没有草稿对象。两个来源折成同一个窄
+ * 结构,图的画法只有一处实现。
+ */
+export interface RouteMapMeta {
+  title?: string | null
+  days?: number | null
+  nights?: number | null
+  startCity?: string | null
+  endCity?: string | null
+  /** 全程里程;给不出就不画底部那行。 */
+  totalDistanceKm?: number | null
+}
+
+/**
  * 渲染线路概览图。节点不足两个时返回 `null`——单点画不出线路,
  * 与其产出一张没有信息量的图,不如不挂。
  */
@@ -94,7 +109,23 @@ export function renderRouteMapSvg(
   draft: RouteImportDraft,
   options: RouteMapOptions = {},
 ): string | null {
-  const nodes = buildRouteMapNodes(draft)
+  const totalDistanceKm = draft.itinerary.reduce((sum, day) => sum + (day.distanceKm ?? 0), 0)
+
+  return renderRouteMapSvgFromNodes(buildRouteMapNodes(draft), {
+    title: options.title || draft.title,
+    days: draft.days,
+    nights: draft.nights,
+    startCity: draft.startCity,
+    endCity: draft.endCity,
+    totalDistanceKm,
+  })
+}
+
+/** 按节点链渲染。草稿与已落库的产品行程共用这一段。 */
+export function renderRouteMapSvgFromNodes(
+  nodes: readonly RouteMapNode[],
+  meta: RouteMapMeta = {},
+): string | null {
   if (nodes.length < 2) return null
 
   // 先定行数,再把节点均摊到各行。直接按上限铺会排成 4+1,末尾那个节点
@@ -111,11 +142,11 @@ export function renderRouteMapSvg(
 
   const parts: string[] = []
   parts.push(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${escapeXml(routeAriaLabel(draft, nodes))}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${escapeXml(routeAriaLabel(meta, nodes))}">`,
   )
   parts.push(defs())
   parts.push(`<rect width="${width}" height="${height}" fill="${COLOR_CANVAS}"/>`)
-  parts.push(header(draft, options, width))
+  parts.push(header(meta, width))
 
   // 先画连线再画节点,连线才不会压在节点框上。
   for (let index = 1; index < placed.length; index += 1) {
@@ -127,7 +158,7 @@ export function renderRouteMapSvg(
 
   for (const node of placed) parts.push(nodeMarkup(node, placed))
 
-  parts.push(footer(draft, width, height))
+  parts.push(footer(meta, width, height))
   parts.push("</svg>")
 
   return parts.join("")
@@ -156,15 +187,15 @@ function defs(): string {
   ].join("")
 }
 
-function header(draft: RouteImportDraft, options: RouteMapOptions, width: number): string {
-  const title = options.title || draft.title || "线路概览"
+function header(meta: RouteMapMeta, width: number): string {
+  const title = meta.title || "线路概览"
   const facts: string[] = []
-  if (draft.days != null && draft.nights != null) facts.push(`${draft.days} 天 ${draft.nights} 晚`)
-  if (draft.startCity && draft.endCity) {
+  if (meta.days != null && meta.nights != null) facts.push(`${meta.days} 天 ${meta.nights} 晚`)
+  if (meta.startCity && meta.endCity) {
     facts.push(
-      draft.startCity === draft.endCity
-        ? `${draft.startCity} 起止`
-        : `${draft.startCity} 进 ${draft.endCity} 出`,
+      meta.startCity === meta.endCity
+        ? `${meta.startCity} 起止`
+        : `${meta.startCity} 进 ${meta.endCity} 出`,
     )
   }
 
@@ -179,8 +210,8 @@ function header(draft: RouteImportDraft, options: RouteMapOptions, width: number
   return parts.join("")
 }
 
-function footer(draft: RouteImportDraft, width: number, height: number): string {
-  const total = draft.itinerary.reduce((sum, day) => sum + (day.distanceKm ?? 0), 0)
+function footer(meta: RouteMapMeta, width: number, height: number): string {
+  const total = meta.totalDistanceKm ?? 0
   if (total <= 0) return ""
   return `<text x="${width / 2}" y="${height - 10}" text-anchor="middle" font-family="${FONT_STACK}" font-size="11" fill="${COLOR_MUTED}">全程约 ${Math.round(total)} 公里</text>`
 }
@@ -250,8 +281,16 @@ function nodeMarkup(node: PlacedNode, all: PlacedNode[]): string {
   const parts = [
     `<rect x="${node.x}" y="${node.y}" width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="8" fill="${COLOR_NODE_BG}" stroke="${accent ? COLOR_ACCENT : COLOR_LINE}" stroke-width="${accent ? 1.8 : 1.2}"/>`,
     `<text x="${node.x + NODE_WIDTH / 2}" y="${node.y + NODE_HEIGHT / 2 + 6}" text-anchor="middle" font-family="${FONT_STACK}" font-size="15" font-weight="600" fill="${COLOR_INK}">${escapeXml(node.label)}</text>`,
-    `<text x="${node.x + NODE_WIDTH / 2}" y="${node.y - 8}" text-anchor="middle" font-family="${FONT_STACK}" font-size="11" font-weight="600" fill="${accent ? COLOR_ACCENT : COLOR_MUTED}">${escapeXml(formatDayRange(node.dayNumbers))}</text>`,
   ]
+
+  // 日次标签垫一块底色再写字。换行那一段的折线正好从节点顶部插进来,
+  // 与标签重叠,不垫底会看到线穿字而过,像是画错了。
+  const dayRange = formatDayRange(node.dayNumbers)
+  const labelWidth = dayRange.length * 7 + 8
+  parts.push(
+    `<rect x="${node.x + NODE_WIDTH / 2 - labelWidth / 2}" y="${node.y - 20}" width="${labelWidth}" height="16" fill="${COLOR_CANVAS}"/>`,
+    `<text x="${node.x + NODE_WIDTH / 2}" y="${node.y - 8}" text-anchor="middle" font-family="${FONT_STACK}" font-size="11" font-weight="600" fill="${accent ? COLOR_ACCENT : COLOR_MUTED}">${escapeXml(dayRange)}</text>`,
+  )
 
   if (isFirst || isLast) {
     parts.push(
@@ -278,9 +317,9 @@ function formatDuration(minutes: number): string {
   return Number.isInteger(hours) ? `约 ${hours} 小时` : `约 ${hours.toFixed(1)} 小时`
 }
 
-function routeAriaLabel(draft: RouteImportDraft, nodes: RouteMapNode[]): string {
+function routeAriaLabel(meta: RouteMapMeta, nodes: readonly RouteMapNode[]): string {
   const chain = nodes.map((node) => node.label).join(" → ")
-  return draft.title ? `${draft.title}:${chain}` : chain
+  return meta.title ? `${meta.title}:${chain}` : chain
 }
 
 /**

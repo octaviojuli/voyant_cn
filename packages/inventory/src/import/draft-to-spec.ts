@@ -28,6 +28,14 @@ export interface DraftToSpecOptions {
   adultMinAge?: number
   /** 儿童起算年龄,默认 2 岁,2 岁以下按婴儿另计。 */
   childMinAge?: number
+  /**
+   * 正文语言,默认 `zh-CN`。
+   *
+   * 解析器认的是「费用包含」「旅游须知」这类中文章节标题,能被它解析出来的
+   * 文档正文必然是中文,标成别的语言是错的。这个字段不是装饰:宣传册按它
+   * 决定用哪套文案与日期格式,留空的话中文线路的册子上会印出 `Travelers`。
+   */
+  defaultLanguageTag?: string | null
 }
 
 /** 每日服务的成本占位:文档里没有成本数据,建库后由采购另行维护。 */
@@ -51,6 +59,7 @@ export function draftToProductGraphSpec(
       exclusionsHtml: draft.exclusionsHtml ?? null,
       termsHtml: draft.termsHtml ?? null,
       termsShowOnContract: false,
+      defaultLanguageTag: options.defaultLanguageTag ?? "zh-CN",
       // 多日线路必须用 itinerary 模式;date 是单日游,校验会直接拒绝。
       bookingMode: days.length > 1 ? "itinerary" : "date",
       capacityMode: "limited",
@@ -173,6 +182,11 @@ function buildDayServices(day: DraftDay) {
 /**
  * 每日正文。里程与车程暂时以一行前言的形式保留——schema 尚无专用字段,
  * 但这两个数字是行程单的常规信息,丢掉了宣传册就补不回来。
+ *
+ * **景点词条不再往后追加**。`pois` 与 `bodyHtml` 出自同一段原文
+ * (`parse-route-document` 里两者都读 `body`),追加等于把每一条带
+ * 【景点】说明的段落原样印第二遍。宣传册上是整页整页的重复,一眼可见。
+ * 词条仍留在草稿里供复核界面按条展示,只是不再重复进正文。
  */
 function buildDayDescriptionHtml(day: DraftDay): string {
   const parts: string[] = []
@@ -183,11 +197,6 @@ function buildDayDescriptionHtml(day: DraftDay): string {
   if (travel.length > 0) parts.push(`<p><strong>${travel.join(" · ")}</strong></p>`)
 
   if (day.bodyHtml) parts.push(day.bodyHtml)
-
-  for (const poi of day.pois) {
-    parts.push(`<p><strong>${escapeHtml(poi.name)}</strong></p>`)
-    if (poi.descriptionHtml) parts.push(poi.descriptionHtml)
-  }
 
   return parts.join("")
 }
