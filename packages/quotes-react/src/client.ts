@@ -58,7 +58,11 @@ export async function fetchWithValidation<TOut>(
 ): Promise<TOut> {
   const url = joinUrl(options.baseUrl, path)
   const headers = new Headers(init?.headers)
-  if (init?.body !== undefined && !headers.has("Content-Type")) {
+  // FormData 不能自己设 Content-Type:显式设了,fetch 就不会补 multipart 的
+  // boundary,服务端收到的是一个声称是 JSON 的 multipart body,解析必失败。
+  // 交给平台自己生成。legal-react 已有同样的防护,这里保持一致的写法。
+  const isFormDataBody = typeof FormData !== "undefined" && init?.body instanceof FormData
+  if (init?.body !== undefined && !isFormDataBody && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json")
   }
   const response = await options.fetcher(url, { ...init, headers })
