@@ -1,0 +1,380 @@
+import {
+  type DraftDay,
+  type DraftMeals,
+  type DraftPoi,
+  type DraftUnresolved,
+  type RouteImportDraft,
+  routeImportDraftSchema,
+} from "./draft.js"
+
+/**
+ * 把线路资料的纯文本解析成结构化草稿。
+ *
+ * 规则解析,不经模型:同一份文件永远得到同样的结果,可回归测试,更重要的是
+ * 绝不会把价格或天数"编"出来。模型只适合润色文案,不适合决定金额。
+ *
+ * 规则取自真实供应商文件的稳定写法:
+ *   - 日行以 `D1`…`Dn` 标记,可能与上一行黏连(见 6 日线路资料)
+ *   - 餐宿写作「早餐：酒店内」「住宿：xx 或同级」
+ *   - 景点写作「【博斯腾湖】 维吾尔语意为…」
+ *   - 费用与须知集中在最后一日之后
+ */
+
+/** 天数与晚数,如「12 天 11 晚」;中间可能夹空格或全角空格。 */
+const DAYS_NIGHTS = /(\d+)\s*天\s*(\d+)\s*晚/
+/** 井号标签,如 #私家出行#1 动#乌起喀止。 */
+const TAG = /#([^#\s　]+)/g
+/** 日行标记。允许出现在行中(标题与 D1 黏连的情况),其后必须跟空白。 */
+const DAY_MARKER = /D(\d{1,2})[ 　\t]/g
+/** 单程里程,如「单程约 300KM」「约 139 公里」。 */
+const DISTANCE = /约\s*(\d+(?:\.\d+)?)\s*(?:KM|km|公里)/
+/** 行车时长,如「行驶约 4.5H」「车程约 2 小时」。 */
+const DRIVE = /(?:行驶|车程)?约\s*(\d+(?:\.\d+)?)\s*(?:H|h|小时)/
+/** 景点词条:【名称】+ 说明,直到下一个词条或段落结束。 */
+const POI = /【([^】]{1,40})】([^【]*)/g
+
+const MEAL_KEYS: ReadonlyArray<{ key: keyof DraftMeals; label: string }> = [
+  { key: "breakfast", label: "早餐" },
+  { key: "lunch", label: "午餐" },
+  { key: "dinner", label: "晚餐" },
+]
+
+/** 尾部章节的关键词。顺序即文档中的常见顺序。 */
+const TAIL_SECTIONS = [
+  { field: "inclusionsHtml", labels: ["费用包含", "费用包括"] },
+  { field: "exclusionsHtml", labels: ["费用不含", "费用不包含"] },
+  { field: "termsHtml", labels: ["注意事项", "旅游须知", "预订须知"] },
+] as const
+
+export interface ParseRouteDocumentOptions {
+  /** 文件名,仅用于在未识别项里给出定位线索。 */
+  filename?: string
+}
+
+/** 解析线路资料文本,返回可供人工复核的草稿。 */
+export function parseRouteDocument(
+  text: string,
+  options: ParseRouteDocumentOptions = {},
+): RouteImportDraft {
+  const unresolved: DraftUnresolved[] = []
+  const normalized = normalizeText(text)
+
+  const dayMarkers = findDayMarkers(normalized)
+  const header = normalized.slice(0, dayMarkers[0]?.index ?? normalized.length)
+  const tailStart =
+    dayMarkers.length > 0 ? findTailStart(normalized, dayMarkers) : normalized.length
+
+  const draft: RouteImportDraft = {
+    ...parseHeader(header, unresolved),
+    itinerary: parseDays(normalized, dayMarkers, tailStart),
+    ...parseTailSections(normalized.slice(tailStart), unresolved),
+    unresolved,
+  }
+
+  if (draft.itinerary.length === 0) {
+    unresolved.push({
+      field: "itinerary",
+      reason: "未找到 D1、D2 这类每日行程标记",
+      excerpt: options.filename ?? null,
+    })
+  } else if (draft.days != null && draft.days !== draft.itinerary.length) {
+    // 标题说 12 天却只解析出 10 天,多半是某个 D 标记写法特殊,必须让人看到。
+    unresolved.push({
+      field: "itinerary",
+      reason: `标题标称 ${draft.days} 天,实际解析出 ${draft.itinerary.length} 天`,
+      excerpt: null,
+    })
+  }
+
+  draft.startCity = draft.itinerary[0]?.routeChain.at(-1) ?? null
+  draft.endCity = draft.itinerary.at(-1)?.routeChain.at(-1) ?? null
+
+  return routeImportDraftSchema.parse(draft)
+}
+
+/** 统一换行与空白,但保留段落分隔(连续空行)。 */
+function normalizeText(text: string): string {
+  return (
+    text
+      .replace(/\r\n?/g, "\n")
+      // 换页符也当换行:Word/PDF 提取的文本用它表示分页,而分页处往往正好是
+      // 新的一天开始,漏掉会让该日的 D 标记显得不在行首、进而整天丢失。
+      .replace(/[\f\v]/g, "\n")
+      .replace(/[\t\u00a0\u3000 ]/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+  )
+}
+
+interface DayMarker {
+  index: number
+  dayNumber: number
+}
+
+/**
+ * 定位每日标记。两道判据缺一不可:
+ *   - 序号必须递增,避免回头引用被当成新的一天;
+ *   - 必须另起一行——正文里的「参考 D3 的安排」正是这样被排除的。
+ * 例外只有首日:有的资料把 D1 直接接在标题后面,不换行。
+ */
+function findDayMarkers(text: string): DayMarker[] {
+  const markers: DayMarker[] = []
+  let expected = 1
+
+  DAY_MARKER.lastIndex = 0
+  let match = DAY_MARKER.exec(text)
+  while (match !== null) {
+    const dayNumber = Number.parseInt(match[1] as string, 10)
+    const atLineStart = match.index === 0 || text[match.index - 1] === "\n"
+    if (dayNumber === expected && (atLineStart || dayNumber === 1)) {
+      markers.push({ index: match.index, dayNumber })
+      expected += 1
+    }
+    match = DAY_MARKER.exec(text)
+  }
+  return markers
+}
+
+/** 尾部章节的起点:最后一天之后,第一个费用/须知类关键词的位置。 */
+function findTailStart(text: string, markers: DayMarker[]): number {
+  const lastDayIndex = markers[markers.length - 1]?.index ?? 0
+  const labels = TAIL_SECTIONS.flatMap((section) => section.labels)
+  let earliest = text.length
+
+  for (const label of labels) {
+    const index = text.indexOf(label, lastDayIndex)
+    if (index !== -1 && index < earliest) earliest = index
+  }
+  return earliest
+}
+
+function parseHeader(
+  header: string,
+  unresolved: DraftUnresolved[],
+): Pick<RouteImportDraft, "brand" | "title" | "tagline" | "tags" | "days" | "nights"> {
+  const lines = header
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  // 首行通常是品牌/产品线名(如「湖燃之间」),不含装饰符号。
+  const brand = lines[0] && !/[-★#]/.test(lines[0]) ? lines[0] : null
+  const tagline = (brand ? lines[1] : lines[0]) ?? null
+
+  const dn = tagline?.match(DAYS_NIGHTS)
+  const days = dn ? Number.parseInt(dn[1] as string, 10) : null
+  const nights = dn ? Number.parseInt(dn[2] as string, 10) : null
+  if (!dn) {
+    unresolved.push({
+      field: "days",
+      reason: "标题行里没找到「N 天 N 晚」",
+      excerpt: tagline,
+    })
+  }
+
+  const tags: string[] = []
+  if (tagline) {
+    TAG.lastIndex = 0
+    let tagMatch = TAG.exec(tagline)
+    while (tagMatch !== null) {
+      tags.push((tagMatch[1] as string).trim())
+      tagMatch = TAG.exec(tagline)
+    }
+  }
+
+  return { brand, title: cleanTitle(tagline), tagline, tags, days, nights }
+}
+
+/** 去掉 ★ - # 之类装饰与天数片段,留下可用作产品名的线路名。 */
+function cleanTitle(tagline: string | null): string {
+  if (!tagline) return ""
+  return tagline
+    .replace(TAG, " ")
+    .replace(DAYS_NIGHTS, " ")
+    .replace(/[★☆*]+/g, " ")
+    .replace(/^[-—–\s]+|[-—–\s]+$/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+}
+
+function parseDays(text: string, markers: DayMarker[], tailStart: number): DraftDay[] {
+  return markers.map((marker, i) => {
+    const end = markers[i + 1]?.index ?? tailStart
+    const segment = text.slice(marker.index, end)
+    return parseDay(segment, marker.dayNumber)
+  })
+}
+
+function parseDay(segment: string, dayNumber: number): DraftDay {
+  const newline = segment.indexOf("\n")
+  const headerLine = (newline === -1 ? segment : segment.slice(0, newline)).trim()
+  const rest = newline === -1 ? "" : segment.slice(newline + 1)
+
+  // 去掉「D3 」前缀,余下即路线链与括号里的里程车程。
+  const withoutMarker = headerLine.replace(/^D\d{1,2}[ 　\t]+/, "")
+  const bracket = withoutMarker.match(/[（(]([^）)]*)[）)]/)
+  const title = withoutMarker.replace(/[（(][^）)]*[）)]/g, "").trim()
+
+  const distanceMatch = bracket?.[1]?.match(DISTANCE)
+  const driveMatch = bracket?.[1]?.match(DRIVE)
+
+  const { meals, accommodation, body } = splitDayBody(rest)
+
+  return {
+    dayNumber,
+    title,
+    routeChain: splitRouteChain(title),
+    distanceKm: distanceMatch ? Number.parseFloat(distanceMatch[1] as string) : null,
+    driveMinutes: driveMatch ? Math.round(Number.parseFloat(driveMatch[1] as string) * 60) : null,
+    meals,
+    accommodation,
+    bodyHtml: toParagraphHtml(body),
+    pois: extractPois(body),
+  }
+}
+
+/** 途经点:原件用 - → ✈ 等连接,统一拆开。 */
+function splitRouteChain(title: string): string[] {
+  return title
+    .split(/[-—–→>✈✚+]/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+}
+
+/** 从日正文里剥出餐、宿两类结构化信息,其余作为正文。 */
+function splitDayBody(rest: string): {
+  meals: DraftMeals
+  accommodation: string | null
+  body: string
+} {
+  const meals: DraftMeals = {}
+  let accommodation: string | null = null
+  const bodyLines: string[] = []
+
+  for (const rawLine of rest.split("\n")) {
+    const line = rawLine.trim()
+    if (!line) {
+      bodyLines.push("")
+      continue
+    }
+
+    const mealKey = MEAL_KEYS.find((meal) => new RegExp(`^${meal.label}\\s*[:：]`).test(line))
+    if (mealKey) {
+      meals[mealKey.key] = line.replace(/^[^:：]*[:：]\s*/, "").trim()
+      continue
+    }
+    if (/^住宿\s*[:：]/.test(line)) {
+      accommodation = line.replace(/^[^:：]*[:：]\s*/, "").trim()
+      continue
+    }
+    bodyLines.push(line)
+  }
+
+  return { meals, accommodation, body: bodyLines.join("\n") }
+}
+
+/** 景点词条。说明文字里的换行压平,避免正文里出现断行。 */
+function extractPois(body: string): DraftPoi[] {
+  const pois: DraftPoi[] = []
+  POI.lastIndex = 0
+  let match = POI.exec(body)
+  while (match !== null) {
+    const description = (match[2] as string).replace(/\s*\n\s*/g, "").trim()
+    // 只有带说明的才算词条;正文里顺带提到的【景点】不单独成条。
+    if (description.length >= 12) {
+      pois.push({
+        name: (match[1] as string).trim(),
+        descriptionHtml: toParagraphHtml(description),
+      })
+    }
+    match = POI.exec(body)
+  }
+  return pois
+}
+
+function parseTailSections(
+  tail: string,
+  unresolved: DraftUnresolved[],
+): Pick<RouteImportDraft, "inclusionsHtml" | "exclusionsHtml" | "termsHtml"> {
+  const hits = TAIL_SECTIONS.map((section) => {
+    let index = -1
+    for (const label of section.labels) {
+      const found = tail.indexOf(label)
+      if (found !== -1 && (index === -1 || found < index)) index = found
+    }
+    return { field: section.field, index }
+  })
+
+  const ordered = hits.filter((hit) => hit.index !== -1).sort((a, b) => a.index - b.index)
+  const result: Record<string, string | null> = {
+    inclusionsHtml: null,
+    exclusionsHtml: null,
+    termsHtml: null,
+  }
+
+  ordered.forEach((hit, i) => {
+    const end = ordered[i + 1]?.index ?? tail.length
+    // 连同标题一起截取,再去掉标题行本身。
+    const block = tail.slice(hit.index, end)
+    const body = block.replace(/^[^\n]*\n/, "").trim()
+    result[hit.field] = body ? toListHtml(body) : null
+  })
+
+  for (const section of TAIL_SECTIONS) {
+    if (!result[section.field]) {
+      unresolved.push({
+        field: section.field,
+        reason: `未找到「${section.labels[0]}」章节`,
+        excerpt: null,
+      })
+    }
+  }
+
+  return result as Pick<RouteImportDraft, "inclusionsHtml" | "exclusionsHtml" | "termsHtml">
+}
+
+/** 按空行分段,输出 <p>。富文本编辑器与宣传册模板都吃 HTML。 */
+function toParagraphHtml(text: string): string {
+  const paragraphs = text
+    .split(/\n\s*\n/)
+    .map((block) =>
+      block
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .join(""),
+    )
+    .filter(Boolean)
+  return paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join("")
+}
+
+/**
+ * 费用与须知在原件里是编号条目(「1、含…」「❤ 请…」)。转成 <ul>,
+ * 宣传册才能按条排版,而不是糊成一段。
+ */
+function toListHtml(text: string): string {
+  const items = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .reduce<string[]>((acc, line) => {
+      // 新条目以「1、」「1.」「❤」「•」开头;否则视为上一条的续行。
+      if (/^(?:\d+[、.．)]|[❤●•·▲◆*])/.test(line) || acc.length === 0) {
+        acc.push(line.replace(/^(?:\d+[、.．)]|[❤●•·▲◆*])\s*/, ""))
+      } else {
+        acc[acc.length - 1] = `${acc[acc.length - 1]}${line}`
+      }
+      return acc
+    }, [])
+    .filter(Boolean)
+
+  if (items.length === 0) return ""
+  return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
