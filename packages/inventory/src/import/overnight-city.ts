@@ -19,9 +19,23 @@ function isPlaceholder(place: string): boolean {
   return PLACEHOLDER_PLACES.some((word) => place === word || place.endsWith(word))
 }
 
+/**
+ * 行程限定词,不是地名的一部分。
+ *
+ * 日行标题里常写「库尔德宁一日-中沟秘境感受」,「一日」说的是在那儿待一整
+ * 天;照抄下来,总览表里就会出现「库尔德宁一日」这么个城市。
+ */
+const TRIP_QUALIFIER = /(一日游|半日游|一日|半日|全天|深度游|自由活动|环线|一日行)$/
+
+function normalizePlace(place: string): string {
+  const trimmed = place.trim().replace(TRIP_QUALIFIER, "").trim()
+  // 去掉限定词后要是空了,说明整段本来就只是限定词,保留原文交给占位判断。
+  return trimmed || place.trim()
+}
+
 function firstMeaningful(chain: readonly string[]): string | null {
   for (const place of chain) {
-    if (!isPlaceholder(place)) return place
+    if (!isPlaceholder(place)) return normalizePlace(place)
   }
   return null
 }
@@ -29,7 +43,7 @@ function firstMeaningful(chain: readonly string[]): string | null {
 function lastMeaningful(chain: readonly string[]): string | null {
   for (let index = chain.length - 1; index >= 0; index -= 1) {
     const place = chain[index]
-    if (place && !isPlaceholder(place)) return place
+    if (place && !isPlaceholder(place)) return normalizePlace(place)
   }
   return null
 }

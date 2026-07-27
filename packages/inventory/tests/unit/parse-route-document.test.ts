@@ -185,4 +185,61 @@ describe("parseRouteDocument", () => {
       expect(draft.itinerary[0]?.bodyHtml).not.toContain("<script>")
     })
   })
+
+  describe("线路名", () => {
+    it("卖点串不当标题,哪怕天数写在那一行上", () => {
+      // 真实的 Word 资料就长这样:标题在首行,而「8天7晚」写在次行的卖点
+      // 串上。原先按「带天数的那行是标题」来取,产品名就成了一长串菜名。
+      const draft = parseRouteDocument(
+        [
+          "【伊犁奇遇】夏日风光8日游",
+          "S101+沙湾大盘鸡+独山子大峡谷+赛里木湖+帆船体验+湖边火锅+独库公路 8天7晚",
+          "第一天：出发地-乌鲁木齐　住：乌鲁木齐",
+        ].join("\n"),
+      )
+
+      expect(draft.title).toBe("【伊犁奇遇】夏日风光8日游")
+      // 天数仍要从卖点行上取到——两件事解耦,不是二选一。
+      expect(draft.days).toBe(8)
+      expect(draft.nights).toBe(7)
+    })
+
+    it("短的首行仍认作品牌,标题取下一行", () => {
+      const draft = parseRouteDocument(
+        ["湖燃之间", "---新疆南疆胡杨★12 天 11 晚★---", "D1 全国各地✈乌鲁木齐"].join("\n"),
+      )
+
+      expect(draft.brand).toBe("湖燃之间")
+      expect(draft.title).toBe("新疆南疆胡杨")
+    })
+
+    it("带括号的首行是标题而不是品牌", () => {
+      const draft = parseRouteDocument(
+        [
+          "【多巴胺南疆-一眼千年8天7晚】",
+          "中国西极石碑+斯姆哈纳村+贝壳山+白沙湖",
+          "第一天：喀什",
+        ].join("\n"),
+      )
+
+      expect(draft.brand).toBeNull()
+      expect(draft.title).toContain("多巴胺南疆")
+    })
+
+    it("抠掉天数后不留下悬空的连接号", () => {
+      const draft = parseRouteDocument(
+        ["寻穿北境", "-冬季北疆喀纳斯禾木-6 天 5 晚-夜雪探寻-", "D1 全国各地✈阿勒泰"].join("\n"),
+      )
+
+      expect(draft.title).toBe("冬季北疆喀纳斯禾木-夜雪探寻")
+    })
+
+    it("标签单独成行时也能取到", () => {
+      const draft = parseRouteDocument(
+        ["湖燃之间", "---新疆南疆胡杨★12 天 11 晚★---", "#私家出行#乌起喀止", "D1 甲地"].join("\n"),
+      )
+
+      expect(draft.tags).toEqual(expect.arrayContaining(["私家出行", "乌起喀止"]))
+    })
+  })
 })

@@ -91,3 +91,20 @@ describe("每日落脚城市", () => {
     expect(cities[0]).toBe("奎屯")
   })
 })
+
+describe("地名归一", () => {
+  it("剥掉「一日」这类行程限定词", () => {
+    // 「库尔德宁一日-中沟秘境感受」里的「一日」说的是在那儿待一整天,
+    // 照抄下来总览表就会出现「库尔德宁一日」这么个城市。
+    const cities = resolveOvernightCities([
+      day({ dayNumber: 1, routeChain: ["昭苏", "库尔德宁"] }),
+      day({ dayNumber: 2, routeChain: ["库尔德宁一日", "中沟秘境感受"] }),
+    ])
+    expect(cities[0]).toBe("库尔德宁")
+  })
+
+  it("限定词剥光后不留空名", () => {
+    const cities = resolveOvernightCities([day({ dayNumber: 1, routeChain: ["自由活动"] })])
+    expect(cities[0]).toBe("自由活动")
+  })
+})

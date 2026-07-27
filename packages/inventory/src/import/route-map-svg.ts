@@ -25,13 +25,22 @@ export interface RouteMapNode {
 
 const NODE_WIDTH = 128
 const NODE_HEIGHT = 44
-const GAP_X = 72
+/**
+ * 节点间距要放得下边上的里程标注(「约 245 公里」「车程约 2.5 小时」两行)。
+ * 原先 72px 装不下,标注被两侧的节点框压掉了两头。
+ */
+const GAP_X = 116
 const ROW_HEIGHT = 132
 const PADDING_X = 32
 const HEADER_HEIGHT = 76
 const FOOTER_HEIGHT = 28
-/** 每行最多几个节点。再多就挤得看不清城市名。 */
-const MAX_PER_ROW = 5
+/** 每行最多几个节点。间距加大后每行减到 4 个,总宽才不至于失控。 */
+const MAX_PER_ROW = 4
+/** 边上标注的字号与行距。 */
+const EDGE_FONT_SIZE = 10
+const EDGE_LINE_HEIGHT = 12
+/** 末行节点下方「起/终」标注占的高度。 */
+const LAST_ROW_CAPTION_HEIGHT = 26
 
 const COLOR_INK = "#1f2933"
 const COLOR_MUTED = "#7b8794"
@@ -88,10 +97,15 @@ export function renderRouteMapSvg(
   const nodes = buildRouteMapNodes(draft)
   if (nodes.length < 2) return null
 
-  const perRow = Math.min(MAX_PER_ROW, nodes.length)
-  const rows = Math.ceil(nodes.length / perRow)
+  // 先定行数,再把节点均摊到各行。直接按上限铺会排成 4+1,末尾那个节点
+  // 孤零零吊在右边;均摊成 3+2 才看得过去。
+  const rows = Math.ceil(nodes.length / MAX_PER_ROW)
+  const perRow = Math.ceil(nodes.length / rows)
   const width = PADDING_X * 2 + perRow * NODE_WIDTH + (perRow - 1) * GAP_X
-  const height = HEADER_HEIGHT + rows * ROW_HEIGHT + FOOTER_HEIGHT
+  // 行高里那段余量是留给换行折线的,最后一行不换行,只需容下节点与「起/终」
+  // 标注。按整行算会在图底下留一大片空白。
+  const height =
+    HEADER_HEIGHT + (rows - 1) * ROW_HEIGHT + NODE_HEIGHT + LAST_ROW_CAPTION_HEIGHT + FOOTER_HEIGHT
 
   const placed = nodes.map((node, index) => ({ ...node, ...positionOf(index, perRow) }))
 
@@ -178,7 +192,7 @@ type PlacedNode = RouteMapNode & { x: number; y: number; row: number }
  * 免得直接斜穿把中间的节点连穿过去。
  */
 function connector(from: PlacedNode, to: PlacedNode, perRow: number, index: number): string {
-  const label = edgeLabel(to)
+  const lines = edgeLabelLines(to)
   const fromCenterY = from.y + NODE_HEIGHT / 2
   const toCenterY = to.y + NODE_HEIGHT / 2
 
@@ -189,8 +203,9 @@ function connector(from: PlacedNode, to: PlacedNode, perRow: number, index: numb
     const midX = (startX + endX) / 2
 
     const line = `<line x1="${startX}" y1="${fromCenterY}" x2="${endX}" y2="${toCenterY}" stroke="${COLOR_LINE}" stroke-width="1.5" marker-end="url(#rm-arrow)"/>`
-    if (!label) return line
-    return `${line}<text x="${midX}" y="${fromCenterY - 9}" text-anchor="middle" font-family="${FONT_STACK}" font-size="10" fill="${COLOR_MUTED}">${escapeXml(label)}</text>`
+    // 标注堆在连线上方,最后一行紧贴着线。
+    const baseY = fromCenterY - 8 - (lines.length - 1) * EDGE_LINE_HEIGHT
+    return line + edgeText(lines, midX, baseY)
   }
 
   // 换行:从节点底部垂下,横移到下一行对应列,再插进目标节点顶部。
@@ -199,18 +214,32 @@ function connector(from: PlacedNode, to: PlacedNode, perRow: number, index: numb
   const toCenterX = to.x + NODE_WIDTH / 2
   const path = `M ${fromCenterX} ${from.y + NODE_HEIGHT} V ${dropY} H ${toCenterX} V ${to.y}`
   const line = `<path d="${path}" fill="none" stroke="${COLOR_LINE}" stroke-width="1.5" marker-end="url(#rm-arrow)"/>`
-  if (!label) return line
-  return `${line}<text x="${(fromCenterX + toCenterX) / 2}" y="${dropY - 6}" text-anchor="middle" font-family="${FONT_STACK}" font-size="10" fill="${COLOR_MUTED}">${escapeXml(label)}</text>`
+  const baseY = dropY - 6 - (lines.length - 1) * EDGE_LINE_HEIGHT
+  return line + edgeText(lines, (fromCenterX + toCenterX) / 2, baseY)
 }
 
-/** 入边标注:里程与车程。两者都没有就不画,不留空标签。 */
-function edgeLabel(node: RouteMapNode): string | null {
-  const bits: string[] = []
-  if (node.distanceKm != null && node.distanceKm > 0) bits.push(`约 ${node.distanceKm} 公里`)
+function edgeText(lines: readonly string[], x: number, baseY: number): string {
+  return lines
+    .map(
+      (text, index) =>
+        `<text x="${x}" y="${baseY + index * EDGE_LINE_HEIGHT}" text-anchor="middle" font-family="${FONT_STACK}" font-size="${EDGE_FONT_SIZE}" fill="${COLOR_MUTED}">${escapeXml(text)}</text>`,
+    )
+    .join("")
+}
+
+/**
+ * 入边标注:里程与车程,各占一行。
+ *
+ * 曾经并成一行用「·」隔开,一行一百八十来像素,比节点间距还宽,两头都被
+ * 节点框压掉了。两者都没有就不画,不留空标签。
+ */
+function edgeLabelLines(node: RouteMapNode): string[] {
+  const lines: string[] = []
+  if (node.distanceKm != null && node.distanceKm > 0) lines.push(`约 ${node.distanceKm} 公里`)
   if (node.driveMinutes != null && node.driveMinutes > 0) {
-    bits.push(`车程${formatDuration(node.driveMinutes)}`)
+    lines.push(`车程${formatDuration(node.driveMinutes)}`)
   }
-  return bits.length > 0 ? bits.join(" · ") : null
+  return lines
 }
 
 function nodeMarkup(node: PlacedNode, all: PlacedNode[]): string {
