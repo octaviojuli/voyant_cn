@@ -18,12 +18,18 @@ catalogs:
     drizzle-orm:
       specifier: ^0.45.2
       version: 0.45.2
+    mammoth:
+      specifier: ^1.12.0
+      version: 1.12.0
     tsx:
       specifier: ^4.22.4
       version: 4.22.4
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
+    unpdf:
+      specifier: ^1.4.0
+      version: 1.8.0
     vite:
       specifier: ^8.1.3
       version: 8.1.3
@@ -104,9 +110,6 @@ importers:
       lint-staged:
         specifier: ^17.0.8
         version: 17.0.8
-      mammoth:
-        specifier: ^1.12.0
-        version: 1.12.0
       playwright:
         specifier: 1.61.1
         version: 1.61.1
@@ -2611,6 +2614,9 @@ importers:
       hono:
         specifier: 4.12.25
         version: 4.12.25
+      mammoth:
+        specifier: 'catalog:'
+        version: 1.12.0
       marked:
         specifier: ^18.0.5
         version: 18.0.5
@@ -2620,10 +2626,16 @@ importers:
       sanitize-html:
         specifier: ^2.17.5
         version: 2.17.5
+      unpdf:
+        specifier: 'catalog:'
+        version: 1.8.0
       zod:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.5.2
       '@types/sanitize-html':
         specifier: ^2.16.1
         version: 2.16.1
@@ -11530,6 +11542,15 @@ packages:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
 
+  unpdf@1.8.0:
+    resolution: {integrity: sha512-jQlkckbe5nKxRHQdbvo9IKHlU6Cjq00UlxxB8lrCIxvS2o5IbAL1wM+4a1Yc3+BIohg9p5AsoaftwO+G4Aq/qQ==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      '@napi-rs/canvas': ^0.1.69 || ^1.0.0
+    peerDependenciesMeta:
+      '@napi-rs/canvas':
+        optional: true
+
   unpipe@1.0.0:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
     engines: {node: '>= 0.8'}
@@ -19656,6 +19677,8 @@ snapshots:
       unist-util-visit-parents: 6.0.2
 
   universalify@0.1.2: {}
+
+  unpdf@1.8.0: {}
 
   unpipe@1.0.0: {}
 

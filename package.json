@@ -146,7 +146,6 @@
     "depcheck": "^1.4.7",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "mammoth": "^1.12.0",
     "playwright": "1.61.1",
     "secretlint": "^13.0.2",
     "semver": "^7.8.5",

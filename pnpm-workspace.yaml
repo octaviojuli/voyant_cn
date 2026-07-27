@@ -11,6 +11,8 @@ catalog:
   "@hono/zod-openapi": ^1.4.0
   "@types/node": ^25.5.2
   "drizzle-orm": ^0.45.2
+  "mammoth": ^1.12.0
+  "unpdf": ^1.4.0
   "hono": ^4.12.27
   "tsx": ^4.22.4
   "typescript": ^6.0.3
