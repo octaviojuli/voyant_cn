@@ -71,8 +71,52 @@ sudo nginx -t && sudo systemctl reload nginx
 | `ECS_SSH_PORT` | 可选,默认 22 |
 
 配好后每次 push `main`,`.github/workflows/deploy-ecs.yml` 会 SSH 到服务器
-执行 `deploy/ecs/deploy.sh`(拉代码 → 装依赖 → 构建 → 迁移 → 重启 → 健康检查)。
-未配置 `ECS_HOST` 时工作流自动跳过,不会报错。
+执行 `deploy/ecs/deploy.sh`。未配置 `ECS_HOST` 时工作流自动跳过,不会报错。
+
+### 部署的固定次序
+
+```
+拉代码 → 装依赖 → 构建 → 迁移 → 种子(按需)
+      → 预检:旁路端口启动新构建        ← 起不来就到此为止,线上分毫未动
+      → 重启线上服务 → 健康检查
+      → 失败则自动回滚到上一个可用版本
+      → 成功则把本次产物存为"最后可用版本"
+```
+
+**预检是整套流程的关键**。它用真实 `.env` 把新构建先在 `8099` 端口启起来,
+健康检查通过才动线上服务。配置缺失、部署图选了运行时不接受的提供方、依赖
+装错——这几类问题都会在这一步暴露,而此时线上仍是旧版本,对外照常服务。
+
+预检之后仍失败(例如 systemd 环境与预检不同)时,脚本自动还原
+`/opt/voyant/releases/last-good` 里的产物并重启,站点先恢复,再排查。
+**回滚只还原代码,不回滚数据库**——迁移是只进不退的;若某次迁移与上一版
+构建不兼容,回滚救不了,只能向前修复。
+
+### 健康检查探哪个地址
+
+用 **`/healthz`**,它免鉴权。不要探 `/api/healthz`:该路径需要鉴权,未登录
+时返回 `401`,把它当成"没起来"会白等很久(这个坑真踩过)。
+
+```bash
+curl -sf https://<域名>/healthz     # 200 = 活着
+```
+
+### 改动部署形态时的自检清单
+
+新增或切换 `providers.*`(存储、缓存、共享状态、限流)时,**部署图里注册了
+不等于运行时能跑**。至少走完:
+
+1. 包清单里注册提供方与其配置项(`packages/<pkg>/src/voyant.ts`);
+2. `starters/operator/voyant.config.ts` 选用它;
+3. **`packages/framework/src/node-provider-plan.ts` 放行该取值**,并把它需要
+   的环境变量加进 `validateVoyantNodeProviderPlanEnv`——这份白名单独立于
+   部署图,漏改会导致服务启动即退出;
+4. `deploy/ecs/deploy.sh` 备好目录与配置项;
+5. 本地跑一遍 `bash deploy/ecs/lib.test.sh`。
+
+第 3 步就是把站点搞挂过一次的地方:部署图、提供方构造、运行时端口解析都改了,
+唯独漏了那份白名单,而它不在存储包里,包级验证覆盖不到。现在预检会挡住这类
+问题,但清单本身仍值得照着走一遍。
 
 ## 运维速查
 
@@ -80,8 +124,21 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo systemctl status voyant-operator        # 服务状态
 sudo journalctl -u voyant-operator -f        # 实时日志
 bash deploy/ecs/deploy.sh                    # 手动更新到最新 main
+curl -sf http://127.0.0.1:8080/healthz       # 存活探针(免鉴权)
+bash deploy/ecs/lib.test.sh                  # 部署脚本自测(改脚本后先跑这个)
 docker exec -it voyant-postgres psql -U voyant voyant   # 进数据库
 docker exec voyant-postgres pg_dump -U voyant voyant | gzip > backup.sql.gz  # 备份
+```
+
+手动回滚(自动回滚没生效或想退回上一版时):
+
+```bash
+cd /opt/voyant/app/starters/operator
+cat /opt/voyant/releases/last-good/COMMIT           # 看那份产物是哪个提交
+rm -rf dist .voyant
+cp -a /opt/voyant/releases/last-good/dist .
+cp -a /opt/voyant/releases/last-good/.voyant .
+sudo systemctl restart voyant-operator
 ```
 
 ## 已知注意事项

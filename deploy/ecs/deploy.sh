@@ -9,6 +9,10 @@ NODE_BIN="${NODE_BIN:-/opt/voyant/node24/bin}"
 export PATH="$NODE_BIN:$PATH"
 cd "$APP_DIR"
 
+# 部署过程中的可复用函数(可被测试单独加载)。
+# shellcheck source=deploy/ecs/lib.sh
+. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
 SKIP_PULL=false
 SEED_ZH=false
 PREBUILT=false
@@ -124,32 +128,43 @@ if [ "$SEED_ZH" = true ] || [ ! -f "$SEED_MARKER" ]; then
   cd "$APP_DIR/starters/operator"
 fi
 
+echo "[$(date +%H:%M:%S)] ==> 预检:在旁路端口 $PREFLIGHT_PORT 启动新构建"
+if ! preflight_boot; then
+  exit 1
+fi
+echo "[$(date +%H:%M:%S)] ==> 预检通过"
+cd "$APP_DIR/starters/operator"
+
 echo "[$(date +%H:%M:%S)] ==> 重启服务并做健康检查"
 sudo systemctl restart voyant-operator
-for i in $(seq 1 30); do
-  if curl -sf -o /dev/null http://127.0.0.1:8080/healthz; then
-    echo "==> 部署成功:healthz OK"
-    # 首页初始化探针:在服务器本机以演示账号走一遍 setup/initialize,
-    # 失败时当场输出服务日志,便于远程定位(演示口令为公开种子数据)。
-    D=$(sed -n 's|^DASH_BASE_URL="https\?://\([^"]*\)"|\1|p' "$APP_DIR/starters/operator/.env" | head -1)
-    if [ -n "$D" ]; then
-      JAR=$(mktemp)
-      curl -s -c "$JAR" -o /dev/null -w "[probe] signin:%{http_code}\n" \
-        -X POST http://127.0.0.1:8080/api/auth/sign-in/email \
-        -H "Host: $D" -H "Origin: https://$D" -H "Content-Type: application/json" \
-        -d '{"email":"owner@voyant.dev","password":"password123"}' || true
-      curl -s -b "$JAR" -w "\n[probe] initialize:%{http_code}\n" \
-        -X POST http://127.0.0.1:8080/api/v1/admin/setup/initialize \
-        -H "Host: $D" -H "Origin: https://$D" -H "Content-Type: application/json" \
-        -d '{"stepIds":[],"fresh":true}' | head -c 400 || true
-      echo "[probe] 最近服务日志:"
-      sudo journalctl -u voyant-operator -n 40 --no-pager | tail -40 || true
-      rm -f "$JAR"
-    fi
-    exit 0
+if ! wait_healthy "$SERVICE_PORT" 30; then
+  echo "!! 健康检查失败,最近日志:"
+  sudo journalctl -u voyant-operator -n 50 --no-pager
+  if restore_last_good; then
+    echo "!! 已回滚到上一个可用版本,站点恢复服务;本次部署未生效。"
+  else
+    echo "!! 回滚亦失败,站点当前不可用。"
   fi
-  sleep 2
-done
-echo "!! 健康检查失败,最近日志:"
-sudo journalctl -u voyant-operator -n 50 --no-pager
-exit 1
+  exit 1
+fi
+save_last_good
+echo "==> 部署成功:healthz OK"
+
+# 首页初始化探针:在服务器本机以演示账号走一遍 setup/initialize,
+# 失败时当场输出服务日志,便于远程定位(演示口令为公开种子数据)。
+D=$(sed -n 's|^DASH_BASE_URL="https\?://\([^"]*\)"|\1|p' "$ENV_FILE" | head -1)
+if [ -n "$D" ]; then
+  JAR=$(mktemp)
+  curl -s -c "$JAR" -o /dev/null -w "[probe] signin:%{http_code}\n" \
+    -X POST "http://127.0.0.1:$SERVICE_PORT/api/auth/sign-in/email" \
+    -H "Host: $D" -H "Origin: https://$D" -H "Content-Type: application/json" \
+    -d '{"email":"owner@voyant.dev","password":"password123"}' || true
+  curl -s -b "$JAR" -w "\n[probe] initialize:%{http_code}\n" \
+    -X POST "http://127.0.0.1:$SERVICE_PORT/api/v1/admin/setup/initialize" \
+    -H "Host: $D" -H "Origin: https://$D" -H "Content-Type: application/json" \
+    -d '{"stepIds":[],"fresh":true}' | head -c 400 || true
+  echo "[probe] 最近服务日志:"
+  sudo journalctl -u voyant-operator -n 40 --no-pager | tail -40 || true
+  rm -f "$JAR"
+fi
+exit 0

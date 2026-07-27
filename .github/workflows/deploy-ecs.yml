@@ -45,6 +45,10 @@ jobs:
           corepack enable
           HUSKY=0 pnpm install --frozen-lockfile
 
+      - name: Test deploy script helpers
+        if: steps.gate.outputs.configured == 'true'
+        run: bash deploy/ecs/lib.test.sh
+
       - name: Build operator app
         if: steps.gate.outputs.configured == 'true'
         working-directory: starters/operator
