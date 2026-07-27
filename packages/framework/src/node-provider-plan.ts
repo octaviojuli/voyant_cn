@@ -1,4 +1,4 @@
-export type VoyantNodeObjectStorageProvider = "memory" | "s3-compatible" | "custom"
+export type VoyantNodeObjectStorageProvider = "memory" | "filesystem" | "s3-compatible" | "custom"
 export type VoyantNodeKvProvider = "memory" | "postgres" | "redis"
 
 export interface VoyantNodeProviderPlan {
@@ -32,6 +32,9 @@ export function validateVoyantNodeProviderPlanEnv(
     required.add("STORAGE_MEDIA_BUCKET")
     required.add("STORAGE_DOCUMENTS_BUCKET")
   }
+  // Surface a missing storage root here, where the message names the env var,
+  // rather than letting provider construction fail later with a bare throw.
+  if (plan.storage === "filesystem") required.add("STORAGE_FILESYSTEM_ROOT")
 
   for (const role of KV_PROVIDER_ROLES) {
     if (plan[role] === "redis") required.add("REDIS_URL")
@@ -53,7 +56,9 @@ function objectStorageProvider(
 ): VoyantNodeObjectStorageProvider {
   const provider = requireProvider(providers, role)
   if (provider === "none" || provider === "memory") return "memory"
-  if (provider === "s3-compatible" || provider === "custom") return provider
+  if (provider === "filesystem" || provider === "s3-compatible" || provider === "custom") {
+    return provider
+  }
   throw new Error(
     `deployment graph providers.${role}=${provider} is not supported by the Node runtime`,
   )
