@@ -186,6 +186,23 @@ describe("parseRouteDocument", () => {
     })
   })
 
+  describe("尾部章节", () => {
+    it("认「需知」而不只是「须知」", () => {
+      // 真实资料的标题是「新疆旅游需知」——需/须一字之差,整章须知就丢了。
+      const draft = parseRouteDocument(
+        ["品牌", "线路 1 天 0 晚", "D1 甲地", "正文", "新疆旅游需知：", "请携带身份证"].join("\n"),
+      )
+      expect(draft.termsHtml).toContain("请携带身份证")
+    })
+
+    it("认「温馨提示」", () => {
+      const draft = parseRouteDocument(
+        ["品牌", "线路 1 天 0 晚", "D1 甲地", "正文", "温馨提示", "高原地区注意休息"].join("\n"),
+      )
+      expect(draft.termsHtml).toContain("高原地区注意休息")
+    })
+  })
+
   describe("线路名", () => {
     it("卖点串不当标题,哪怕天数写在那一行上", () => {
       // 真实的 Word 资料就长这样:标题在首行,而「8天7晚」写在次行的卖点

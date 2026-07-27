@@ -80,7 +80,12 @@ const MEAL_KEYS: ReadonlyArray<{ key: keyof DraftMeals; label: string }> = [
 const TAIL_SECTIONS = [
   { field: "inclusionsHtml", labels: ["费用包含", "费用包括"] },
   { field: "exclusionsHtml", labels: ["费用不含", "费用不包含"] },
-  { field: "termsHtml", labels: ["注意事项", "旅游须知", "预订须知"] },
+  // 「需知」不是「须知」——真实资料里两种写法都有(「新疆旅游需知」),
+  // 少一个字整章须知就丢了。同理「温馨提示」也是常见标题。
+  {
+    field: "termsHtml",
+    labels: ["注意事项", "旅游须知", "预订须知", "旅游需知", "出行须知", "温馨提示", "特别说明"],
+  },
 ] as const
 
 export interface ParseRouteDocumentOptions {
