@@ -42,7 +42,8 @@ workload class well. On Node none of it is necessary.
 - **Bindings are real Node providers, not Cloudflare emulation.** The resolved
   deployment graph's `deployment.providers` map selects the concrete Node
   providers. `memory` uses in-process KV/object storage, `redis`/`postgres`
-  back selected KV and rate-limit stores, and `s3-compatible` uses AWS SDK v3
+  back selected KV and rate-limit stores, `filesystem` writes objects under
+  `STORAGE_FILESYSTEM_ROOT`, and `s3-compatible` uses AWS SDK v3
   for AWS S3 or compatible services. `custom` resolves the selected
   `storage.object` provider factory from an adapter package. Env vars configure
   the graph-selected provider; their mere presence must not change provider

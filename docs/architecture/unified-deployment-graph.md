@@ -258,8 +258,12 @@ workflow, and delivery implementations; environment values only configure the
 selected implementation.
 
 Object storage is exposed as a vendor-neutral logical-store resolver. The Node
-host provides `memory`, an AWS SDK v3-backed `s3-compatible` adapter, or an
-adapter-package `custom` provider selected on the `storage.object` graph port.
+host provides `memory`, a disk-backed `filesystem` adapter, an AWS SDK v3-backed
+`s3-compatible` adapter, or an adapter-package `custom` provider selected on the
+`storage.object` graph port. `memory` keeps bytes in-process and loses them on
+restart, so it suits tests and local runs rather than any deployment that
+accepts uploads; `filesystem` is the smallest durable choice for a single node,
+and `s3-compatible` is the one to pick once reads must outlive a single host.
 Modules request logical `media` or `documents` stores and never consume
 S3/R2/GCS bucket bindings directly. Signing is an optional provider capability,
 and custom adapters can run the published storage conformance suite. Direct host
