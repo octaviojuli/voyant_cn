@@ -10,7 +10,7 @@
  */
 
 import { typeId } from "@voyant-travel/db/lib/typeid-column"
-import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
 /**
  * Original catch-all table from the first booking-journey settings
@@ -151,3 +151,31 @@ export const bookingTaxSettings = pgTable("booking_tax_settings", {
 
 export type BookingTaxSettings = typeof bookingTaxSettings.$inferSelect
 export type NewBookingTaxSettings = typeof bookingTaxSettings.$inferInsert
+
+/**
+ * 线路上线助理的默认值(单行表)。
+ *
+ * 只放「全公司一个值、几乎不变」的参数。供应商刻意不放在这里——它随每份
+ * 资料变,做成纯设置项会逼着操作员「改设置 → 上传 → 改回来」,早晚挂错;
+ * 这里存的是复核界面的默认选中项,人可在确认前当场改。
+ */
+export const routeImportSettings = pgTable("route_import_settings", {
+  id: typeId("route_import_settings"),
+  /** 建出产品的售价币种。助手不从文档里猜金额,但币种要有个准。 */
+  sellCurrency: text("sell_currency"),
+  /** 建出产品的时区。 */
+  timezone: text("timezone"),
+  /** 默认产品类型。跨包软引用,不建外键。 */
+  productTypeId: text("product_type_id"),
+  /** 复核界面默认选中的供应商。跨包软引用,不建外键。 */
+  defaultSupplierId: text("default_supplier_id"),
+  /** 成人起算年龄,默认 12 岁。不同产品口径不一。 */
+  adultMinAge: integer("adult_min_age"),
+  /** 儿童起算年龄,默认 2 岁,2 岁以下按婴儿另计。 */
+  childMinAge: integer("child_min_age"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type RouteImportSettings = typeof routeImportSettings.$inferSelect
+export type NewRouteImportSettings = typeof routeImportSettings.$inferInsert

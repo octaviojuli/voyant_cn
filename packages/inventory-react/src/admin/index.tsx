@@ -50,6 +50,10 @@ declare module "@voyant-travel/admin" {
     "booking.create": Record<string, never>
     /** An availability slot's detail page. */
     "availabilitySlot.detail": { slotId: string }
+    /** The route import assistant's draft list. */
+    "routeImportDraft.list": Record<string, never>
+    /** A single parsed route draft's review page. */
+    "routeImportDraft.detail": { draftId: string }
   }
 }
 
@@ -73,10 +77,13 @@ export { ProductDetailSkeleton }
 export interface CreateInventoryAdminExtensionOptions {
   /** Mount path of the products pages inside the admin workspace. Default `/products`. */
   basePath?: string
+  /** Mount path of the route import assistant. Default `/route-imports`. */
+  routeImportBasePath?: string
   /** Localized page titles. Defaults are the English operator nav labels. */
   labels?: {
     products?: string
     categories?: string
+    routeImport?: string
   }
 }
 
@@ -107,7 +114,12 @@ export function createInventoryAdminExtension(
   options: CreateInventoryAdminExtensionOptions = {},
 ): AdminExtension {
   const { basePath = "/products", labels = {} } = options
-  const { products = "Products", categories = "Categories" } = labels
+  const { products = "Products", categories = "Categories", routeImport = "Route import" } = labels
+
+  // 助理页刻意不挂在 `${basePath}/…` 之下:产品详情是 `${basePath}/$id`,
+  // 任何 `${basePath}/<静态段>` 都会被它当成产品 ID 吃掉。草稿本来也不是
+  // 产品的子资源——产品要到确认之后才存在。
+  const routeImportBasePath = options.routeImportBasePath ?? "/route-imports"
 
   return defineAdminExtension({
     id: "inventory",
@@ -151,6 +163,48 @@ export function createInventoryAdminExtension(
           return queryClient.ensureQueryData(
             getProductCategoriesQueryOptions(loaderClient(runtime), { limit: 25, offset: 0 }),
           )
+        },
+      },
+      {
+        id: "products-route-import",
+        path: routeImportBasePath,
+        title: routeImport,
+        destination: "routeImportDraft.list",
+        ssr: "data-only",
+        page: () =>
+          import("./route-import-host.js").then((module) =>
+            adminRoutePageModule(module.RouteImportHost),
+          ),
+        // 动态引入,与产品列表的 loader 同理:静态引入会把数据层钉进
+        // 工作台外壳的分包。
+        loader: async ({ queryClient, runtime }: AdminRouteLoaderContext) => {
+          const { getRouteImportDraftsQueryOptions } = await import("../query-options.js")
+          return queryClient.ensureQueryData(
+            getRouteImportDraftsQueryOptions(loaderClient(runtime)),
+          )
+        },
+      },
+      {
+        id: "products-route-import-detail",
+        path: `${routeImportBasePath}/$id`,
+        title: routeImport,
+        destination: "routeImportDraft.detail",
+        destinationParams: { id: "draftId" },
+        ssr: "data-only",
+        loader: async ({ queryClient, runtime, params }: AdminRouteLoaderContext) => {
+          const id = params.id
+          if (!id) return
+          const { getRouteImportDraftQueryOptions } = await import("../query-options.js")
+          return queryClient.ensureQueryData(
+            getRouteImportDraftQueryOptions(loaderClient(runtime), id),
+          )
+        },
+        page: async () => {
+          const module = await import("./pages/route-import-detail-page.js")
+          const Page = module.default
+          return {
+            default: ({ params }: AdminRoutePageProps) => <Page id={params.id ?? ""} />,
+          }
         },
       },
       {
@@ -221,6 +275,7 @@ export function createSelectedInventoryAdminExtension({
   const labels = {
     products: navMessages.products ?? "Products",
     categories: navMessages.categories ?? "Categories",
+    routeImport: navMessages.productRouteImport ?? "Route import",
   }
   const extension = withAdminRouteMessagesProvider(createInventoryAdminExtension({ labels }), () =>
     import("../i18n.js").then((module) => ({ default: module.ProductsUiMessagesProvider })),
@@ -268,6 +323,11 @@ export function createSelectedInventoryAdminExtension({
                 id: "product-categories",
                 title: labels.categories,
                 url: "/products/categories",
+              },
+              {
+                id: "product-route-import",
+                title: labels.routeImport,
+                url: "/route-imports",
               },
             ],
           },

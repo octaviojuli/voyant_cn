@@ -78,6 +78,61 @@ export type ProductsUiCoreMessages = {
     title: string
     description: string
   }
+  routeImportPage: {
+    title: string
+    description: string
+    upload: {
+      label: string
+      hint: string
+      button: string
+      uploading: string
+      failed: string
+    }
+    empty: string
+    columns: {
+      file: string
+      route: string
+      days: string
+      status: string
+      created: string
+    }
+    status: {
+      pending_review: string
+      in_review: string
+      committed: string
+      discarded: string
+    }
+    detail: {
+      back: string
+      sourceFile: string
+      routeMap: string
+      routeMapEmpty: string
+      basics: string
+      itinerary: string
+      pricing: string
+      inclusions: string
+      exclusions: string
+      terms: string
+      unresolved: string
+      unresolvedHint: string
+      meals: string
+      accommodation: string
+      distance: string
+      noContent: string
+      day: string
+      save: string
+      saving: string
+      saved: string
+      commit: string
+      committing: string
+      committed: string
+      commitHint: string
+      commitFailed: string
+      openProduct: string
+      discard: string
+      discarded: string
+    }
+  }
   productDetailPage: {
     actions: {
       back: string

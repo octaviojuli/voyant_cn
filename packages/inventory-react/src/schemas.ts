@@ -29,6 +29,43 @@ export const arrayEnvelope = <T extends z.ZodTypeAny>(item: T) => z.object({ dat
 
 export const successEnvelope = z.object({ success: z.boolean() })
 
+/**
+ * 线路上线助理的草稿行。
+ *
+ * `draft` / `parsedDraft` 用 `z.unknown()`:草稿的结构由后端的
+ * `routeImportDraftSchema` 定义,在这里再抄一份必然与后端漂移。界面按需
+ * 收窄读取,而不是重复维护一份形状定义。
+ */
+export const routeImportDraftRowSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  sourceFilename: z.string(),
+  sourceFormat: z.string(),
+  sourceStorageKey: z.string().nullable(),
+  draft: z.unknown(),
+  parsedDraft: z.unknown(),
+  warnings: z.unknown().nullable(),
+  productId: z.string().nullable(),
+  note: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  committedAt: z.string().nullable(),
+})
+
+/** 详情比列表多一张线路概览图(SVG 源码,可能为空)。 */
+export const routeImportDraftDetailSchema = routeImportDraftRowSchema.extend({
+  routeMapSvg: z.string().nullable(),
+})
+
+export type RouteImportDraftRow = z.infer<typeof routeImportDraftRowSchema>
+export type RouteImportDraftDetail = z.infer<typeof routeImportDraftDetailSchema>
+
+export const routeImportDraftListResponse = arrayEnvelope(routeImportDraftRowSchema)
+export const routeImportDraftSingleResponse = singleEnvelope(routeImportDraftDetailSchema)
+export const routeImportCommitResponse = singleEnvelope(
+  z.object({ productId: z.string(), status: z.string() }),
+)
+
 const productListingDepositRuleSchema = z.object({
   kind: z.enum(["none", "percent", "fixed_cents"]),
   percent: z.number().min(0).max(100).optional(),

@@ -18,6 +18,7 @@ import {
   operatorPaymentDefaults,
   operatorPaymentInstructions,
   operatorProfile,
+  routeImportSettings,
 } from "./schema.js"
 
 const depositRuleSchema = z.object({
@@ -364,5 +365,83 @@ export function toPublicOperatorSettings(
     customerPaymentPolicy: row?.customerPaymentPolicy ?? null,
     bookingCheckoutUrlTemplate: row?.bookingCheckoutUrlTemplate ?? null,
     invoicePayUrlTemplate: row?.invoicePayUrlTemplate ?? null,
+  }
+}
+
+/** 线路上线助理默认值的可改字段。全部可空:未设置即用系统兜底。 */
+export const updateRouteImportSettingsSchema = z.object({
+  sellCurrency: z.string().min(3).max(3).nullish(),
+  timezone: z.string().max(64).nullish(),
+  productTypeId: z.string().max(64).nullish(),
+  defaultSupplierId: z.string().max(64).nullish(),
+  adultMinAge: z.number().int().min(0).max(99).nullish(),
+  childMinAge: z.number().int().min(0).max(99).nullish(),
+})
+
+export type UpdateRouteImportSettingsInput = z.infer<typeof updateRouteImportSettingsSchema>
+
+export async function getRouteImportSettings(db: PostgresJsDatabase) {
+  const [row] = await db
+    .select()
+    .from(routeImportSettings)
+    .orderBy(desc(routeImportSettings.createdAt))
+    .limit(1)
+  return row ?? null
+}
+
+export async function upsertRouteImportSettings(
+  db: PostgresJsDatabase,
+  patch: UpdateRouteImportSettingsInput,
+) {
+  const existing = await getRouteImportSettings(db)
+  const values: Partial<typeof routeImportSettings.$inferInsert> = {}
+
+  // 只写请求里出现过的键。缺省与显式置空是两回事:前者保持原值,后者清空。
+  if ("sellCurrency" in patch)
+    values.sellCurrency = patch.sellCurrency?.trim().toUpperCase() || null
+  if ("timezone" in patch) values.timezone = patch.timezone?.trim() || null
+  if ("productTypeId" in patch) values.productTypeId = patch.productTypeId?.trim() || null
+  if ("defaultSupplierId" in patch) {
+    values.defaultSupplierId = patch.defaultSupplierId?.trim() || null
+  }
+  if ("adultMinAge" in patch) values.adultMinAge = patch.adultMinAge ?? null
+  if ("childMinAge" in patch) values.childMinAge = patch.childMinAge ?? null
+
+  if (!existing) {
+    const [created] = await db.insert(routeImportSettings).values(values).returning()
+    return created ?? null
+  }
+
+  const [updated] = await db
+    .update(routeImportSettings)
+    .set({ ...values, updatedAt: new Date() })
+    .where(eq(routeImportSettings.id, existing.id))
+    .returning()
+  return updated ?? null
+}
+
+/** 助手的兜底默认值。设置页没填时用它,不留空导致建库失败。 */
+export const ROUTE_IMPORT_FALLBACKS = {
+  sellCurrency: "CNY",
+  timezone: "Asia/Shanghai",
+  adultMinAge: 12,
+  childMinAge: 2,
+} as const
+
+/**
+ * 解析出建产品要用的一组值:设置优先,缺项落到兜底。
+ *
+ * 单独成函数,是为了让接口与界面看到的是同一套解析结果——两边各算一次
+ * 迟早会各说一套。
+ */
+export async function resolveRouteImportDefaults(db: PostgresJsDatabase) {
+  const row = await getRouteImportSettings(db)
+  return {
+    sellCurrency: row?.sellCurrency ?? ROUTE_IMPORT_FALLBACKS.sellCurrency,
+    timezone: row?.timezone ?? ROUTE_IMPORT_FALLBACKS.timezone,
+    productTypeId: row?.productTypeId ?? null,
+    defaultSupplierId: row?.defaultSupplierId ?? null,
+    adultMinAge: row?.adultMinAge ?? ROUTE_IMPORT_FALLBACKS.adultMinAge,
+    childMinAge: row?.childMinAge ?? ROUTE_IMPORT_FALLBACKS.childMinAge,
   }
 }

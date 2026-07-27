@@ -198,6 +198,5 @@
     "**/*": [
       "secretlint"
     ]
-  },
-  "dependencies": {}
+  }
 }

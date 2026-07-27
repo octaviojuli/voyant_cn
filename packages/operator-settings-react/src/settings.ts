@@ -5,7 +5,7 @@ import {
   defineAdminExtension,
 } from "@voyant-travel/admin/extensions"
 import type { AdminCoreSettingsExtraPage } from "@voyant-travel/admin-app/core-extension"
-import { Building } from "lucide-react"
+import { Building, FileUp } from "lucide-react"
 
 import {
   OPERATOR_PROFILE_SETUP_STEP_ID,
@@ -53,11 +53,33 @@ export function createOperatorProfileSettingsExtraPage(
   }
 }
 
+/**
+ * 线路上线助理的默认值页,放在「产品」分组下——它管的是助手怎么建产品,
+ * 不是某一条线路的内容。
+ */
+export function createRouteImportSettingsExtraPage(
+  options: { path?: string; order?: number } = {},
+): AdminCoreSettingsExtraPage {
+  return {
+    id: "route-import",
+    path: options.path ?? "/route-import",
+    title: "Route import assistant",
+    label: (messages) => messages.settings.routeImport,
+    icon: FileUp,
+    group: "products",
+    order: options.order ?? 60,
+    page: () =>
+      import("./route-import-settings-page.js").then((module) =>
+        adminRoutePageModule(module.RouteImportSettingsPage),
+      ),
+  }
+}
+
 /** Selected-graph admin contribution owned by the operator-settings package. */
 export function createSelectedOperatorSettingsAdminExtension(): AdminExtension {
   return defineAdminExtension({
     id: "operator-settings",
-    settingsPages: [createOperatorProfileSettingsExtraPage()],
+    settingsPages: [createOperatorProfileSettingsExtraPage(), createRouteImportSettingsExtraPage()],
     setupSteps: [
       {
         id: OPERATOR_PROFILE_SETUP_STEP_ID,

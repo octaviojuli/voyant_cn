@@ -280,6 +280,10 @@ export const STANDARD_OPERATOR_DISTRIBUTION_POLICY: {
       owners: ["@voyant-travel/inventory", "@voyant-travel/storage"],
     },
     {
+      resolve: "@voyant-travel/inventory/import-extension",
+      owners: ["@voyant-travel/inventory", "@voyant-travel/storage"],
+    },
+    {
       resolve: "@voyant-travel/finance/booking-schedule-extension",
       owners: [
         "@voyant-travel/finance",

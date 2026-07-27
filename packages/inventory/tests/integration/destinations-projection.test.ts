@@ -126,7 +126,8 @@ describe.skipIf(!DB_AVAILABLE)("createProductDestinationsProjectionExtension", (
 
     productId = "prod_dest_test"
     // agent-quality: raw-sql reviewed -- owner: products; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
-    await db.execute(sql`INSERT INTO products (id, name) VALUES (${productId}, 'Italy Loop Tour')`)
+    await db.execute(sql`INSERT INTO products (id, name, sell_currency, status, activated, visibility)
+      VALUES (${productId}, 'Italy Loop Tour', 'EUR', 'active', true, 'public')`)
 
     // Destinations include hierarchy plus cruise-specific port/waterway geography.
     await db.insert(destinations).values([

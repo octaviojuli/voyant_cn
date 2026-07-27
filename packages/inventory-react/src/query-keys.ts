@@ -112,6 +112,10 @@ export interface DayServiceTranslationsListFilters {
 export const productsQueryKeys = {
   all: ["voyant", "products"] as const,
 
+  importDrafts: () => [...productsQueryKeys.all, "import-drafts"] as const,
+  importDraftsList: () => [...productsQueryKeys.importDrafts(), "list"] as const,
+  importDraft: (id: string) => [...productsQueryKeys.importDrafts(), "detail", id] as const,
+
   products: () => [...productsQueryKeys.all, "products"] as const,
   productsList: (filters: ProductsListFilters) =>
     [...productsQueryKeys.products(), "list", filters] as const,

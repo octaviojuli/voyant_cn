@@ -1,3 +1,7 @@
+// agent-quality: file-size exception -- owner: inventory; 清单必须是单文件。
+// first-party-manifest-convergence 以文本方式在 `./voyant` 导出目标里查找
+// defineModule/defineExtension 声明,不跟随再导出——把声明拆到同级文件会让
+// 部署图校验判定「未声明」。拆分要先改那个检查器,不能只挪代码。
 import { actionLedgerInventoryDriftRuntimePort } from "@voyant-travel/action-ledger/runtime-port"
 import { bookingsInventoryRuntimePort } from "@voyant-travel/bookings/runtime-port"
 import { catalogInventoryRuntimeExtensionPort } from "@voyant-travel/catalog/ports"
@@ -391,6 +395,24 @@ export const inventoryVoyantModule = defineModule({
         },
       },
       {
+        id: "@voyant-travel/inventory#admin.route.products-route-import",
+        path: "/route-imports",
+        requiredScopes: ["products:read"],
+        runtime: {
+          entry: "@voyant-travel/inventory-react/admin",
+          export: "createInventoryAdminExtension",
+        },
+      },
+      {
+        id: "@voyant-travel/inventory#admin.route.products-route-import-detail",
+        path: "/route-imports/$id",
+        requiredScopes: ["products:read"],
+        runtime: {
+          entry: "@voyant-travel/inventory-react/admin",
+          export: "createInventoryAdminExtension",
+        },
+      },
+      {
         id: "@voyant-travel/inventory#admin.route.products-detail",
         path: "/products/$id",
         requiredScopes: ["products:read"],
@@ -734,6 +756,29 @@ export const inventoryBrochureVoyantPlugin = defineExtension({
       runtime: {
         entry: "@voyant-travel/inventory/graph-runtime",
         export: "createInventoryBrochureVoyantRuntime",
+      },
+    },
+  ],
+  meta: {
+    ownership: "package",
+  },
+})
+
+export const inventoryImportVoyantPlugin = defineExtension({
+  id: "@voyant-travel/inventory#import-extension",
+  packageName: "@voyant-travel/inventory",
+  localId: "inventory.import-extension",
+  runtimePorts: [requirePort(storageMediaRuntimePort)],
+  api: [
+    {
+      id: "@voyant-travel/inventory#import-extension.api.admin",
+      surface: "admin",
+      // 独立挂载点。挂到 products 之下会被 /products/{id} 吃掉。
+      mount: "route-imports",
+      openapi: { document: "products" },
+      runtime: {
+        entry: "@voyant-travel/inventory/graph-runtime",
+        export: "createInventoryImportVoyantRuntime",
       },
     },
   ],
