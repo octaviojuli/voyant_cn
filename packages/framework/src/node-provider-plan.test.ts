@@ -100,6 +100,34 @@ describe("resolveVoyantNodeProviderPlan", () => {
     ).toThrow(/providers\.cache=memcached/)
   })
 
+  it("admits the filesystem storage provider and requires its root", () => {
+    const plan = resolveVoyantNodeProviderPlan({
+      storage: "filesystem",
+      cache: "memory",
+      sharedState: "memory",
+      rateLimit: "memory",
+    })
+
+    expect(plan.storage).toBe("filesystem")
+    expect(validateVoyantNodeProviderPlanEnv(plan, {})).toEqual([
+      "env STORAGE_FILESYSTEM_ROOT is required by the Node provider plan",
+    ])
+    expect(
+      validateVoyantNodeProviderPlanEnv(plan, { STORAGE_FILESYSTEM_ROOT: "/opt/voyant/storage" }),
+    ).toEqual([])
+  })
+
+  it("does not require the storage root for other storage providers", () => {
+    const plan = resolveVoyantNodeProviderPlan({
+      storage: "memory",
+      cache: "memory",
+      sharedState: "memory",
+      rateLimit: "memory",
+    })
+
+    expect(validateVoyantNodeProviderPlanEnv(plan, {})).toEqual([])
+  })
+
   it("requires explicit graph provider roles used by the Node runtime", () => {
     expect(() =>
       resolveVoyantNodeProviderPlan({
