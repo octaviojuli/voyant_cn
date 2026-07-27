@@ -24,8 +24,45 @@ import {
 const DAYS_NIGHTS = /(\d+)\s*天\s*(\d+)\s*晚/
 /** 井号标签,如 #私家出行#1 动#乌起喀止。 */
 const TAG = /#([^#\s　]+)/g
-/** 日行标记。允许出现在行中(标题与 D1 黏连的情况),其后必须跟空白。 */
-const DAY_MARKER = /D(\d{1,2})[ 　\t]/g
+/**
+ * 日行标记。两套写法都要认:
+ *   - `D1 `(PDF 类资料常用),其后必须跟空白;
+ *   - `第一天：`/`第 1 天:`(Word 类资料常用),中文数字与阿拉伯数字都有。
+ */
+const DAY_MARKER = /D(\d{1,2})[ 　\t]|第\s*([一二三四五六七八九十百零〇\d]{1,4})\s*天\s*[:：、.]?/g
+
+/** 中文数字转整数,只需覆盖行程天数的量级(一到百)。 */
+const CN_DIGITS: Readonly<Record<string, number>> = {
+  零: 0,
+  〇: 0,
+  一: 1,
+  二: 2,
+  三: 3,
+  四: 4,
+  五: 5,
+  六: 6,
+  七: 7,
+  八: 8,
+  九: 9,
+}
+
+function parseDayNumber(value: string): number | null {
+  if (/^\d+$/.test(value)) return Number.parseInt(value, 10)
+
+  // 十 / 十二 / 二十 / 二十三 这几种组合足以覆盖行程天数。
+  const tenIndex = value.indexOf("十")
+  if (tenIndex !== -1) {
+    const highPart = value.slice(0, tenIndex)
+    const lowPart = value.slice(tenIndex + 1)
+    const high = highPart ? CN_DIGITS[highPart] : 1
+    const low = lowPart ? CN_DIGITS[lowPart] : 0
+    if (high == null || low == null) return null
+    return high * 10 + low
+  }
+
+  const digit = CN_DIGITS[value]
+  return digit ?? null
+}
 /** 单程里程,如「单程约 300KM」「约 139 公里」。 */
 const DISTANCE = /约\s*(\d+(?:\.\d+)?)\s*(?:KM|km|公里)/
 /** 行车时长,如「行驶约 4.5H」「车程约 2 小时」。 */
@@ -86,8 +123,10 @@ export function parseRouteDocument(
     })
   }
 
-  draft.startCity = draft.itinerary[0]?.routeChain.at(-1) ?? null
-  draft.endCity = draft.itinerary.at(-1)?.routeChain.at(-1) ?? null
+  // 首日的终点即出发城市(首日多为「出发地-乌鲁木齐」),末日的终点即结束城市;
+  // 两头都要跳过「出发地」「家」这类占位词。
+  draft.startCity = meaningfulPlace(draft.itinerary[0]?.routeChain ?? [], "start")
+  draft.endCity = meaningfulPlace(draft.itinerary.at(-1)?.routeChain ?? [], "end")
 
   return routeImportDraftSchema.parse(draft)
 }
@@ -111,27 +150,51 @@ interface DayMarker {
 }
 
 /**
- * 定位每日标记。两道判据缺一不可:
- *   - 序号必须递增,避免回头引用被当成新的一天;
- *   - 必须另起一行——正文里的「参考 D3 的安排」正是这样被排除的。
- * 例外只有首日:有的资料把 D1 直接接在标题后面,不换行。
+ * 定位每日标记。
+ *
+ * 判据:序号递增、且必须另起一行——正文里的「参考 D3 的安排」正是这样被
+ * 排除的。唯一例外是首日,有的资料把 D1 直接接在标题后面不换行。
+ *
+ * 一份资料里日程可能出现两遍(前面一张总览表、后面才是逐日详情),因此把
+ * 所有从 1 开始的递增序列都找出来,取正文最长的那一段——总览表只有标题,
+ * 详情才有餐宿与正文。
  */
 function findDayMarkers(text: string): DayMarker[] {
-  const markers: DayMarker[] = []
-  let expected = 1
+  const candidates: DayMarker[] = []
 
   DAY_MARKER.lastIndex = 0
   let match = DAY_MARKER.exec(text)
   while (match !== null) {
-    const dayNumber = Number.parseInt(match[1] as string, 10)
+    const raw = match[1] ?? match[2]
+    const dayNumber = raw ? parseDayNumber(raw) : null
     const atLineStart = match.index === 0 || text[match.index - 1] === "\n"
-    if (dayNumber === expected && (atLineStart || dayNumber === 1)) {
-      markers.push({ index: match.index, dayNumber })
-      expected += 1
+    if (dayNumber != null && dayNumber >= 1 && (atLineStart || dayNumber === 1)) {
+      candidates.push({ index: match.index, dayNumber })
     }
     match = DAY_MARKER.exec(text)
   }
-  return markers
+
+  const runs: DayMarker[][] = []
+  for (const candidate of candidates) {
+    const current = runs[runs.length - 1]
+    if (current && candidate.dayNumber === (current[current.length - 1]?.dayNumber ?? 0) + 1) {
+      current.push(candidate)
+    } else if (candidate.dayNumber === 1) {
+      runs.push([candidate])
+    }
+  }
+
+  let best: DayMarker[] = []
+  let bestSpan = -1
+  for (const run of runs) {
+    const span = (run[run.length - 1]?.index ?? 0) - (run[0]?.index ?? 0)
+    // 同样长度时取天数多的,避免总览表因排在前面而胜出。
+    if (span > bestSpan || (span === bestSpan && run.length > best.length)) {
+      best = run
+      bestSpan = span
+    }
+  }
+  return best
 }
 
 /** 尾部章节的起点:最后一天之后,第一个费用/须知类关键词的位置。 */
@@ -210,7 +273,9 @@ function parseDay(segment: string, dayNumber: number): DraftDay {
   const rest = newline === -1 ? "" : segment.slice(newline + 1)
 
   // 去掉「D3 」前缀,余下即路线链与括号里的里程车程。
-  const withoutMarker = headerLine.replace(/^D\d{1,2}[ 　\t]+/, "")
+  const withoutMarker = headerLine
+    .replace(/^D\d{1,2}[ 　\t]+/, "")
+    .replace(/^第\s*[一二三四五六七八九十百零〇\d]{1,4}\s*天\s*[:：、.]?\s*/, "")
   const bracket = withoutMarker.match(/[（(]([^）)]*)[）)]/)
   const title = withoutMarker.replace(/[（(][^）)]*[）)]/g, "").trim()
 
@@ -234,13 +299,36 @@ function parseDay(segment: string, dayNumber: number): DraftDay {
 
 /** 途经点:原件用 - → ✈ 等连接,统一拆开。 */
 function splitRouteChain(title: string): string[] {
-  return title
-    .split(/[-—–→>✈✚+]/)
-    .map((part) => part.trim())
-    .filter(Boolean)
+  return (
+    title
+      // 「住：乌鲁木齐」有时跟在日行标题末尾,不是途经点。
+      .replace(/(?:住宿|住)\s*[:：].*$/, "")
+      // 【和田二街的烤肉…】这类是卖点文案,不是地名。
+      .replace(/【[^】]*】/g, " ")
+      .split(/[-—–→>✈✚+]/)
+      .map((part) => part.trim())
+      .filter(Boolean)
+  )
 }
 
-/** 从日正文里剥出餐、宿两类结构化信息,其余作为正文。 */
+/** 「出发地」「全国各地」「家」这类不是城市,不能出现在封面上。 */
+const PLACEHOLDER_PLACES = ["出发地", "全国各地", "家", "温暖的家", "各地", "返程"]
+
+function meaningfulPlace(chain: readonly string[], from: "start" | "end"): string | null {
+  const ordered = from === "start" ? [...chain].reverse() : [...chain].reverse()
+  for (const place of ordered) {
+    if (!PLACEHOLDER_PLACES.some((word) => place === word || place.endsWith(word))) return place
+  }
+  return null
+}
+
+/**
+ * 从日正文里剥出餐、宿两类结构化信息,其余作为正文。
+ *
+ * 两种写法都要认:每餐各占一行(PDF 类资料),以及三餐挤在同一行
+ * (Word 类资料,如「早餐：酒店包含  午餐：敬请自理  晚餐：敬请自理」)。
+ * 住宿写作「住宿：」或「住：」。
+ */
 function splitDayBody(rest: string): {
   meals: DraftMeals
   accommodation: string | null
@@ -257,19 +345,43 @@ function splitDayBody(rest: string): {
       continue
     }
 
-    const mealKey = MEAL_KEYS.find((meal) => new RegExp(`^${meal.label}\\s*[:：]`).test(line))
-    if (mealKey) {
-      meals[mealKey.key] = line.replace(/^[^:：]*[:：]\s*/, "").trim()
-      continue
+    const consumed = extractMealsInline(line, meals)
+    const stay = line.match(/(?:住宿|住)\s*[:：]\s*([^\s].*)$/)
+    if (stay && !accommodation) {
+      accommodation = (stay[1] as string).trim()
+      if (consumed || /^(?:住宿|住)\s*[:：]/.test(line)) continue
     }
-    if (/^住宿\s*[:：]/.test(line)) {
-      accommodation = line.replace(/^[^:：]*[:：]\s*/, "").trim()
-      continue
-    }
+    if (consumed) continue
+
     bodyLines.push(line)
   }
 
   return { meals, accommodation, body: bodyLines.join("\n") }
+}
+
+/**
+ * 就地抽取一行里的餐食。返回该行是否已被餐食信息占满——占满才丢弃整行,
+ * 否则正文会被误删(有的资料把住宿和正文写在同一行)。
+ */
+function extractMealsInline(line: string, meals: DraftMeals): boolean {
+  let matched = false
+  let remainder = line
+
+  for (const meal of MEAL_KEYS) {
+    // 值取到下一个餐别标签或行尾为止。
+    const pattern = new RegExp(
+      `${meal.label}\\s*[:：]\\s*([^\\s]{0,30}?)(?=\\s{2,}|\\s*(?:早餐|午餐|晚餐|住宿|住)\\s*[:：]|$)`,
+    )
+    const found = line.match(pattern)
+    if (!found) continue
+    matched = true
+    if (!meals[meal.key]) meals[meal.key] = (found[1] as string).trim()
+    remainder = remainder.replace(found[0], "")
+  }
+
+  if (!matched) return false
+  // 去掉餐食片段后若只剩标点空白,这一行就是纯餐食行。
+  return remainder.replace(/[\s:：,,、]/g, "").length === 0
 }
 
 /** 景点词条。说明文字里的换行压平,避免正文里出现断行。 */

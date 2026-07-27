@@ -109,6 +109,48 @@ describe("parseRouteDocument", () => {
     })
   })
 
+  describe("Word 类资料(第N天 写法)", () => {
+    const ili = parseRouteDocument(read("ili-8d-word.txt"))
+    const south = parseRouteDocument(read("south-xinjiang-8d-word.txt"))
+
+    it("认得中文数字的日期标记", () => {
+      // 这两份资料没有 D1/D2,用的是「第一天：」。
+      expect(ili.itinerary.map((day) => day.dayNumber).slice(0, 3)).toEqual([1, 2, 3])
+      expect(south.itinerary.length).toBeGreaterThanOrEqual(3)
+    })
+
+    it("日行标题不残留「第一天:」前缀", () => {
+      expect(ili.itinerary[0]?.title).not.toMatch(/^第.{1,3}天/)
+    })
+
+    it("三餐写在同一行时也能拆开", () => {
+      const day = ili.itinerary.find((entry) => entry.meals.lunch)
+      expect(day?.meals.breakfast).toBeTruthy()
+      expect(day?.meals.lunch).toBeTruthy()
+      expect(day?.meals.dinner).toBeTruthy()
+    })
+
+    it("认得「住：」这种简写", () => {
+      expect(ili.itinerary[0]?.accommodation).toBe("乌鲁木齐")
+    })
+
+    it("途经点剔除卖点文案与住宿尾巴", () => {
+      // 原文是「出发地-乌鲁木齐【和田二街的烤肉…】  住：乌鲁木齐」。
+      expect(ili.itinerary[0]?.routeChain).toEqual(["出发地", "乌鲁木齐"])
+    })
+
+    it("起止城市跳过「出发地」「家」这类占位词", () => {
+      expect(ili.startCity).toBe("乌鲁木齐")
+      expect(south.startCity).toBe("喀什")
+      expect(ili.endCity).not.toBe("家")
+    })
+
+    it("费用包含解析成条目", () => {
+      expect(ili.inclusionsHtml).toContain("<li>")
+      expect(south.inclusionsHtml).toContain("<li>")
+    })
+  })
+
   describe("异常与边界", () => {
     it("没有 D 标记时明确报未识别,而不是返回空行程了事", () => {
       const draft = parseRouteDocument("某某旅行社\n新疆风光 5 天 4 晚\n正文若干")
