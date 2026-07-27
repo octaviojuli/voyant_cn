@@ -34,10 +34,18 @@ import {
   type ProductBrochurePrinter,
   ProductBrochureStorageError,
   type ProductBrochureTemplateDefinition,
+  type ThemedBrochureTheme,
 } from "./tasks/index.js"
 
-/** 5 MiB cap on a generated brochure PDF before it's rejected with 413. */
-const DEFAULT_MAX_BROCHURE_PDF_BYTES = 5 * 1024 * 1024
+/**
+ * 生成的宣传册大小上限,超过即 413。
+ *
+ * 原来是 5 MiB,那是按「一份纯文字 PDF」定的。现在册子要带封面、每日配图与
+ * 线路概览图,一条 12 天线路光图就十几张——按老上限,配图越齐全越生成不出来,
+ * 恰好把做得最认真的线路挡在外面。图片内联另有独立的字节预算兜住体积
+ * (见 `brochure-images.ts`),这里只做最后一道闸。
+ */
+const DEFAULT_MAX_BROCHURE_PDF_BYTES = 16 * 1024 * 1024
 
 const errorResponseSchema = z.object({ error: z.string() })
 
@@ -117,8 +125,17 @@ export interface ProductBrochureRoutesOptions {
    * Resolve an optional PDF printer for this request (e.g. a browser-rendering
    * service). When omitted, the brochure task falls back to its built-in
    * pdf-lib printer.
+   *
+   * 允许返回 Promise:本机浏览器要探测可执行文件在不在,那是异步的。
    */
-  resolvePrinter?(c: Context): ProductBrochurePrinter | null
+  resolvePrinter?(
+    c: Context,
+  ): ProductBrochurePrinter | null | Promise<ProductBrochurePrinter | null>
+  /**
+   * 品牌与配色。取自经营主体资料,由装配层注入——inventory 不该知道公司
+   * 抬头存在哪张表里。
+   */
+  resolveTheme?(c: Context): ThemedBrochureTheme | null | Promise<ThemedBrochureTheme | null>
   /**
    * The brochure template. Defaults to {@link createDefaultProductBrochureTemplate}.
    */
@@ -150,7 +167,10 @@ export function createProductBrochureRoutes(
       const productId = c.req.valid("param").id
       if (!productId) return c.json({ error: "id route param is required" }, 400)
 
-      const printer = options.resolvePrinter?.(c) ?? null
+      const [printer, theme] = await Promise.all([
+        options.resolvePrinter?.(c) ?? null,
+        options.resolveTheme?.(c) ?? null,
+      ])
       const keyPrefix = options.keyPrefix?.(productId) ?? `brochures/products/${productId}`
 
       let generated: Awaited<ReturnType<typeof generateAndStoreProductBrochure>>
@@ -159,6 +179,7 @@ export function createProductBrochureRoutes(
           storage,
           template: options.template ?? createDefaultProductBrochureTemplate(),
           ...(printer ? { printer } : {}),
+          ...(theme ? { theme } : {}),
           keyPrefix,
           filename: ({ productId: generatedProductId, filename }) =>
             `brochure-${generatedProductId}-${Date.now()}-${filename}`,

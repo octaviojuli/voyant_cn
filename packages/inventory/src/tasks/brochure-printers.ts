@@ -137,12 +137,15 @@ export function isBasicPdfProductBrochurePrinter(printer: ProductBrochurePrinter
 }
 
 export function createBasicPdfProductBrochurePrinter(): ProductBrochurePrinter {
-  const printer: ProductBrochurePrinterWithKind = async ({ template, context }) => {
+  const printer: ProductBrochurePrinterWithKind = async ({ template }) => {
     const body = await renderPdfDocument({
       title: template.title,
       content: template.body,
       format: template.bodyFormat,
-      metadataLines: [`Product ID: ${context.product.id}`, ...template.metadataLines],
+      // 模板给什么就印什么。这里原本还硬塞一行 `Product ID`,与默认模板里
+      // 那行重复,册子上因此出现两遍内部主键——客人拿到的文件里不该有它,
+      // 更不该有两次。要印内部信息就由模板明确写出来。
+      metadataLines: template.metadataLines,
     })
 
     return {

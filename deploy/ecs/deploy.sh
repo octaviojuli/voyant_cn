@@ -99,6 +99,29 @@ if ! grep -q '^STORAGE_FILESYSTEM_ROOT=' "$ENV_FILE" 2>/dev/null; then
   printf '\nSTORAGE_FILESYSTEM_ROOT="%s"\n' "$STORAGE_ROOT" >> "$ENV_FILE"
 fi
 
+# 宣传册走 HTML → PDF,需要一个本机无头浏览器。装在 APP_DIR 之外,理由与
+# 存储目录相同:部署会对仓库做 git reset --hard。
+#
+# 这一步**失败不阻断部署**。装不上只是宣传册回落到内置的纯文本排版,册子
+# 难看但功能仍在;为了一个可选的排版能力把整次发布卡住是本末倒置。
+BROWSERS_ROOT="${BROWSERS_ROOT:-/opt/voyant/browsers}"
+if [ ! -d "$BROWSERS_ROOT" ] || [ -z "$(ls -A "$BROWSERS_ROOT" 2>/dev/null)" ]; then
+  echo "[$(date +%H:%M:%S)] ==> 安装无头浏览器(宣传册排版用)"
+  mkdir -p "$BROWSERS_ROOT"
+  # 国内直连 playwright CDN 极慢,走 npmmirror 镜像。
+  if PLAYWRIGHT_BROWSERS_PATH="$BROWSERS_ROOT" \
+     PLAYWRIGHT_DOWNLOAD_HOST="https://cdn.npmmirror.com/binaries/playwright" \
+     npx --yes playwright@1.61.1 install --with-deps chromium; then
+    echo "[$(date +%H:%M:%S)] ==> 浏览器就绪:$BROWSERS_ROOT"
+  else
+    echo "!! 浏览器安装失败,宣传册将回落到纯文本排版(不影响本次部署)"
+  fi
+fi
+if [ -d "$BROWSERS_ROOT" ] && ! grep -q '^PLAYWRIGHT_BROWSERS_PATH=' "$ENV_FILE" 2>/dev/null; then
+  echo "[$(date +%H:%M:%S)] ==> 写入 PLAYWRIGHT_BROWSERS_PATH=$BROWSERS_ROOT"
+  printf '\nPLAYWRIGHT_BROWSERS_PATH="%s"\n' "$BROWSERS_ROOT" >> "$ENV_FILE"
+fi
+
 echo "[$(date +%H:%M:%S)] ==> 执行数据库迁移"
 migrated=false
 for i in 1 2 3; do

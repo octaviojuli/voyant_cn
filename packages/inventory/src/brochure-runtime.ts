@@ -11,6 +11,7 @@ type RuntimeEnv = Readonly<
   Partial<
     Record<
       | "APP_URL"
+      | "BROCHURE_CHROMIUM_PATH"
       | "VOYANT_API_KEY"
       | "VOYANT_CLOUD_API_KEY"
       | "VOYANT_CLOUD_API_URL"
@@ -81,14 +82,26 @@ export function createProductBrochurePrinter(env: RuntimeEnv): ProductBrochurePr
   }
 }
 
-/** Build Inventory's brochure printer policy from generic graph host primitives. */
+/**
+ * 打印器的选取顺序:Voyant Cloud 浏览器 → 本机无头浏览器 → `null`。
+ *
+ * 返回 `null` 不是失败,是回落到内置的 pdf-lib 纯文本打印器——册子难看,但
+ * 生成不会断。自托管部署没有云端密钥,本机浏览器就是那条真正在跑的路;它
+ * 装没装是运维状态,不该让运营在点「生成宣传册」时看到 500。
+ */
+export async function resolveBrochurePrinter(
+  env: RuntimeEnv,
+): Promise<ProductBrochurePrinter | null> {
+  if (tryGetCloudClient(env)) return createProductBrochurePrinter(env)
+  // 动态引入:那个模块会在运行时去解析 playwright,不该钉进本模块的静态图。
+  const { resolveLocalChromiumPrinter } = await import("./tasks/brochure-chromium.js")
+  return resolveLocalChromiumPrinter(env)
+}
+
 export function createInventoryBrochureRuntime(
   primitives: BrochureRuntimePrimitives,
 ): InventoryBrochureRuntime {
   return {
-    resolvePrinter: (context) => {
-      const env = primitives.env(context.env)
-      return tryGetCloudClient(env) ? createProductBrochurePrinter(env) : null
-    },
+    resolvePrinter: (context) => resolveBrochurePrinter(primitives.env(context.env)),
   }
 }

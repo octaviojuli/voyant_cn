@@ -107,9 +107,12 @@ describe("generateAndStoreProductBrochure", () => {
     expect(result.url).toBe(
       "https://files.example/brochures/products/prod_123/custom-template-brochure.pdf",
     )
+    // 会排版的打印器一律套上宣传册版式,元数据里因此多出版式与内联图数量。
     expect(result.metadata).toEqual({
       renderer: "custom-printer",
       provider: "browserbase",
+      layout: "themed-brochure",
+      inlinedImages: 0,
     })
     expect(result.brochure.mimeType).toBe("application/pdf")
     expect(result.brochure.fileSize).toBe(4)
