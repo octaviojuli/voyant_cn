@@ -123,21 +123,23 @@ BROWSER_LIBS="libnss3 libnspr4 libatk1.0-0t64 libatk1.0-0 libatk-bridge2.0-0t64
 libatk-bridge2.0-0 libcups2t64 libcups2 libdrm2 libxkbcommon0 libxcomposite1
 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2
 libasound2t64 libasound2 fonts-noto-cjk"
-if [ ! -f "$BROWSERS_ROOT/.deps-attempted" ] && command -v apt-get &>/dev/null; then
+# 每次都试一遍,不再用 .deps-attempted 打标记跳过:运维后来补上免密 sudo
+# 或手动装过库之后,下一次部署就该自动恢复成浏览器排版,而不是因为一个
+# 陈年标记文件永远走纯文本。装不上的情况本来就是几秒钟的事,不值得缓存。
+if command -v apt-get &>/dev/null; then
   echo "[$(date +%H:%M:%S)] ==> 尝试安装浏览器系统库(免密 sudo,失败不阻断)"
   installed=0
   for pkg in $BROWSER_LIBS; do
     sudo -n apt-get install -y --no-install-recommends "$pkg" &>/dev/null && installed=$((installed + 1))
   done
-  echo "   装上 $installed 个;装不上多半是没有免密 sudo,下面的自检会给出结论"
-  touch "$BROWSERS_ROOT/.deps-attempted" || true
+  echo "   装上/已在位 $installed 个;装不上多半是没有免密 sudo,下面的自检会给出结论"
 fi
 
 # 用仓库里已装的 playwright-core 下载,不走 npx 现拉:版本必然与运行时一致,
 # 也少一次网络往返。刻意不加 --with-deps —— 它内部会 sudo,非交互 SSH 下提权
 # 失败即整体退出,连浏览器本体都不会下(实测踩过)。
 PW_CLI="$APP_DIR/packages/inventory/node_modules/playwright-core/cli.js"
-if [ -z "$(ls -A "$BROWSERS_ROOT" 2>/dev/null | grep -v '^\.deps-attempted$')" ] && [ -f "$PW_CLI" ]; then
+if [ -z "$(ls -A "$BROWSERS_ROOT" 2>/dev/null)" ] && [ -f "$PW_CLI" ]; then
   echo "[$(date +%H:%M:%S)] ==> 下载无头浏览器(宣传册排版用)"
   # 国内直连 playwright CDN 极慢,走 npmmirror 镜像。
   PLAYWRIGHT_BROWSERS_PATH="$BROWSERS_ROOT" \
@@ -158,14 +160,43 @@ fi
 echo "[$(date +%H:%M:%S)] ==> 自检:浏览器能否启动"
 (
   cd "$APP_DIR/packages/inventory" 2>/dev/null || exit 1
+  # 错误信息整段打出来,**不要**只取第一行。playwright 的第一行永远是那句没有
+  # 信息量的「Target page, context or browser has been closed」,真正有用的
+  # 「error while loading shared libraries: libX.so.N」在后面几行——上一次
+  # 就是被我截掉了,白等了一个部署周期才知道缺库。
   PLAYWRIGHT_BROWSERS_PATH="$BROWSERS_ROOT" node -e '
 const p = require("playwright-core");
 p.chromium
   .launch({ args: ["--no-sandbox", "--disable-dev-shm-usage"] })
   .then((b) => b.close())
   .then(() => console.log("   自检通过:宣传册走 HTML→PDF"))
-  .catch((e) => console.log("   自检未通过,宣传册回落到纯文本排版:" + String(e.message).split("\n")[0]))
-'
+  .catch((e) => {
+    console.log("   自检未通过,宣传册回落到纯文本排版。完整错误:");
+    console.log(String(e.message).split("\n").map((l) => "     " + l).join("\n"));
+    process.exitCode = 3;
+  })
+' || {
+    # 启不动时补一份 ldd,直接列出缺哪些 .so —— 这才是运维要拿去装包的清单。
+    CHROME_BIN=$(PLAYWRIGHT_BROWSERS_PATH="$BROWSERS_ROOT" node -e \
+      'console.log(require("playwright-core").chromium.executablePath())' 2>/dev/null || true)
+    if [ -n "$CHROME_BIN" ] && [ -x "$CHROME_BIN" ] && command -v ldd &>/dev/null; then
+      MISSING=$(ldd "$CHROME_BIN" 2>/dev/null | awk '/not found/{print "     " $1}')
+      if [ -n "$MISSING" ]; then
+        echo "   缺失的共享库:"
+        echo "$MISSING"
+        # node 必须写绝对路径:它装在 /opt/voyant/node24/bin,只有 voyant 用户
+        # 的部署 shell 把这段加进了 PATH,`sudo` 起来的 root 环境里没有,照着
+        # 敲会得到「sudo: node: command not found」(实测踩过)。
+        # install-deps 只是去 apt 装包、不碰浏览器目录,因此不需要
+        # PLAYWRIGHT_BROWSERS_PATH,顺带避开 sudo 清环境变量的麻烦。
+        echo "   一条命令即可补齐(需要 root,只需执行一次):"
+        echo "     sudo $NODE_BIN/node $PW_CLI install-deps chromium"
+        echo "   装完不必重新部署:每次生成宣传册前都会重新探测。"
+      else
+        echo "   ldd 未报缺库,问题不在系统库;请看上面的完整错误。"
+      fi
+    fi
+  }
 ) || echo "   自检未能执行(playwright-core 解析不到);宣传册回落到纯文本排版"
 
 echo "[$(date +%H:%M:%S)] ==> 执行数据库迁移"

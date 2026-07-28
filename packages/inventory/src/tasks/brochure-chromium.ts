@@ -16,7 +16,7 @@
 import type { ProductBrochurePrinter } from "./brochure-printers.js"
 
 /** 只用到这几个方法,不引 playwright 的类型——它不是本包的依赖。 */
-interface ChromiumLike {
+export interface ChromiumLike {
   executablePath(): string
   launch(options: { executablePath?: string; args?: string[] }): Promise<BrowserLike>
 }
@@ -39,6 +39,14 @@ export interface LocalChromiumBrochurePrinterOptions {
   timeoutMs?: number
   /** 页脚模板里的公司名,留空则只印页码。 */
   footerBrand?: string | null
+  /**
+   * 直接给出浏览器工厂,跳过对 playwright 的解析。
+   *
+   * 存在的理由是探测那段逻辑本身要能被测:「启不动时不缓存失败」这条规则
+   * 只有喂一个先失败后成功的假浏览器才验得出来,而真 playwright 做不到。
+   * 生产路径不传这个参数。
+   */
+  chromium?: ChromiumLike
 }
 
 type RuntimeEnv = Readonly<Partial<Record<"BROCHURE_CHROMIUM_PATH", unknown>>>
@@ -89,14 +97,18 @@ async function fileExists(path: string): Promise<boolean> {
 }
 
 /**
- * 每个可执行文件只真启一次,结果缓存。
+ * 真启一次看能不能用,**只缓存成功**。
  *
  * 「文件在不在」不足以说明能不能用:Chromium 依赖一串系统库(libnss3、
  * libgbm 之类),二进制下下来了而库没装,启动才会炸。只看文件存在的话,探测
  * 会说「能用」,然后生成宣传册直接 500——回落形同虚设。实测就踩到了:部署
  * 装浏览器时 `--with-deps` 要 sudo,非交互 SSH 下装不了。
  *
- * 代价是进程内第一次生成多花一两秒,之后走缓存。
+ * **失败不缓存**,这一点是有代价换来的。缺库时运维补装是常态,而把失败缓存
+ * 到进程结束意味着:装好库之后还必须重启服务才恢复,否则这个进程永远记着
+ * 「不可用」。承诺过「装完不必重新部署」,负缓存会让那句话变成假的。
+ * 代价是缺库期间每次生成都多试一次启动——但那种失败是立即返回的(动态链接
+ * 器找不到 .so 就退出),不是超时,量级在百毫秒,可以接受。
  */
 const LAUNCH_PROBES = new Map<string, Promise<boolean>>()
 
@@ -113,6 +125,7 @@ async function canLaunch(chromium: ChromiumLike, executablePath: string): Promis
       await browser.close()
       return true
     } catch {
+      LAUNCH_PROBES.delete(executablePath)
       return false
     }
   })()
@@ -129,23 +142,23 @@ export async function resolveLocalChromiumPrinter(
   env: RuntimeEnv = {},
   options: LocalChromiumBrochurePrinterOptions = {},
 ): Promise<ProductBrochurePrinter | null> {
-  const playwright = await importPlaywrightCore()
-  if (!playwright) return null
+  const chromium = options.chromium ?? (await importPlaywrightCore())?.chromium
+  if (!chromium) return null
 
   const explicit = options.executablePath?.trim() || nonEmpty(env.BROCHURE_CHROMIUM_PATH)
   let executablePath: string | undefined = explicit
   if (!executablePath) {
     try {
-      executablePath = playwright.chromium.executablePath()
+      executablePath = chromium.executablePath()
     } catch {
       return null
     }
   }
 
   if (!executablePath || !(await fileExists(executablePath))) return null
-  if (!(await canLaunch(playwright.chromium, executablePath))) return null
+  if (!(await canLaunch(chromium, executablePath))) return null
 
-  return createLocalChromiumBrochurePrinter(playwright.chromium, {
+  return createLocalChromiumBrochurePrinter(chromium, {
     ...options,
     executablePath,
   })

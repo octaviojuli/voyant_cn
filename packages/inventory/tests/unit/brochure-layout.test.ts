@@ -314,3 +314,56 @@ describe("本机浏览器探测", () => {
     expect(await resolveLocalChromiumPrinter({ BROCHURE_CHROMIUM_PATH: "/bin/true" })).toBeNull()
   })
 })
+
+describe("浏览器探测不缓存失败", () => {
+  /** 先失败后成功的假浏览器:用来验「装完库不必重启也能恢复」。 */
+  function flakyChromium(failTimes: number) {
+    let attempts = 0
+    return {
+      attempts: () => attempts,
+      chromium: {
+        executablePath: () => "/bin/true",
+        launch: async () => {
+          attempts += 1
+          if (attempts <= failTimes) throw new Error("libnss3.so: cannot open shared object file")
+          return { newPage: async () => ({}) as never, close: async () => {} }
+        },
+      },
+    }
+  }
+
+  it("第一次启不动之后仍会重试,库补上就自动恢复", async () => {
+    // 缺库时运维补装是常态。把失败缓存到进程结束意味着装好库还得重启服务,
+    // 而部署日志里写的是「装完不必重新部署」——负缓存会让那句话变成假的。
+    const { resolveLocalChromiumPrinter } = await import("../../src/tasks/brochure-chromium.js")
+    const fake = flakyChromium(1)
+
+    const first = await resolveLocalChromiumPrinter(
+      {},
+      { chromium: fake.chromium, executablePath: "/bin/true" },
+    )
+    const second = await resolveLocalChromiumPrinter(
+      {},
+      { chromium: fake.chromium, executablePath: "/bin/true" },
+    )
+
+    expect(first).toBeNull()
+    expect(second).not.toBeNull()
+    expect(fake.attempts()).toBe(2)
+  })
+
+  it("成功的结果照常缓存,不必每次生成都白启一次", async () => {
+    const { resolveLocalChromiumPrinter } = await import("../../src/tasks/brochure-chromium.js")
+    const fake = flakyChromium(0)
+    // 用独立路径做缓存键,免得与上一条用例互相影响。
+    const at = "/bin/echo"
+
+    expect(
+      await resolveLocalChromiumPrinter({}, { chromium: fake.chromium, executablePath: at }),
+    ).not.toBeNull()
+    expect(
+      await resolveLocalChromiumPrinter({}, { chromium: fake.chromium, executablePath: at }),
+    ).not.toBeNull()
+    expect(fake.attempts()).toBe(1)
+  })
+})
