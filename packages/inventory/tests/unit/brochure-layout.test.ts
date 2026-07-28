@@ -304,4 +304,13 @@ describe("本机浏览器探测", () => {
       await resolveLocalChromiumPrinter({ BROCHURE_CHROMIUM_PATH: "/nonexistent/chrome" }),
     ).toBeNull()
   })
+
+  it("文件在但启不起来也返回 null,不留到生成时才 500", async () => {
+    // 只看「文件在不在」不够:缺 libnss3 之类的系统库时,二进制在、一启动
+    // 就炸。线上正是这个形态——部署装浏览器时 --with-deps 要 sudo,非交互
+    // SSH 下装不了。这里用一个存在但不是浏览器的可执行文件复现。
+    const { resolveLocalChromiumPrinter } = await import("../../src/tasks/brochure-chromium.js")
+
+    expect(await resolveLocalChromiumPrinter({ BROCHURE_CHROMIUM_PATH: "/bin/true" })).toBeNull()
+  })
 })
