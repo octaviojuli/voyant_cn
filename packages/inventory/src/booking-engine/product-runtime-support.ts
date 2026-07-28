@@ -1,12 +1,77 @@
 import { bookingItems, bookings } from "@voyant-travel/bookings/schema"
 import { paxBandCodeForUnit } from "@voyant-travel/catalog/booking-engine"
-import { pricingCategories } from "@voyant-travel/commerce"
+import { priceCatalogs, pricingCategories } from "@voyant-travel/commerce"
 import { bookingItemTaxLines } from "@voyant-travel/finance"
 import { and, asc, desc, eq, inArray, like, type SQL } from "drizzle-orm"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 
-import { optionUnits, productOptions } from "../schema-core.js"
+import { optionUnits, productOptions, products } from "../schema-core.js"
 import { defaultBookingNumber } from "./handler-support.js"
+
+/**
+ * Public price catalogs to try for a product, best first.
+ *
+ * This used to be a single query for "the" default public catalog, and that
+ * was wrong in two ways that compounded into silently ignoring every price
+ * rule on a product:
+ *
+ * 1. **`isDefault` is not unique.** Nothing in the schema stops two public
+ *    catalogs from both carrying the flag, and the baseline data ships EUR and
+ *    GBP catalogs that both do. `.limit(1)` then picked one arbitrarily.
+ * 2. **Currency was never considered.** A CNY product resolved against a EUR
+ *    catalog, found no rule for its option there, and the caller fell all the
+ *    way back to `product.sell_amount_cents × pax` — a flat per-head charge.
+ *    Per-unit prices, seasonal schedules and per-departure overrides all became
+ *    dead configuration, and nothing surfaced an error: the flat price looks
+ *    plausible, so a child was quietly billed the adult fare.
+ *
+ * So: filter to the product's own sell currency (a rule priced in another
+ * currency is never the right answer), and return every remaining candidate
+ * ordered `isDefault` first, then by code, so the caller can walk them and use
+ * whichever one actually prices the option. Ordering by code rather than
+ * insertion time keeps the choice stable across environments.
+ *
+ * Catalogs matching the product currency come first; if none match, the
+ * remaining public catalogs still follow, which preserves the old behavior for
+ * products whose currency has no catalog of its own.
+ */
+export async function resolvePriceCatalogCandidates(
+  db: PostgresJsDatabase,
+  productId: string,
+): Promise<string[]> {
+  const [product] = await db
+    .select({ sellCurrency: products.sellCurrency })
+    .from(products)
+    .where(eq(products.id, productId))
+    .limit(1)
+
+  const catalogs = await db
+    .select({
+      id: priceCatalogs.id,
+      code: priceCatalogs.code,
+      currencyCode: priceCatalogs.currencyCode,
+      isDefault: priceCatalogs.isDefault,
+    })
+    .from(priceCatalogs)
+    .where(and(eq(priceCatalogs.catalogType, "public"), eq(priceCatalogs.active, true)))
+    .orderBy(desc(priceCatalogs.isDefault), asc(priceCatalogs.code))
+
+  return orderPriceCatalogCandidates(catalogs, product?.sellCurrency ?? null)
+}
+
+/** Ordering half of `resolvePriceCatalogCandidates`, split out to be testable
+ *  without a database. Input is expected pre-sorted `isDefault` first, then by
+ *  code; this only partitions on currency and keeps that order within each
+ *  partition. */
+export function orderPriceCatalogCandidates(
+  catalogs: ReadonlyArray<{ id: string; currencyCode: string | null }>,
+  currency: string | null,
+): string[] {
+  if (!currency) return catalogs.map((catalog) => catalog.id)
+  const matching = catalogs.filter((catalog) => catalog.currencyCode === currency)
+  const rest = catalogs.filter((catalog) => catalog.currencyCode !== currency)
+  return [...matching, ...rest].map((catalog) => catalog.id)
+}
 
 /**
  * Build the `OR` scope clauses that select a product's pricing
