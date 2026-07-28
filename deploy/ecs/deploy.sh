@@ -184,8 +184,14 @@ p.chromium
       if [ -n "$MISSING" ]; then
         echo "   缺失的共享库:"
         echo "$MISSING"
+        # node 必须写绝对路径:它装在 /opt/voyant/node24/bin,只有 voyant 用户
+        # 的部署 shell 把这段加进了 PATH,`sudo` 起来的 root 环境里没有,照着
+        # 敲会得到「sudo: node: command not found」(实测踩过)。
+        # install-deps 只是去 apt 装包、不碰浏览器目录,因此不需要
+        # PLAYWRIGHT_BROWSERS_PATH,顺带避开 sudo 清环境变量的麻烦。
         echo "   一条命令即可补齐(需要 root,只需执行一次):"
-        echo "     sudo PLAYWRIGHT_BROWSERS_PATH=$BROWSERS_ROOT node $PW_CLI install-deps chromium"
+        echo "     sudo $NODE_BIN/node $PW_CLI install-deps chromium"
+        echo "   装完不必重新部署:每次生成宣传册前都会重新探测。"
       else
         echo "   ldd 未报缺库,问题不在系统库;请看上面的完整错误。"
       fi
