@@ -141,6 +141,20 @@ echo "回滚:没有可回滚版本时应明确报错而非静默成功"
   teardown
 )
 
+echo "systemd 单元:带空格的 Environment= 必须整体加引号"
+(
+  # 这条是机械规则,值得用检查器钉住而不是靠 review 记着。不加引号时 systemd
+  # 按空格拆成多个赋值,后半段不符合 KEY=value 就被静默丢弃——NODE_OPTIONS 的
+  # 堆上限因此一直没生效,只在 journal 里留一行 Invalid environment assignment。
+  UNIT="$(dirname "${BASH_SOURCE[0]}")/voyant-operator.service"
+  bad=$(grep -n '^Environment=[^"]*[[:space:]]' "$UNIT" || true)
+  if [ -n "$bad" ]; then
+    check "无未加引号的多段赋值" "" "$bad"
+  else
+    check "无未加引号的多段赋值" "yes" "yes"
+  fi
+)
+
 PASS=$(grep -c '^P$' "$TALLY" || true)
 FAIL=$(grep -c '^F$' "$TALLY" || true)
 rm -f "$TALLY"

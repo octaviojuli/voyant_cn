@@ -11,7 +11,13 @@ User=voyant
 WorkingDirectory=/opt/voyant/app/starters/operator
 EnvironmentFile=/opt/voyant/app/starters/operator/.env
 Environment=PORT=8080
-Environment=NODE_OPTIONS=--conditions=development --max-old-space-size=4096
+# 整体加引号是必须的,不是风格问题。systemd 的 Environment= 按空格拆成多个
+# 赋值,不加引号时 `--max-old-space-size=4096` 不符合 KEY=value 形式会被直接
+# 丢弃,NODE_OPTIONS 只剩下 `--conditions=development`,堆上限从未生效。每次
+# 启动 journal 里都有一行:
+#   voyant-operator.service:14: Invalid environment assignment, ignoring:
+#   --max-old-space-size=4096
+Environment="NODE_OPTIONS=--conditions=development --max-old-space-size=4096"
 ExecStart=/opt/voyant/node24/bin/node dist/server/server.js
 Restart=always
 RestartSec=5

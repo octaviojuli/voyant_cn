@@ -100,6 +100,17 @@ sudo nginx -t && sudo systemctl reload nginx
 目录相同——部署会对仓库执行 `git reset --hard`。下载走 npmmirror 镜像,直连
 playwright CDN 在国内基本拉不动。
 
+**`voyant` 用户的免密 sudo 只开了两条**,`bootstrap.sh` 写死在
+`/etc/sudoers.d/voyant`:
+
+```
+voyant ALL=(root) NOPASSWD: /usr/bin/systemctl restart voyant-operator, /usr/bin/journalctl
+```
+
+装包不在其中——这就是部署脚本里 `sudo -n apt-get` 永远装不上系统库的原因,不是
+写法问题。补系统库要以 root 手动跑一次(命令见部署日志的自检段落),或者自行给
+sudoers 加规则。
+
 **装不上不阻断部署**。取不到浏览器时宣传册回落到内置的 pdf-lib 纯文本排版:
 册子难看,但生成不会失败。判定的是「可执行文件在不在」,所以装完不必重启就
 会在下次生成时生效;想指定别的浏览器,在 `.env` 里写
