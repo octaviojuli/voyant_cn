@@ -1,5 +1,16 @@
 # @voyant-travel/framework
 
+## 0.47.1
+
+### Patch Changes
+
+- Updated dependencies [15d1f88]
+  - @voyant-travel/operator-standard@0.7.0
+  - @voyant-travel/auth@0.132.2
+  - @voyant-travel/cruises@0.162.0
+  - @voyant-travel/workflows@0.122.1
+  - @voyant-travel/workflows-orchestrator@0.122.1
+
 ## 0.47.0
 
 ### Minor Changes

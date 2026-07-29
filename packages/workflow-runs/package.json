@@ -1,6 +1,6 @@
 {
   "name": "@voyant-travel/workflow-runs",
-  "version": "0.122.0",
+  "version": "0.122.1",
   "description": "Workflow run recording, admin routes, and rerun/resume dispatch primitives for Voyant operator apps.",
   "license": "Apache-2.0",
   "type": "module",

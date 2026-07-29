@@ -1,5 +1,88 @@
 # @voyant-travel/operator-standard
 
+## 0.7.0
+
+### Minor Changes
+
+- 15d1f88: 新增线路上线助理:上传 Word/PDF 线路资料,解析成待复核草稿,确认后建出产品。
+
+  新增的 `@voyant-travel/inventory/import-extension` 在 admin 面挂到 `products`
+  之下,提供草稿的增删改查与确认接口,并在 `operator-standard` 发行版中默认启用。
+
+  上传与确认刻意分成两步:价格、天数、费用包含解析错了是要赔钱的,中间必须
+  有人过目。助手一律建成 `draft` + `private` 的产品且不写入任何价格规则——
+  没有价格卖不出去,总好过带着 0 元价格被误发布。
+
+### Patch Changes
+
+- Updated dependencies [89fe90a]
+- Updated dependencies [5652440]
+- Updated dependencies [4ac7d46]
+- Updated dependencies [f535cfd]
+- Updated dependencies [f5e02bd]
+- Updated dependencies [115b00b]
+- Updated dependencies [89fe90a]
+- Updated dependencies [192a635]
+- Updated dependencies [15d1f88]
+- Updated dependencies [08c5aa2]
+- Updated dependencies [37fac2f]
+- Updated dependencies [ffcf632]
+- Updated dependencies [34aaebe]
+- Updated dependencies [89fe90a]
+  - @voyant-travel/inventory@0.13.0
+  - @voyant-travel/inventory-react@0.45.0
+  - @voyant-travel/quotes-react@0.161.0
+  - @voyant-travel/operations@0.8.1
+  - @voyant-travel/i18n@0.112.0
+  - @voyant-travel/operator-settings@0.6.0
+  - @voyant-travel/bookings-react@0.163.0
+  - @voyant-travel/catalog-authoring@0.107.15
+  - @voyant-travel/legal@0.163.0
+  - @voyant-travel/storefront@0.165.0
+  - @voyant-travel/trips@0.154.0
+  - @voyant-travel/action-ledger-react@0.50.0
+  - @voyant-travel/admin-app@0.55.0
+  - @voyant-travel/catalog-react@0.161.0
+  - @voyant-travel/commerce-react@0.45.0
+  - @voyant-travel/distribution-react@0.153.0
+  - @voyant-travel/finance-react@0.163.0
+  - @voyant-travel/identity-react@0.163.0
+  - @voyant-travel/legal-react@0.163.0
+  - @voyant-travel/operations-react@0.44.0
+  - @voyant-travel/admin@0.126.1
+  - @voyant-travel/auth-react@0.132.2
+  - @voyant-travel/cruises-react@0.162.0
+  - @voyant-travel/event-catalog-react@0.4.1
+  - @voyant-travel/finance@0.163.0
+  - @voyant-travel/flights-react@0.163.0
+  - @voyant-travel/mice-react@0.31.0
+  - @voyant-travel/navigation-preferences-react@0.5.1
+  - @voyant-travel/notifications-react@0.130.1
+  - @voyant-travel/relationships-react@0.163.0
+  - @voyant-travel/storefront-react@0.165.0
+  - @voyant-travel/trips-react@0.154.0
+  - @voyant-travel/quotes@0.130.1
+  - @voyant-travel/notifications@0.130.1
+  - @voyant-travel/admin-host@0.13.0
+  - @voyant-travel/operator-settings-react@0.16.0
+  - @voyant-travel/admin-react@0.126.1
+  - @voyant-travel/auth@0.132.2
+  - @voyant-travel/bookings@0.163.0
+  - @voyant-travel/catalog@0.161.0
+  - @voyant-travel/charters@0.161.0
+  - @voyant-travel/cruises@0.162.0
+  - @voyant-travel/distribution@0.153.0
+  - @voyant-travel/flights@0.163.0
+  - @voyant-travel/identity@0.163.0
+  - @voyant-travel/navigation-preferences@0.5.1
+  - @voyant-travel/workflow-runs@0.122.1
+  - @voyant-travel/workflows@0.122.1
+  - @voyant-travel/workflows-orchestrator@0.122.1
+  - @voyant-travel/accommodations@0.123.0
+  - @voyant-travel/commerce@0.37.1
+  - @voyant-travel/mice@0.19.0
+  - @voyant-travel/relationships@0.127.1
+
 ## 0.6.3
 
 ### Patch Changes

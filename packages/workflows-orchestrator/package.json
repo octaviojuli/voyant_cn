@@ -1,6 +1,6 @@
 {
   "name": "@voyant-travel/workflows-orchestrator",
-  "version": "0.122.0",
+  "version": "0.122.1",
   "description": "Postgres self-host orchestrator runtime for Voyant Workflows — drives runs through the tenant step handler over the v1 wire protocol.",
   "license": "Apache-2.0",
   "repository": {

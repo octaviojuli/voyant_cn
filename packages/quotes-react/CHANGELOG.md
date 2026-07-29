@@ -1,5 +1,26 @@
 # @voyant-travel/crm-react
 
+## 0.161.0
+
+### Patch Changes
+
+- 115b00b: 修复 multipart 上传:FormData 请求体不再被强设为 application/json。
+
+  `fetchWithValidation` 原先只要请求体不为空就补上 `Content-Type:
+application/json`。对 FormData 来说这是错的——显式设了 Content-Type,fetch
+  就不会生成 multipart 的 boundary,服务端收到的是一个声称是 JSON 的 multipart
+  body,`parseBody()` 解析不了。报价配图上传因此一直是坏的。
+
+  `legal-react` 早已有同样的防护,这里按同一写法补齐。
+
+- Updated dependencies [192a635]
+  - @voyant-travel/i18n@0.112.0
+  - @voyant-travel/commerce-react@0.45.0
+  - @voyant-travel/admin@0.126.1
+  - @voyant-travel/auth-react@0.132.2
+  - @voyant-travel/relationships-react@0.163.0
+  - @voyant-travel/quotes@0.130.1
+
 ## 0.160.0
 
 ### Patch Changes

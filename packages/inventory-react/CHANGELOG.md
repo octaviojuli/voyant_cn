@@ -1,5 +1,61 @@
 # @voyant-travel/inventory-react
 
+## 0.45.0
+
+### Minor Changes
+
+- 192a635: 线路上线助理接入管理后台:产品之下新增「线路上线助理」两个页面。
+
+  列表页上传 Word/PDF 并列出草稿;复核页展示线路概览图、基础信息、逐日行程
+  (用餐/住宿/里程车程)、费用包含与不含,以及解析器没能识别的字段,确认后
+  建出产品。
+
+  概览图以 `<img src="data:image/svg+xml,…">` 渲染而非内联进 DOM——图上的
+  城市名来自上传的文档,等同于外部输入,而 `<img>` 里的 SVG 按规范不执行脚本。
+
+### Patch Changes
+
+- 115b00b: 修复 multipart 上传:FormData 请求体不再被强设为 application/json。
+
+  `fetchWithValidation` 原先只要请求体不为空就补上 `Content-Type:
+application/json`。对 FormData 来说这是错的——显式设了 Content-Type,fetch
+  就不会生成 multipart 的 boundary,服务端收到的是一个声称是 JSON 的 multipart
+  body,`parseBody()` 解析不了。报价配图上传因此一直是坏的。
+
+  `legal-react` 早已有同样的防护,这里按同一写法补齐。
+
+- 37fac2f: 修复线路上线助理接口与页面均无法访问的两处缺陷。
+
+  `packages/inventory/package.json` 缺少 `./import-extension` 导出,而
+  `operator-standard` 的启用清单按这个子路径解析扩展——解析不到就被静默丢弃,
+  接口从未挂载。
+
+  挂载点由 `products` 改为 `route-imports`:核心产品接口有 `/products/{id}`,
+  任何 `/products/<静态段>` 都会被它当成产品 ID 吃掉。前端页面路径同步移出
+  `/products/` 之下。
+
+- Updated dependencies [89fe90a]
+- Updated dependencies [5652440]
+- Updated dependencies [4ac7d46]
+- Updated dependencies [f535cfd]
+- Updated dependencies [f5e02bd]
+- Updated dependencies [89fe90a]
+- Updated dependencies [192a635]
+- Updated dependencies [15d1f88]
+- Updated dependencies [08c5aa2]
+- Updated dependencies [37fac2f]
+- Updated dependencies [ffcf632]
+- Updated dependencies [34aaebe]
+- Updated dependencies [89fe90a]
+  - @voyant-travel/inventory@0.13.0
+  - @voyant-travel/operations@0.8.1
+  - @voyant-travel/i18n@0.112.0
+  - @voyant-travel/catalog-react@0.161.0
+  - @voyant-travel/finance-react@0.163.0
+  - @voyant-travel/admin@0.126.1
+  - @voyant-travel/finance@0.163.0
+  - @voyant-travel/storefront-react@0.165.0
+
 ## 0.44.0
 
 ### Patch Changes

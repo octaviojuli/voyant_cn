@@ -1,6 +1,6 @@
 {
   "name": "@voyant-travel/framework",
-  "version": "0.47.0",
+  "version": "0.47.1",
   "description": "Voyant deployment graph resolver and Node runtime framework.",
   "license": "Apache-2.0",
   "type": "module",
