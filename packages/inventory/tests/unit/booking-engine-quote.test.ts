@@ -419,6 +419,142 @@ describe("createProductsBookingHandler.computeQuote", () => {
     const breakdown = result.pricing?.breakdown as Record<string, unknown>
     expect(breakdown?.total).toBe(40000)
   })
+
+  it("prices the catalog's default option when the draft names none", async () => {
+    // How the child-billed-as-adult bug actually reached production. A
+    // product with a single default option gives the shopper nothing to pick,
+    // so `configure.variantId` is never written — and pricing skipped the
+    // resolver entirely for want of an option id, falling all the way back to
+    // `product.sellAmountCents × pax`. The flat number looks plausible, so
+    // nothing surfaced until an adult and a child shared one booking.
+    const loadResolvedOptionPrice = vi.fn(
+      async (): Promise<ResolvedOptionPrice> => ({
+        baseSellAmountCents: 16000,
+        unitPrices: [
+          {
+            unitId: "u_adult",
+            unitType: "person",
+            travelerCategory: "adult",
+            sellAmountCents: 16000,
+          },
+          {
+            unitId: "u_child",
+            unitType: "person",
+            travelerCategory: "child",
+            sellAmountCents: 9500,
+          },
+        ],
+      }),
+    )
+
+    const handler = createProductsBookingHandler({
+      createBooking: vi.fn(),
+      loadResolvedOptionPrice,
+      loadProductOptions: async () => [{ id: "opt_standard", name: "Standard", isDefault: true }],
+      loadSlotDate: async () => "2026-06-21",
+    })
+
+    const result = await handler.computeQuote(
+      makeCtx([product]),
+      baseRequest({
+        // No `variantId` — exactly what the wizard sends.
+        configure: { departureSlotId: "slot_1", pax: { adult: 1, child: 1 } },
+      }),
+    )
+
+    expect(loadResolvedOptionPrice).toHaveBeenCalledWith(expect.anything(), {
+      productId: product.id,
+      optionId: "opt_standard",
+      date: "2026-06-21",
+    })
+    const breakdown = result.pricing?.breakdown as Record<string, unknown>
+    // 16000 + 9500, not 2 × product.sellAmountCents (29000).
+    expect(breakdown?.total).toBe(25500)
+    expect(breakdown?.lines).toHaveLength(2)
+  })
+
+  it("falls back to the sole option when none is flagged default", async () => {
+    const loadResolvedOptionPrice = vi.fn(
+      async (): Promise<ResolvedOptionPrice> => ({
+        baseSellAmountCents: 20000,
+        unitPrices: [],
+      }),
+    )
+
+    const handler = createProductsBookingHandler({
+      createBooking: vi.fn(),
+      loadResolvedOptionPrice,
+      loadProductOptions: async () => [{ id: "opt_only", name: "Only" }],
+      loadSlotDate: async () => "2026-06-21",
+    })
+
+    await handler.computeQuote(
+      makeCtx([product]),
+      baseRequest({ configure: { departureSlotId: "slot_1", pax: { adult: 1 } } }),
+    )
+
+    expect(loadResolvedOptionPrice).toHaveBeenCalledWith(expect.anything(), {
+      productId: product.id,
+      optionId: "opt_only",
+      date: "2026-06-21",
+    })
+  })
+
+  it("does not guess an option when several exist and none is default", async () => {
+    // Guessing here would quote one option's price while the wizard shows
+    // another's units. Falling back to the product base price is the honest
+    // answer until the shopper picks.
+    const loadResolvedOptionPrice = vi.fn(async (): Promise<ResolvedOptionPrice | null> => null)
+
+    const handler = createProductsBookingHandler({
+      createBooking: vi.fn(),
+      loadResolvedOptionPrice,
+      loadProductOptions: async () => [
+        { id: "opt_a", name: "A" },
+        { id: "opt_b", name: "B" },
+      ],
+      loadSlotDate: async () => "2026-06-21",
+    })
+
+    await handler.computeQuote(
+      makeCtx([product]),
+      baseRequest({ configure: { departureSlotId: "slot_1", pax: { adult: 1 } } }),
+    )
+
+    expect(loadResolvedOptionPrice).not.toHaveBeenCalled()
+  })
+
+  it("still honours an explicitly picked option over the default", async () => {
+    const loadResolvedOptionPrice = vi.fn(
+      async (): Promise<ResolvedOptionPrice> => ({
+        baseSellAmountCents: 20000,
+        unitPrices: [],
+      }),
+    )
+
+    const handler = createProductsBookingHandler({
+      createBooking: vi.fn(),
+      loadResolvedOptionPrice,
+      loadProductOptions: async () => [
+        { id: "opt_standard", name: "Standard", isDefault: true },
+        { id: "opt_premium", name: "Premium" },
+      ],
+      loadSlotDate: async () => "2026-06-21",
+    })
+
+    await handler.computeQuote(
+      makeCtx([product]),
+      baseRequest({
+        configure: { variantId: "opt_premium", departureSlotId: "slot_1", pax: { adult: 1 } },
+      }),
+    )
+
+    expect(loadResolvedOptionPrice).toHaveBeenCalledWith(expect.anything(), {
+      productId: product.id,
+      optionId: "opt_premium",
+      date: "2026-06-21",
+    })
+  })
 })
 
 describe("createProductsBookingHandler.commit", () => {
