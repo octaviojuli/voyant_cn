@@ -236,4 +236,42 @@ describe.skipIf(!DB_AVAILABLE)("expired availability-hold sweep", () => {
     expect(released).toBe(0)
     expect(await remainingPax()).toBe(4)
   })
+
+  it("never credits a slot above its initial capacity", async () => {
+    // Production had a departure at initial_pax = 6 / remaining_pax = 12 with
+    // no live hold on it — capacity conjured out of nothing, which oversells
+    // the departure without anything looking wrong. The release paths did a
+    // bare `remaining_pax + paxCount`, so a credit that had no matching debit
+    // sailed straight past the `remaining <= initial` invariant the create and
+    // update paths enforce.
+    //
+    // Reproduced here by crediting a slot that was never debited: an expired
+    // hold exists, but remaining_pax is still at full capacity.
+    await db.insert(availabilityHolds).values({
+      draftId: "draft_uncounted",
+      holdToken: "uncounted",
+      productId,
+      slotId,
+      paxCount: 4,
+      expiresAt: PAST,
+    })
+    expect(await remainingPax()).toBe(6)
+
+    const released = await releaseExpiredHoldsForSlots(db, [slotId])
+
+    expect(released).toBe(1)
+    // Without the clamp this lands at 10.
+    expect(await remainingPax()).toBe(6)
+  })
+
+  it("still credits back in full when the slot really was debited", async () => {
+    // The clamp must not swallow legitimate restores — otherwise every
+    // abandoned draft would quietly cost the departure a seat.
+    await seedAbandonedHolds(2, 2)
+    expect(await remainingPax()).toBe(2)
+
+    await releaseExpiredHoldsForSlots(db, [slotId])
+
+    expect(await remainingPax()).toBe(6)
+  })
 })

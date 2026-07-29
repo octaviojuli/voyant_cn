@@ -10,7 +10,6 @@ import {
   extraPriceRules,
   optionPriceRules,
   optionUnitPriceRules,
-  priceCatalogs,
   pricingCategories,
   pricingCategoryDependencies,
   resolveOptionPriceRulesForDate,
@@ -38,6 +37,7 @@ import {
   humanizeFieldKey,
   persistBookingCreateTaxLines,
   pricingCategoryScopeClauses,
+  resolvePriceCatalogCandidates,
   typeForFieldKey,
 } from "./product-runtime-support.js"
 
@@ -487,31 +487,25 @@ export function registerProductBookingHandler(
       async loadResolvedOptionPrice(ctx, args) {
         const db = asPostgresDb(ctx.db)
 
-        // Resolve catalog id: explicit (rare) > default public.
-        let catalogId = args.catalogId
-        if (!catalogId) {
-          const [cat] = await db
-            .select({ id: priceCatalogs.id })
-            .from(priceCatalogs)
-            .where(
-              and(
-                eq(priceCatalogs.catalogType, "public"),
-                eq(priceCatalogs.active, true),
-                eq(priceCatalogs.isDefault, true),
-              ),
-            )
-            .limit(1)
-          if (!cat) return null
-          catalogId = cat.id
-        }
+        const catalogIds = args.catalogId
+          ? [args.catalogId]
+          : await resolvePriceCatalogCandidates(db, args.productId)
+        if (catalogIds.length === 0) return null
 
-        const ruleByOption = await resolveOptionPriceRulesForDate(db, {
-          productId: args.productId,
-          optionIds: [args.optionId],
-          catalogId,
-          date: args.date,
-        })
-        const rule = ruleByOption.get(args.optionId)
+        // Try candidates in preference order and take the first that actually
+        // prices this option. See `resolvePriceCatalogCandidates` for why more
+        // than one candidate has to be tried.
+        let rule: { id: string } | undefined
+        for (const candidate of catalogIds) {
+          const ruleByOption = await resolveOptionPriceRulesForDate(db, {
+            productId: args.productId,
+            optionIds: [args.optionId],
+            catalogId: candidate,
+            date: args.date,
+          })
+          rule = ruleByOption.get(args.optionId)
+          if (rule) break
+        }
         if (!rule) return null
 
         const [ruleRow, unitPriceRows, unitRows] = await Promise.all([

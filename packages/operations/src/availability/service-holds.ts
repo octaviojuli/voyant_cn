@@ -56,6 +56,37 @@ export type PlaceAvailabilityHoldOutcome =
   | { status: "insufficient_capacity"; remaining: number; needed: number }
 
 /**
+ * Credit `paxCount` back to a slot's remaining capacity, never above
+ * `initial_pax`.
+ *
+ * The clamp is the point. `remaining_pax` is an invariant of the slot —
+ * `assertSlotTimingAndCapacity` refuses to create or update a slot where it
+ * exceeds `initial_pax` — but the three release paths here bypass that check
+ * entirely and just did `remaining_pax + paxCount`. One credit without a
+ * matching debit and the slot claims seats that do not exist, which is an
+ * oversell waiting to happen: capacity looks fine, holds get granted, and the
+ * departure ends up with more travelers than it can carry.
+ *
+ * Observed on production — a departure sitting at `initial_pax = 6` /
+ * `remaining_pax = 12` with no live hold on it at all. The place/release pair
+ * is balanced on its own (every path guards on `released_at IS NULL` and marks
+ * the row released in the same transaction), so the extra capacity came from
+ * somewhere outside this file. That is exactly why the arithmetic should not
+ * be able to produce an impossible number regardless of who calls it: the
+ * clamp turns a silent oversell into, at worst, a slot that forgets a seat.
+ *
+ * `initial_pax` is read from the row inside the same statement, so this stays
+ * race-free against concurrent holds.
+ */
+function creditRemainingPax(paxCount: number) {
+  // agent-quality: raw-sql reviewed -- owner: availability; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
+  return sql`LEAST(
+    COALESCE(${availabilitySlots.initialPax}, ${availabilitySlots.remainingPax} + ${paxCount}),
+    ${availabilitySlots.remainingPax} + ${paxCount}
+  )::int`
+}
+
+/**
  * Release every expired hold on the given slots, inside a caller-owned
  * transaction. Returns the number of holds released.
  *
@@ -113,8 +144,7 @@ async function releaseExpiredHoldsForSlotsTx(
     await tx
       .update(availabilitySlots)
       .set({
-        // agent-quality: raw-sql reviewed -- owner: availability; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
-        remainingPax: sql`${availabilitySlots.remainingPax} + ${paxCount}`,
+        remainingPax: creditRemainingPax(paxCount),
         updatedAt: now,
       })
       .where(eq(availabilitySlots.id, slotId))
@@ -373,8 +403,7 @@ async function releaseAvailabilityHoldsByToken(
         await tx
           .update(availabilitySlots)
           .set({
-            // agent-quality: raw-sql reviewed -- owner: availability; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
-            remainingPax: sql`${availabilitySlots.remainingPax} + ${paxCount}`,
+            remainingPax: creditRemainingPax(paxCount),
             updatedAt: new Date(),
           })
           .where(eq(availabilitySlots.id, slotId))
@@ -443,8 +472,7 @@ export async function releaseExpiredHolds(
         await tx
           .update(availabilitySlots)
           .set({
-            // agent-quality: raw-sql reviewed -- owner: availability; dynamic SQL interpolation uses Drizzle parameter binding or vetted SQL identifiers.
-            remainingPax: sql`${availabilitySlots.remainingPax} + ${paxCount}`,
+            remainingPax: creditRemainingPax(paxCount),
             updatedAt: new Date(),
           })
           .where(eq(availabilitySlots.id, slotId))
