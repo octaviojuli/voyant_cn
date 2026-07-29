@@ -63,6 +63,25 @@ export function selectShapeOption(
   return fallback
 }
 
+/**
+ * The option to price when the draft names none.
+ *
+ * `configure.variantId` is only written once the shopper actively picks an
+ * option, and a product with a single default option gives them nothing to
+ * pick — so the id stays empty and pricing has no option to resolve rules
+ * against. That is not "no price configured", it is "nobody said which"; the
+ * catalog already answers it.
+ *
+ * Deliberately the same rule `selectShapeOption` uses to decide which option
+ * the wizard renders as selected. If these two ever disagreed, the wizard
+ * would show one option's units while pricing another's.
+ */
+export function defaultProductOptionId(
+  productOptions: ReadonlyArray<ProductVariantOption> | null | undefined,
+): string | null {
+  return selectShapeOption(productOptions ?? [], null)?.id ?? null
+}
+
 export interface EffectivePaxCounts {
   counts: Record<string, number>
   /** Which input decided the counts — useful in tests + logs. */

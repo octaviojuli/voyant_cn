@@ -56,6 +56,7 @@ import {
   bookingItemLinesFromOptionSelections,
   bookingItemLinesFromPaxBands,
   defaultBookingNumber,
+  defaultProductOptionId,
   extractBillingParty,
   extractInternalNotes,
   extractPartyTravelers,
@@ -728,6 +729,22 @@ export function createProductsBookingHandler(
         selectedOptionId: optionId,
       })
 
+      // Which option to price. `variantId` is only set once the shopper
+      // actively picks one, and a product with a single default option
+      // gives them nothing to pick — the wizard renders the option step
+      // with one pre-selected entry and never writes the id back. Pricing
+      // must not wait for that: with no option there is no price rule, so
+      // every per-unit price, seasonal schedule and departure override was
+      // skipped and the quote fell all the way back to
+      // `product.sellAmountCents × pax` — a flat per-head charge that
+      // silently billed a child the adult fare.
+      //
+      // So fall back to the option the catalog itself calls default (or the
+      // only one, when nothing is flagged). Resolving it here rather than
+      // in each client keeps every surface — operator wizard, storefront,
+      // trips configurator — on the same price.
+      const pricedOptionId = optionId ?? defaultProductOptionId(productOptionCatalog)
+
       // The traveler roster is the more specific statement of who is
       // travelling — a traveler moved to the Child band (or carrying a
       // child's date of birth) must reprice, not stay billed as an
@@ -743,10 +760,13 @@ export function createProductsBookingHandler(
       let pricing: ComputeQuoteResult["pricing"]
       try {
         const resolvedPrice =
-          optionSelections.length === 0 && optionId && slotDate && options.loadResolvedOptionPrice
+          optionSelections.length === 0 &&
+          pricedOptionId &&
+          slotDate &&
+          options.loadResolvedOptionPrice
             ? await options.loadResolvedOptionPrice(ctx, {
                 productId: request.entityId,
-                optionId,
+                optionId: pricedOptionId,
                 date: slotDate,
               })
             : null
@@ -983,11 +1003,15 @@ export function createProductsBookingHandler(
       // records the unit each traveler is actually billed as. Enrichment
       // failures degrade to the pre-existing behaviour (finance seeds a
       // single required-unit row) rather than failing the commit.
-      const commitOptionId = draft.configure?.variantId ?? null
       const commitProductOptions = await safeLoad(
         "loadProductOptions",
         options.loadProductOptions?.(ctx, request.entityId),
       )
+      // Same default-option fallback the quote applies. These two must agree:
+      // if the commit resolved a different option than the quote priced, the
+      // booking would be written at a price the customer was never shown.
+      const commitOptionId =
+        draft.configure?.variantId ?? defaultProductOptionId(commitProductOptions)
       const { paxBands: commitBands, option: commitBandOption } = resolveShapePaxBands({
         productOptions: commitProductOptions,
         paxBands: await safeLoad("loadPaxBands", options.loadPaxBands?.(ctx, request.entityId)),
